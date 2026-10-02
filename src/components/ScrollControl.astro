@@ -76,8 +76,10 @@ import Icon from './Icon.astro';
   [data-state='idle'] {
     width: var(--ctl-h);
   }
+  /* Collapsing hides the label at once; expanding fades it back in. */
   [data-state='idle'] .scroll-ctl__label {
     opacity: 0;
+    transition: none;
   }
 
   @media (max-width: 1279px) {
@@ -101,6 +103,7 @@ import Icon from './Icon.astro';
     [data-state='scroll'] .scroll-ctl__label,
     [data-state='idle'] .scroll-ctl__label {
       opacity: 0;
+      transition: none;
     }
     [data-state='scroll'] .scroll-ctl__icon,
     [data-state='idle'] .scroll-ctl__icon {

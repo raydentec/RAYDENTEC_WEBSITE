@@ -30,11 +30,13 @@ const collapseBtn = () => document.querySelector<HTMLButtonElement>('[data-sideb
 const isTablet = () => !mq.desktop.matches && !mq.mobile.matches;
 
 function setExpanded(expanded: boolean) {
+  if (expanded && mq.desktop.matches) collapseExpandButton();
   setRootState('sidebar', expanded ? 'expanded' : 'collapsed');
   if (mq.desktop.matches) expandBtn()?.setAttribute('aria-expanded', String(expanded));
 }
 
 function openOverlay() {
+  collapseExpandButton();
   setRootState('overlay', 'open');
   expandBtn()?.setAttribute('aria-expanded', 'true');
   // The panel becomes visible synchronously (visibility switches with no delay).
@@ -48,6 +50,45 @@ function closeOverlay(returnFocus = true) {
   expandBtn()?.setAttribute('aria-expanded', 'false');
   if (returnFocus || hadFocus) expandBtn()?.focus({ preventScroll: true });
 }
+
+/* ---------- EXPAND button: full height on hover/focus, collapses after leaving ---------- */
+
+const EXPAND_COLLAPSE_DELAY_MS = 2000;
+let expandCollapseTimer = 0;
+
+function openExpandButton() {
+  window.clearTimeout(expandCollapseTimer);
+  setRootState('expandOpen', '');
+}
+
+/** The sidebar has opened: start EXPAND's collapse animation now instead of after the delay. */
+function collapseExpandButton() {
+  window.clearTimeout(expandCollapseTimer);
+  setRootState('expandOpen', null);
+}
+
+function closeExpandButtonSoon(delay = EXPAND_COLLAPSE_DELAY_MS) {
+  window.clearTimeout(expandCollapseTimer);
+  expandCollapseTimer = window.setTimeout(() => setRootState('expandOpen', null), delay);
+}
+
+// pointerover/out bubble (enter/leave don't), so these delegate from document once.
+document.addEventListener('pointerover', (e) => {
+  if ((e.target as Element | null)?.closest('[data-sidebar-expand]')) openExpandButton();
+});
+document.addEventListener('pointerout', (e) => {
+  const btn = (e.target as Element | null)?.closest('[data-sidebar-expand]');
+  if (btn && !btn.contains(e.relatedTarget as Node | null) && !btn.matches(':focus-visible')) closeExpandButtonSoon();
+});
+// Keyboard focus only: focus moved here by script after a mouse click (←) doesn't count.
+document.addEventListener('focusin', (e) => {
+  const btn = (e.target as Element | null)?.closest('[data-sidebar-expand]');
+  if (btn?.matches(':focus-visible')) openExpandButton();
+});
+document.addEventListener('focusout', (e) => {
+  const btn = (e.target as Element | null)?.closest('[data-sidebar-expand]');
+  if (btn && !btn.matches(':hover')) closeExpandButtonSoon();
+});
 
 /* ---------- Bound once (persisted elements / document) ---------- */
 

@@ -62,21 +62,45 @@ const [videos, socials] = site.ctas;
     height: var(--rail-w);
   }
   .rail__expand {
+    --icon-top: 14px;
     top: var(--content-top);
     width: var(--rail-w);
     height: var(--expand-h);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 0 18px;
+    overflow: hidden;
+    transition: height var(--t-ctl) var(--ease-out);
+  }
+  .rail__expand :global(svg) {
+    position: absolute;
+    left: 50%;
+    top: var(--icon-top);
+    transform: translateX(-50%);
+    transition: top var(--t-ctl) var(--ease-out);
+  }
+  /*
+   * Collapsed to an arrow-only square by default; grows to full height while hovered
+   * or focused and shrinks back a couple of seconds after the pointer leaves, or right
+   * away when the sidebar opens (<html data-expand-open>, set by scripts/sidebar.ts).
+   */
+  :global(html:not([data-expand-open])) .rail__expand {
+    --icon-top: calc((var(--rail-w) - 4px - 30px) / 2);
+    height: var(--rail-w);
+  }
+  /* Collapsing hides the label at once; expanding fades it back in. */
+  :global(html:not([data-expand-open])) .rail__expand-label {
+    opacity: 0;
+    transition: none;
   }
   .rail__expand-label {
+    position: absolute;
+    left: 50%;
+    bottom: 18px;
+    translate: -50% 0;
+    transition: opacity var(--t-ctl) ease;
     writing-mode: vertical-rl;
     transform: rotate(180deg);
     font-family: var(--f-ui);
     font-weight: 600;
-    font-size: 20px;
+    font-size: var(--ctl-font);
     letter-spacing: 0.04em;
   }
   .rail__join {
@@ -134,9 +158,6 @@ const [videos, socials] = site.ctas;
       opacity: 1;
       visibility: visible;
       transition: none;
-    }
-    .rail__expand-label {
-      font-size: 18px;
     }
     .rail__join-label {
       font-size: 14px;

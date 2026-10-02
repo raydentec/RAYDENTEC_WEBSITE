@@ -15,7 +15,8 @@
   --ctl-bottom: calc(var(--footer-h) + 31px);
   --ctl-right: 31px;
   --ctl-w: 318px;
-  --ctl-font: 24px;
+  /* Label size of the glass controls: SCROLL / BACK TO TOP and EXPAND. */
+  --ctl-font: 20px;
   --track-right: 14px;
   --track-w: 6px;
   --expand-h: 300px;
@@ -35,7 +36,7 @@
     --ctl-bottom: calc(var(--footer-h) + 32px);
     --ctl-right: var(--gutter);
     --ctl-w: 306px;
-    --ctl-font: 22px;
+    --ctl-font: 18px;
     --expand-h: 287px;
   }
 }
@@ -45,6 +46,7 @@
     --menu-bar-bottom: calc(var(--footer-h) + 16px);
     --ctl-bottom: calc(var(--menu-bar-bottom) + var(--ctl-h) + 12px);
     --ctl-right: var(--gutter);
+    --ctl-font: 18px;
     --track-right: 7px;
     --track-w: 5px;
   }
