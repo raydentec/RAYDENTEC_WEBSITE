@@ -102,9 +102,18 @@ window.addEventListener('resize', () => {
   if (scroller) updateTrack(scroller);
 });
 
-onPageLoad(() => {
+/** A new page starts at the top (SCROLL) — or, on mobile, at container 1 (snap.ts). */
+function syncToStart() {
   window.clearTimeout(idleTimer);
-  setState('top');
   const scroller = getScroller();
-  if (scroller) updateTrack(scroller);
-});
+  if (!scroller) return;
+  updateTrack(scroller);
+  if (scroller.scrollTop > 0) {
+    setState('scroll');
+    if (!held) collapseLater(IDLE_MS);
+  } else {
+    setState('top');
+  }
+}
+document.addEventListener('astro:after-swap', syncToStart);
+onPageLoad(syncToStart);

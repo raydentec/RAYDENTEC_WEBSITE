@@ -154,12 +154,35 @@ window.addEventListener('resize', () => {
   updateSnapping(scroller);
 });
 
+/**
+ * Mobile, switching pages: every page except Start opens with container 1 selected and
+ * snapped under the header (Start opens at the top, with the profile). Done on swap,
+ * before the page transition captures the new page, so it doesn't fade in at the top
+ * and then jump.
+ */
+let positionedOnSwap = false;
+document.addEventListener('astro:after-swap', () => {
+  positionedOnSwap = false;
+  const scroller = getScroller();
+  const first = scroller ? containers(scroller)[0] : undefined;
+  if (!scroller || !first || !mq.mobile.matches || scroller.dataset.page === 'start') return;
+  returningToTop = false;
+  scroller.dataset.snap = 'on';
+  scroller.scrollTop += first.getBoundingClientRect().top - snapLine(scroller);
+  home = first;
+  setActive(scroller, first);
+  positionedOnSwap = true;
+});
+
 onPageLoad(() => {
   const scroller = getScroller();
   if (!scroller) return;
   returningToTop = false;
-  home = null;
-  scroller.scrollTop = 0;
+  if (!positionedOnSwap) {
+    home = null;
+    scroller.scrollTop = 0;
+  }
+  positionedOnSwap = false;
   updateTail(scroller);
   updateSnapping(scroller);
   // The scroller is swapped on navigation, so this listener is bound once per page.

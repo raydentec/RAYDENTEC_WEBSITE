@@ -1,5 +1,5 @@
 ---
-/** Top nav, centered on the viewport. Persisted; aria-current is updated by scripts/mobile-menu.ts. */
+/** Top nav, centred over the content column. Persisted; aria-current is updated by scripts/mobile-menu.ts. */
 import { getSite, ROUTES, type PageId } from '../lib/content';
 
 interface Props {
@@ -21,11 +21,13 @@ const site = await getSite();
 </nav>
 
 <style>
+  /* Centred over the content column: same left/width as #scroller (Shell.astro), and
+     moves with it when the desktop sidebar opens or closes. */
   .topnav {
     position: fixed;
     top: var(--nav-top);
-    left: 0;
-    right: 0;
+    left: calc((100vw - var(--content-w)) / 2);
+    width: var(--content-w);
     height: var(--nav-h);
     display: flex;
     justify-content: center;
@@ -33,6 +35,15 @@ const site = await getSite();
     gap: var(--nav-gap);
     z-index: 3;
     pointer-events: none;
+    transition:
+      left var(--t-sidebar) var(--ease-out),
+      width var(--t-sidebar) var(--ease-out);
+  }
+  @media (min-width: 1280px) {
+    :global(html[data-sidebar='expanded']) .topnav {
+      left: var(--col-left-expanded);
+      width: var(--content-w-expanded);
+    }
   }
   .topnav__link {
     pointer-events: auto;

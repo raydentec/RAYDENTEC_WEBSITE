@@ -62,6 +62,12 @@ mq.mobile.addEventListener('change', () => {
   if (scroller) updateHeader(scroller);
 });
 
+// After swap too, so a page that opens at container 1 (snap.ts) shows the header at once.
+document.addEventListener('astro:after-swap', () => {
+  const scroller = getScroller();
+  if (scroller) updateHeader(scroller);
+});
+
 onPageLoad(() => {
   setMenu(false);
   syncCurrentPage();
