@@ -206,6 +206,40 @@ dd {
   }
 }
 
+/* ---------- Page transitions ---------- */
+/*
+ * ClientRouter navigation animates the content column (#scroller) as its own view-
+ * transition layer, which the browser paints above a snapshot of the rest of the page.
+ * Controls that sit over the content get their own layers stacked above it, so they
+ * stay on top while the column fades.
+ */
+.scroll-ctl {
+  view-transition-name: scroll-ctl;
+}
+.mmenu__bar {
+  view-transition-name: mobile-menu-bar;
+}
+.mheader {
+  view-transition-name: mobile-header;
+}
+::view-transition-group(scroll-ctl),
+::view-transition-group(mobile-menu-bar),
+::view-transition-group(mobile-header) {
+  z-index: 10;
+  animation: none; /* no size/position morph between old and new state */
+}
+/* Show their new state straight away instead of cross-fading old and new labels. */
+::view-transition-old(scroll-ctl),
+::view-transition-old(mobile-menu-bar),
+::view-transition-old(mobile-header) {
+  display: none;
+}
+::view-transition-new(scroll-ctl),
+::view-transition-new(mobile-menu-bar),
+::view-transition-new(mobile-header) {
+  animation: none;
+}
+
 /* ---------- Reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) {
   *,

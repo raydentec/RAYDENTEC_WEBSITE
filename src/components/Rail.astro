@@ -85,6 +85,12 @@ const [videos, socials] = site.ctas;
     --icon-top: calc((var(--rail-w) - 4px - 30px) / 2);
     height: var(--rail-w);
   }
+  /* Opened instantly when the sidebar closes on container 1 (scripts/sidebar.ts). */
+  :global(html[data-expand-instant]) .rail__expand,
+  :global(html[data-expand-instant]) .rail__expand :global(svg),
+  :global(html[data-expand-instant]) .rail__expand-label {
+    transition: none;
+  }
   /* Collapsing hides the label at once; expanding fades it back in. */
   :global(html:not([data-expand-open])) .rail__expand-label {
     opacity: 0;

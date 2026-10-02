@@ -30,7 +30,10 @@ const collapseBtn = () => document.querySelector<HTMLButtonElement>('[data-sideb
 const isTablet = () => !mq.desktop.matches && !mq.mobile.matches;
 
 function setExpanded(expanded: boolean) {
-  if (expanded && mq.desktop.matches) collapseExpandButton();
+  if (mq.desktop.matches) {
+    if (expanded) collapseExpandButton();
+    else if (firstActive) openExpandButtonInstantly(); // fully open at once on close, no countdown
+  }
   setRootState('sidebar', expanded ? 'expanded' : 'collapsed');
   if (mq.desktop.matches) expandBtn()?.setAttribute('aria-expanded', String(expanded));
 }
@@ -48,6 +51,7 @@ function closeOverlay(returnFocus = true) {
   const hadFocus = sidebar()?.contains(document.activeElement) ?? false;
   setRootState('overlay', null);
   expandBtn()?.setAttribute('aria-expanded', 'false');
+  if (firstActive) openExpandButtonInstantly(); // fully open at once on close, no countdown
   if (returnFocus || hadFocus) expandBtn()?.focus({ preventScroll: true });
 }
 
@@ -55,10 +59,20 @@ function closeOverlay(returnFocus = true) {
 
 const EXPAND_COLLAPSE_DELAY_MS = 2000;
 let expandCollapseTimer = 0;
+/** Container 1 is selected: an expanded EXPAND button stays expanded (no countdown). */
+let firstActive = true;
 
 function openExpandButton() {
   window.clearTimeout(expandCollapseTimer);
   setRootState('expandOpen', '');
+}
+
+/** Sidebar closed on container 1: EXPAND is fully open at once, without the grow animation. */
+function openExpandButtonInstantly() {
+  setRootState('expandInstant', '');
+  openExpandButton();
+  void expandBtn()?.offsetHeight; // apply the open state before animations come back
+  requestAnimationFrame(() => setRootState('expandInstant', null));
 }
 
 /** The sidebar has opened: start EXPAND's collapse animation now instead of after the delay. */
@@ -69,7 +83,10 @@ function collapseExpandButton() {
 
 function closeExpandButtonSoon(delay = EXPAND_COLLAPSE_DELAY_MS) {
   window.clearTimeout(expandCollapseTimer);
-  expandCollapseTimer = window.setTimeout(() => setRootState('expandOpen', null), delay);
+  if (firstActive) return;
+  expandCollapseTimer = window.setTimeout(() => {
+    if (!firstActive) setRootState('expandOpen', null);
+  }, delay);
 }
 
 // pointerover/out bubble (enter/leave don't), so these delegate from document once.
@@ -155,6 +172,18 @@ onScrollerScroll((scroller) => {
 // Collapse once the snapped container is no longer the first one (snap.ts settles it).
 document.addEventListener(ACTIVE_CHANGE, (e) => {
   const { index } = (e as ActiveChangeEvent).detail;
+  const wasFirst = firstActive;
+  firstActive = index === 0;
+  if (firstActive) {
+    // Container 1 selected: cancel any running countdown, so an expanded EXPAND stays so.
+    window.clearTimeout(expandCollapseTimer);
+    // Tablet: selecting container 1 also expands it (animated) if it isn't already.
+    if (isTablet() && !wasFirst && getRootState('expandOpen') === null) openExpandButton();
+  }
+  // Leaving container 1 with EXPAND expanded: the normal countdown starts now.
+  if (wasFirst && !firstActive && getRootState('expandOpen') !== null && !expandBtn()?.matches(':hover, :focus-visible')) {
+    closeExpandButtonSoon();
+  }
   if (!mq.desktop.matches || index <= 0 || getRootState('sidebar') === 'collapsed') return;
   if (pinnedAt !== null && index === pinnedAt) return;
   pinnedAt = null;
@@ -174,8 +203,13 @@ mq.mobile.addEventListener('change', onBreakpoint);
 /* ---------- Every navigation: the new column starts at scrollTop 0 ---------- */
 
 onPageLoad(() => {
+  firstActive = activeIndex() <= 0;
   closeOverlay(false);
   pinnedAt = null;
   setExpanded(true);
   if (!mq.desktop.matches) expandBtn()?.setAttribute('aria-expanded', 'false');
+  // Container 1 selected on load: expand EXPAND (animated) — unless the desktop sidebar
+  // is open, which keeps it collapsed (the rail is hidden then anyway).
+  const sidebarOpen = mq.desktop.matches && getRootState('sidebar') !== 'collapsed';
+  if (firstActive && !sidebarOpen) openExpandButton();
 });
