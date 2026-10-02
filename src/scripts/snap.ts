@@ -72,7 +72,8 @@ function settle(scroller: HTMLElement, align: boolean) {
   const target = containerAtSnapLine(scroller) ?? nearestToSnapLine(scroller);
   if (!target) return;
   setActive(scroller, target);
-  if (!align) return;
+  // Wheel input forwarded from outside the column settles itself (wheel.ts).
+  if (!align || 'wheel' in scroller.dataset) return;
   if (scroller.dataset.snap === 'off' || returningToTop) {
     home = null; // in the free-scrolling profile area
     return;

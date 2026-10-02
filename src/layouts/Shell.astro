@@ -94,6 +94,7 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
       import '../scripts/snap';
       import '../scripts/scroll-control';
       import '../scripts/mobile-menu';
+      import '../scripts/wheel';
     </script>
   </body>
 </html>
@@ -120,6 +121,10 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
   }
   .scroller::-webkit-scrollbar {
     display: none;
+  }
+  /* Snapping paused while wheel input from outside the column is forwarded (scripts/wheel.ts). */
+  :global(.scroller[data-wheel]) {
+    scroll-snap-type: none !important;
   }
   .scroller:focus {
     outline: none;
