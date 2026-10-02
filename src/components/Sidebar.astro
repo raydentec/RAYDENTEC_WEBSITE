@@ -24,12 +24,22 @@ import Profile from './Profile.astro';
 <div class="sidebar-dimmer" data-sidebar-dimmer aria-hidden="true" transition:persist="sidebar-dimmer"></div>
 
 <style>
+  /*
+   * Desktop: the sidebar box spans from the screen's left and top edges down to the
+   * footer, and right to the midpoint between the ← button and the content column, so
+   * it owns all the space around its elements. When taller than the viewport it scrolls
+   * from the top edge (under the top bar) down to the footer's top edge — nothing shows
+   * behind the footer. Padding keeps the contents where they were: top at the nav row,
+   * left at the gutter, bottom resting the same distance above the footer as the content.
+   */
   .sidebar {
+    --collapse-left: calc(var(--gutter) + 263px);
     position: fixed;
-    left: var(--gutter);
-    top: var(--nav-top);
-    bottom: var(--content-bottom);
-    width: var(--sidebar-w);
+    left: 0;
+    top: 0;
+    bottom: var(--footer-h);
+    width: calc((var(--collapse-left) + var(--ctl-h) + var(--col-left-expanded)) / 2);
+    padding: var(--nav-top) 0 calc(var(--content-bottom) - var(--footer-h)) var(--gutter);
     z-index: 4;
     overflow: hidden auto;
     scrollbar-width: none;
@@ -48,11 +58,11 @@ import Profile from './Profile.astro';
       visibility 0s linear var(--t-fade);
   }
 
-  /* ← sits beside the nav row: left 315px in viewport = 263px into the sidebar. */
+  /* ← sits beside the nav row, 263px right of the profile (left 315px on screen). */
   .sidebar__collapse {
     position: absolute;
-    left: 263px;
-    top: 0;
+    left: var(--collapse-left);
+    top: var(--nav-top);
     width: var(--ctl-h);
     height: var(--ctl-h);
     display: flex;
