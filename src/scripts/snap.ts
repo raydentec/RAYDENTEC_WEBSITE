@@ -3,14 +3,16 @@
  * once scrolling settles, the container closest to the snap line becomes `.is-active`.
  * Keyboard focus inside a container also makes it active.
  */
-import { containers, getScroller, onPageLoad, onScrollerScroll, snapOffset } from './dom';
+import { ACTIVE_CHANGE, containers, getScroller, onPageLoad, onScrollerScroll, snapOffset } from './dom';
 
 const SETTLE_MS = 90;
 let settleTimer = 0;
 
 function setActive(scroller: HTMLElement, active: HTMLElement | undefined) {
   if (!active || active.classList.contains('is-active')) return;
-  containers(scroller).forEach((cf) => cf.classList.toggle('is-active', cf === active));
+  const all = containers(scroller);
+  all.forEach((cf) => cf.classList.toggle('is-active', cf === active));
+  document.dispatchEvent(new CustomEvent(ACTIVE_CHANGE, { detail: { index: all.indexOf(active) } }));
 }
 
 function nearestToSnapLine(scroller: HTMLElement) {

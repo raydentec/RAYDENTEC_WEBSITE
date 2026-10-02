@@ -2,16 +2,26 @@
  * Sidebar behaviour.
  *
  * Desktop (≥1280, HANDOFF §4) — <html data-sidebar="expanded|collapsed">:
- *   - auto-collapse when the content scrollTop > 80, auto-expand only at scrollTop 0;
- *   - EXPAND while scrolled pins it open until the user scrolls another 80px or clicks ←.
+ *   - auto-collapse once the active (snapped) container switches away from the first one;
+ *     auto-expand only at scrollTop 0;
+ *   - EXPAND while a later container is active pins it open until the active container
+ *     changes again or the user clicks ←.
  * Tablet (768–1279, HANDOFF §8) — <html data-overlay="open">:
  *   - EXPAND opens the panel over the content with a dimmer;
  *   - closes on ←, dimmer click, Esc, or any content scroll; focus moves in/out.
  */
-import { getRootState, getScroller, mq, onPageLoad, onScrollerScroll, setRootState } from './dom';
+import {
+  ACTIVE_CHANGE,
+  activeIndex,
+  getRootState,
+  mq,
+  onPageLoad,
+  onScrollerScroll,
+  setRootState,
+  type ActiveChangeEvent,
+} from './dom';
 
-const COLLAPSE_AFTER = 80;
-/** scrollTop at which the user expanded manually (null = not pinned). */
+/** Active container index when the user expanded manually (null = not pinned). */
 let pinnedAt: number | null = null;
 
 const sidebar = () => document.getElementById('sidebar');
@@ -45,8 +55,8 @@ document.addEventListener('click', (e) => {
   const target = e.target as Element | null;
   if (target?.closest('[data-sidebar-expand]')) {
     if (mq.desktop.matches) {
-      const st = getScroller()?.scrollTop ?? 0;
-      pinnedAt = st > 0 ? st : null;
+      const index = activeIndex();
+      pinnedAt = index > 0 ? index : null;
       setExpanded(true);
       collapseBtn()?.focus({ preventScroll: true });
     } else {
@@ -95,26 +105,26 @@ onScrollerScroll((scroller) => {
     closeOverlay(false);
     return;
   }
-  if (!mq.desktop.matches) return;
-  const st = scroller.scrollTop;
-  const expanded = getRootState('sidebar') !== 'collapsed';
-  if (st <= 0) {
+  if (mq.desktop.matches && scroller.scrollTop <= 0) {
     pinnedAt = null;
-    if (!expanded) setExpanded(true);
-  } else if (expanded) {
-    const moved = pinnedAt === null ? st : Math.abs(st - pinnedAt);
-    if (moved > COLLAPSE_AFTER) {
-      pinnedAt = null;
-      setExpanded(false);
-    }
+    if (getRootState('sidebar') === 'collapsed') setExpanded(true);
   }
+});
+
+// Collapse once the snapped container is no longer the first one (snap.ts settles it).
+document.addEventListener(ACTIVE_CHANGE, (e) => {
+  const { index } = (e as ActiveChangeEvent).detail;
+  if (!mq.desktop.matches || index <= 0 || getRootState('sidebar') === 'collapsed') return;
+  if (pinnedAt !== null && index === pinnedAt) return;
+  pinnedAt = null;
+  setExpanded(false);
 });
 
 // Crossing breakpoints: drop the overlay, re-derive the desktop state.
 const onBreakpoint = () => {
   closeOverlay(false);
   pinnedAt = null;
-  setExpanded((getScroller()?.scrollTop ?? 0) <= COLLAPSE_AFTER);
+  setExpanded(activeIndex() <= 0);
   if (!mq.desktop.matches) expandBtn()?.setAttribute('aria-expanded', 'false');
 };
 mq.desktop.addEventListener('change', onBreakpoint);

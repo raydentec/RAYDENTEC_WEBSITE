@@ -152,6 +152,7 @@ dd {
   line-height: 1;
   transition:
     background-color var(--t-fade),
+    border-color var(--t-fade),
     color var(--t-fade);
 }
 .btn svg {
@@ -166,9 +167,12 @@ dd {
   background: var(--c-red);
   color: var(--c-black);
 }
-.btn--primary:hover {
-  background: var(--c-black);
-  color: var(--c-red);
+/* Red-filled buttons turn white on hover. */
+.btn--primary:hover,
+.btn--primary:focus-visible {
+  background: var(--c-white);
+  border-color: var(--c-white);
+  color: var(--c-black);
 }
 .btn[aria-disabled='true'] {
   opacity: 0.45;

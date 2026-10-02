@@ -101,7 +101,9 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
   .scroller {
     position: fixed;
     top: var(--content-top);
-    bottom: var(--content-bottom);
+    /* Runs down to the footer rule, so content is clipped there (as on mobile).
+       Rail, sidebar, track and scroll control still align to --content-bottom. */
+    bottom: var(--footer-h);
     /* Collapsed: re-centered on the viewport. */
     left: calc((100vw - var(--content-w)) / 2);
     width: var(--content-w);

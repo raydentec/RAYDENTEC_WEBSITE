@@ -107,6 +107,7 @@ const [videos, socials] = site.ctas;
     letter-spacing: 0.02em;
     transition:
       background-color var(--t-fade),
+      border-color var(--t-fade),
       color var(--t-fade);
   }
   .rail__cta--primary {
@@ -120,9 +121,11 @@ const [videos, socials] = site.ctas;
     background: var(--c-red);
     color: var(--c-black);
   }
-  .rail__cta--primary:hover {
-    background: var(--c-black);
-    color: var(--c-red);
+  .rail__cta--primary:hover,
+  .rail__cta--primary:focus-visible {
+    background: var(--c-white);
+    border-color: var(--c-white);
+    color: var(--c-black);
   }
 
   @media (max-width: 1279px) {

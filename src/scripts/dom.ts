@@ -58,3 +58,13 @@ export function snapOffset(scroller: HTMLElement) {
 }
 
 export const containers = (scroller: HTMLElement) => Array.from(scroller.querySelectorAll<HTMLElement>('[data-cf]'));
+
+/** Fired on document by snap.ts when the active container changes; detail = its index. */
+export const ACTIVE_CHANGE = 'raydentec:active-change';
+export type ActiveChangeEvent = CustomEvent<{ index: number }>;
+
+/** Index of the active (snapped) container in the current column, or -1. */
+export function activeIndex() {
+  const scroller = getScroller();
+  return scroller ? containers(scroller).findIndex((cf) => cf.classList.contains('is-active')) : -1;
+}
