@@ -138,8 +138,11 @@ const { eyebrow, title, description, media, mediaNote, actions } = Astro.props;
       gap: 8px;
       margin-top: 4px;
     }
+    /* Full width, ↗ right after the label (the right end stays clear for the ↑ square). */
     .intro :global(.intro__btn) {
       width: 100%;
+      justify-content: flex-start;
+      gap: 14px;
       --btn-font: 18px;
       padding: 0 18px 0 24px;
     }

@@ -146,8 +146,11 @@ const { eyebrow, title, description, stack, year, href, buttonLabel, image } = A
       line-height: 1.25;
       letter-spacing: -0.045em;
     }
+    /* Full width, ↗ right after the label (the right end stays clear for the ↑ square). */
     .card :global(.card__btn) {
       width: 100%;
+      justify-content: flex-start;
+      gap: 14px;
       --btn-font: 22px;
       padding: 0 18px 0 24px;
     }

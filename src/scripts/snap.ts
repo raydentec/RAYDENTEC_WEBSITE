@@ -7,6 +7,10 @@
  * switched on (#scroller[data-snap="on"]) once container 1 is about to activate,
  * i.e. its top has passed the middle of the visible area between the header line
  * and the scroll control.
+ *
+ * Containers taller than the visible area (short phones) can be scrolled freely
+ * inside, so the browser may come to rest part-way into the next or previous one.
+ * Switching to another container therefore always re-aligns its top to the snap line.
  */
 import {
   ACTIVE_CHANGE,
@@ -29,8 +33,10 @@ function setActive(scroller: HTMLElement, active: HTMLElement | undefined) {
   document.dispatchEvent(new CustomEvent(ACTIVE_CHANGE, { detail: { index: all.indexOf(active) } }));
 }
 
+const snapLine = (scroller: HTMLElement) => scroller.getBoundingClientRect().top + snapOffset(scroller);
+
 function nearestToSnapLine(scroller: HTMLElement) {
-  const line = scroller.getBoundingClientRect().top + snapOffset(scroller);
+  const line = snapLine(scroller);
   let best: HTMLElement | undefined;
   let bestDistance = Infinity;
   for (const cf of containers(scroller)) {
@@ -41,6 +47,40 @@ function nearestToSnapLine(scroller: HTMLElement) {
     }
   }
   return best;
+}
+
+/** The container the snap line currently runs through (a tall one can span it). */
+function containerAtSnapLine(scroller: HTMLElement) {
+  const line = snapLine(scroller) + 1;
+  return containers(scroller).find((cf) => {
+    const r = cf.getBoundingClientRect();
+    return r.top <= line && r.bottom > line;
+  });
+}
+
+/** The container the user last came to rest in (free scrolling inside it is fine). */
+let home: HTMLElement | null = null;
+const SUPPORTS_SCROLLEND = 'onscrollend' in window;
+
+/**
+ * Scrolling has come to rest: activate the container at the snap line. When `align`
+ * is set and that is a different container than the last one rested in, align its
+ * top to the snap line.
+ */
+function settle(scroller: HTMLElement, align: boolean) {
+  window.clearTimeout(settleTimer);
+  const target = containerAtSnapLine(scroller) ?? nearestToSnapLine(scroller);
+  if (!target) return;
+  setActive(scroller, target);
+  if (!align) return;
+  if (scroller.dataset.snap === 'off' || returningToTop) {
+    home = null; // in the free-scrolling profile area
+    return;
+  }
+  if (target === home) return;
+  home = target;
+  const offset = target.getBoundingClientRect().top - snapLine(scroller);
+  if (Math.abs(offset) > 1) scroller.scrollBy({ top: offset, behavior: scrollBehavior() });
 }
 
 /** Extra space after the last container so it can snap to the top as well. */
@@ -87,7 +127,9 @@ export function scrollToTop(scroller: HTMLElement) {
 onScrollerScroll((scroller) => {
   updateSnapping(scroller);
   window.clearTimeout(settleTimer);
-  settleTimer = window.setTimeout(() => setActive(scroller, nearestToSnapLine(scroller)), SETTLE_MS);
+  // Highlight as soon as scrolling pauses; aligning waits for `scrollend` (the timer
+  // also fires during slow flings) unless the browser doesn't support it.
+  settleTimer = window.setTimeout(() => settle(scroller, !SUPPORTS_SCROLLEND), SETTLE_MS);
 });
 
 // `scrollend` (where supported) settles immediately.
@@ -99,8 +141,7 @@ document.addEventListener(
       // A back-to-top scroll interrupted by the user ends here: resume normal snapping.
       returningToTop = false;
       updateSnapping(target);
-      window.clearTimeout(settleTimer);
-      setActive(target, nearestToSnapLine(target));
+      settle(target, true);
     }
   },
   { capture: true },
@@ -117,6 +158,7 @@ onPageLoad(() => {
   const scroller = getScroller();
   if (!scroller) return;
   returningToTop = false;
+  home = null;
   scroller.scrollTop = 0;
   updateTail(scroller);
   updateSnapping(scroller);

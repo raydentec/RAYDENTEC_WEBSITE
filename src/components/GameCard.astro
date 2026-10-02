@@ -168,8 +168,11 @@ const { eyebrow, title, description, platform, status, href, buttonLabel, captio
       align-items: stretch;
       gap: 14px;
     }
+    /* Full width, ↗ right after the label (the right end stays clear for the ↑ square). */
     .card :global(.card__btn) {
       width: 100%;
+      justify-content: flex-start;
+      gap: 14px;
       --btn-font: 22px;
       padding: 0 18px 0 24px;
     }

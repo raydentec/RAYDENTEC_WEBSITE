@@ -126,9 +126,22 @@ const { variant, number, active = false, height, label } = Astro.props;
   /* Mobile: number tab above the body. */
   @media (max-width: 767px) {
     .cf {
+      --edge-w: 1.5px;
       height: auto;
       display: flex;
       flex-direction: column;
+      /*
+       * Transparent space below the box (still part of the container, so it scrolls and
+       * snaps with it). Lets very short phones scroll the container until its button
+       * clears the menu bar. Sized as the distance from the menu bar's top edge down to
+       * the bottom of the scroll area (gap above footer + bar height), minus the box's
+       * border: scrolled to the container's end, the box's bottom border sits exactly
+       * under the menu bar's top border.
+       */
+      padding-bottom: calc(var(--menu-bar-bottom) - var(--footer-h) + var(--ctl-h) - var(--edge-w));
+    }
+    .cf.is-active {
+      --edge-w: 2px;
     }
     .cf__tab {
       position: relative;
@@ -158,6 +171,7 @@ const { variant, number, active = false, height, label } = Astro.props;
     .cf__body {
       position: relative;
       inset: auto;
+      /* The bordered black box ends 14px below the last row. */
       padding: 14px;
     }
     .is-active .cf__body {
