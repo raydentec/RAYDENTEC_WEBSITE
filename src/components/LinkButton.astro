@@ -1,0 +1,33 @@
+---
+/**
+ * Outline/primary button with ↗. A null or "[PLACEHOLDER]" href renders a
+ * disabled, non-interactive button (e.g. the unpublished Discord invite).
+ */
+import Icon from './Icon.astro';
+import { isPlaceholder, linkAttrs } from '../lib/content';
+
+interface Props {
+  href: string | null | undefined;
+  label: string;
+  variant?: 'primary' | 'outline';
+  class?: string;
+  iconSize?: number;
+}
+
+const { href, label, variant = 'outline', class: className, iconSize = 26 } = Astro.props;
+const classes = ['btn', `btn--${variant}`, className];
+---
+
+{
+  isPlaceholder(href) ? (
+    <span class:list={classes} role="link" aria-disabled="true">
+      <span>{label}</span>
+      <Icon name="arrowUR" size={iconSize} />
+    </span>
+  ) : (
+    <a class:list={classes} {...linkAttrs(href)}>
+      <span>{label}</span>
+      <Icon name="arrowUR" size={iconSize} />
+    </a>
+  )
+}

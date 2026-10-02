@@ -1,0 +1,51 @@
+{
+  "page": "games",
+  "containerVariant": "game",
+  "_note": "Placeholder entries. Replace bracketed values with real games; add/remove items freely.",
+  "items": [
+    {
+      "eyebrow": "Game · [GENRE]",
+      "title": "[GAME TITLE 1]",
+      "description": "[One or two lines pitching the game and its world.]",
+      "platform": "[PLATFORM]",
+      "status": "[STATUS]",
+      "href": "[URL]",
+      "buttonLabel": "VIEW GAME",
+      "caption": "Trailer, devlog and builds",
+      "image": "assets/placeholder-render.jpg"
+    },
+    {
+      "eyebrow": "Game · [GENRE]",
+      "title": "[GAME TITLE 2]",
+      "description": "[One or two lines pitching the game and its world.]",
+      "platform": "[PLATFORM]",
+      "status": "[STATUS]",
+      "href": "[URL]",
+      "buttonLabel": "VIEW GAME",
+      "caption": "Trailer, devlog and builds",
+      "image": "assets/placeholder-render.jpg"
+    },
+    {
+      "eyebrow": "Game · [GENRE]",
+      "title": "[GAME TITLE 3]",
+      "description": "[One or two lines pitching the game and its world.]",
+      "platform": "[PLATFORM]",
+      "status": "[STATUS]",
+      "href": "[URL]",
+      "buttonLabel": "VIEW GAME",
+      "caption": "Trailer, devlog and builds",
+      "image": "assets/placeholder-render.jpg"
+    },
+    {
+      "eyebrow": "Game · [GENRE]",
+      "title": "[GAME TITLE 4]",
+      "description": "[One or two lines pitching the game and its world.]",
+      "platform": "[PLATFORM]",
+      "status": "[STATUS]",
+      "href": "[URL]",
+      "buttonLabel": "VIEW GAME",
+      "caption": "Trailer, devlog and builds",
+      "image": "assets/placeholder-render.jpg"
+    }
+  ]
+}

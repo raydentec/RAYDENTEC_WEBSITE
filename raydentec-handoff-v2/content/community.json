@@ -1,0 +1,142 @@
+{
+  "page": "community",
+  "containerVariant": "community",
+  "items": [
+    {
+      "platform": "youtube",
+      "icon": "youtube",
+      "color": "#FF0000",
+      "eyebrow": "Social Media",
+      "title": "RAYDEN_YouTube",
+      "description": "Starting from nothing, link into the creative process, as I fire up new worlds, games and tech.",
+      "caption": "Watch videos on my channel",
+      "href": "https://www.youtube.com/@raydentec",
+      "image": "assets/placeholder-render.jpg",
+      "buttonLabel": "OPEN LINK"
+    },
+    {
+      "platform": "twitch",
+      "icon": "twitch",
+      "color": "#9146FF",
+      "eyebrow": "Live Stream",
+      "title": "RAYDEN_Twitch",
+      "description": "Go live with me while new worlds, games and tech take shape in real time.",
+      "caption": "Join the live streams",
+      "href": "https://www.twitch.tv/raydentec",
+      "image": "assets/placeholder-render.jpg",
+      "buttonLabel": "OPEN LINK"
+    },
+    {
+      "platform": "instagram",
+      "icon": "instagram",
+      "color": "#E1306C",
+      "eyebrow": "Social Media",
+      "title": "RAYDEN_Instagram",
+      "description": "Renders, stills and behind-the-scenes looks at the worlds in progress.",
+      "caption": "See the latest renders",
+      "href": "https://www.instagram.com/raydentec/",
+      "image": "assets/placeholder-render.jpg",
+      "buttonLabel": "OPEN LINK"
+    },
+    {
+      "platform": "x",
+      "icon": "x",
+      "color": "#000000",
+      "eyebrow": "Social Media",
+      "title": "RAYDEN_X",
+      "description": "Quick updates, devlog notes and announcements as things ship.",
+      "caption": "Follow for updates",
+      "href": "https://x.com/raydentec",
+      "image": "assets/placeholder-render.jpg",
+      "buttonLabel": "OPEN LINK"
+    },
+    {
+      "platform": "github",
+      "icon": "code",
+      "color": "#24292F",
+      "eyebrow": "Code",
+      "title": "RAYDEN_GitHub",
+      "description": "Code, tools and experiments behind the games and projects.",
+      "caption": "Browse the repositories",
+      "href": "https://github.com/raydentec",
+      "image": "assets/placeholder-render.jpg",
+      "buttonLabel": "OPEN LINK"
+    },
+    {
+      "platform": "artstation",
+      "icon": "brush",
+      "color": "#13AFF0",
+      "eyebrow": "Portfolio",
+      "title": "RAYDEN_ArtStation",
+      "description": "Portfolio of characters, environments and concept art.",
+      "caption": "View the portfolio",
+      "href": "https://www.artstation.com/raydentec",
+      "image": "assets/placeholder-render.jpg",
+      "buttonLabel": "OPEN LINK"
+    },
+    {
+      "platform": "discord",
+      "icon": "chat",
+      "color": "#5865F2",
+      "eyebrow": "Community",
+      "title": "RAYDEN_Discord",
+      "description": "Hang out with the community and follow along with development.",
+      "caption": "Invite link coming soon",
+      "href": null,
+      "image": "assets/placeholder-render.jpg",
+      "buttonLabel": "OPEN LINK",
+      "todo": "Discord invite URL not published yet — render button disabled until set."
+    },
+    {
+      "platform": "email",
+      "icon": "mail",
+      "color": "#CC181E",
+      "eyebrow": "Contact",
+      "title": "info@raydentec.com",
+      "description": "For collaborations, press and business inquiries.",
+      "caption": "Get in touch",
+      "href": "mailto:info@raydentec.com",
+      "image": "assets/placeholder-render.jpg",
+      "buttonLabel": "SEND EMAIL"
+    },
+    {
+      "type": "linkGrid",
+      "eyebrow": "More",
+      "title": "More links",
+      "links": [
+        {
+          "label": "Facebook",
+          "href": "https://www.facebook.com/raydentec"
+        },
+        {
+          "label": "Reddit",
+          "href": "https://www.reddit.com/user/raydentec"
+        },
+        {
+          "label": "Threads",
+          "href": "https://www.threads.com/@raydentec"
+        },
+        {
+          "label": "LinkedIn",
+          "href": "https://www.linkedin.com/company/raydentec/"
+        },
+        {
+          "label": "Gumroad",
+          "href": "https://raydentec.gumroad.com/"
+        },
+        {
+          "label": "Patreon",
+          "href": "https://www.patreon.com/cw/raydentec"
+        },
+        {
+          "label": "TikTok",
+          "href": "https://www.tiktok.com/@raydentec"
+        },
+        {
+          "label": "Snapchat",
+          "href": "https://www.snapchat.com/add/raydentec"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,200 @@
+---
+/**
+ * App shell (HANDOFF §0, §3). Everything except the content column is
+ * `transition:persist`-ed, so ClientRouter navigation only swaps the column:
+ * the background video keeps looping and the sidebar/rail/nav/menus keep state.
+ */
+import { ClientRouter, fade } from 'astro:transitions';
+import '../styles/global.css';
+import Footer from '../components/Footer.astro';
+import MobileHeader from '../components/MobileHeader.astro';
+import MobileMenu from '../components/MobileMenu.astro';
+import Nav from '../components/Nav.astro';
+import Profile from '../components/Profile.astro';
+import Rail from '../components/Rail.astro';
+import ScrollControl from '../components/ScrollControl.astro';
+import Sidebar from '../components/Sidebar.astro';
+import { getSite, type PageId } from '../lib/content';
+
+interface Props {
+  page: PageId;
+  /** Render a visually hidden <h1> (pages whose first container has no h1). */
+  srHeading?: boolean;
+}
+
+const { page, srHeading = true } = Astro.props;
+const site = await getSite();
+const pageLabel = site.pages.find((p) => p.id === page)?.label ?? '';
+const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabel} · ${site.name}`;
+---
+
+<!doctype html>
+<html lang="en" data-sidebar="expanded" transition:animate="none">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content={site.bio} />
+    <meta name="theme-color" content="#000000" />
+    <title>{title}</title>
+    <link rel="icon" type="image/png" href="/assets/logo.png" />
+    <link rel="preload" href="/assets/fonts/sora-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/assets/fonts/sora-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/assets/fonts/chakra-petch-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="/assets/fonts/fonts.css" />
+    <ClientRouter />
+  </head>
+  <body>
+    <!-- Decorative lightning loop (HANDOFF §2.1); src is chosen by scripts/bg-video.ts. -->
+    <video
+      class="bg-video"
+      id="bgVideo"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="auto"
+      aria-hidden="true"
+      poster="/assets/video/lightning-mobile-poster.jpg"
+      transition:persist="bg-video"></video>
+    <div class="top-bar" aria-hidden="true"></div>
+
+    <Nav current={page} />
+    <Rail />
+    <Sidebar />
+    <MobileHeader />
+
+    <main
+      id="scroller"
+      class="scroller"
+      aria-label={`${pageLabel} content`}
+      data-page={page}
+      transition:animate={fade({ duration: '160ms' })}
+    >
+      <div class="mprofile" data-mprofile>
+        <Profile />
+      </div>
+      {srHeading && <h1 class="sr-only">{pageLabel}</h1>}
+      <div class="column" data-column>
+        <slot />
+      </div>
+    </main>
+
+    <div class="track" aria-hidden="true" transition:persist="scroll-track">
+      <div class="track__thumb" data-track-thumb></div>
+    </div>
+    <ScrollControl />
+    <MobileMenu current={page} />
+    <Footer />
+
+    <script>
+      import '../scripts/bg-video';
+      import '../scripts/sidebar';
+      import '../scripts/snap';
+      import '../scripts/scroll-control';
+      import '../scripts/mobile-menu';
+    </script>
+  </body>
+</html>
+
+<style>
+  /* ---------- Content column (the only thing that scrolls on desktop/tablet) ---------- */
+  .scroller {
+    position: fixed;
+    top: var(--content-top);
+    bottom: var(--content-bottom);
+    /* Collapsed: re-centered on the viewport. */
+    left: calc((100vw - var(--content-w)) / 2);
+    width: var(--content-w);
+    overflow: hidden auto;
+    overscroll-behavior: contain;
+    scroll-snap-type: y mandatory;
+    scrollbar-width: none;
+    z-index: 1;
+    transition:
+      left var(--t-sidebar) var(--ease-out),
+      width var(--t-sidebar) var(--ease-out);
+  }
+  .scroller::-webkit-scrollbar {
+    display: none;
+  }
+  .scroller:focus {
+    outline: none;
+  }
+  /* Desktop, sidebar expanded: column sits right of the sidebar (x = 416). */
+  @media (min-width: 1280px) {
+    :global(html[data-sidebar='expanded']) .scroller {
+      left: var(--col-left-expanded);
+      width: var(--content-w-expanded);
+    }
+  }
+
+  .column {
+    display: flex;
+    flex-direction: column;
+    gap: var(--card-gap);
+    /* Lets the last container snap to the top too (set by scripts/snap.ts). */
+    padding-bottom: var(--tail, 0px);
+  }
+
+  .mprofile {
+    display: none;
+  }
+
+  /* ---------- Scroll track ---------- */
+  .track {
+    position: fixed;
+    right: var(--track-right);
+    top: var(--content-top);
+    bottom: var(--content-bottom);
+    width: var(--track-w);
+    background: rgba(255, 255, 255, 0.06);
+    z-index: 1;
+    pointer-events: none;
+  }
+  .track__thumb {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 0;
+    background: var(--c-red);
+    will-change: transform;
+  }
+
+  /* ---------- Mobile ---------- */
+  @media (max-width: 767px) {
+    .scroller {
+      top: var(--top-bar);
+      bottom: var(--footer-h);
+      left: 0;
+      width: 100%;
+      padding: 24px var(--gutter) 0;
+      /* Containers snap just below the fixed header line. */
+      scroll-padding-top: calc(var(--header-h) - var(--top-bar));
+      transition: none;
+    }
+    /* Content scrolls under the header and is clipped at its bottom edge. */
+    :global(html[data-mheader='on']) .scroller {
+      clip-path: inset(calc(var(--header-h) - var(--top-bar)) 0 0 0);
+    }
+    /* At the top only the profile shows: it fills the scroll area down to the footer. */
+    .mprofile {
+      display: block;
+      min-height: calc(100dvh - var(--top-bar) - var(--footer-h) - 24px);
+      padding-bottom: 40px;
+      scroll-snap-align: start;
+    }
+    .column {
+      padding-bottom: max(var(--tail, 0px), calc(var(--ctl-bottom) - var(--footer-h) + var(--ctl-h) + 16px));
+    }
+    .track {
+      top: var(--header-h);
+      bottom: calc(var(--menu-bar-bottom) + var(--ctl-h) + 2px);
+      opacity: 0;
+      transition: opacity var(--t-fade) ease;
+    }
+    :global(html[data-mheader='on']) .track {
+      opacity: 1;
+    }
+  }
+</style>

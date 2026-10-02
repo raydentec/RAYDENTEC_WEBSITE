@@ -1,0 +1,69 @@
+{
+  "name": "RAYDEN",
+  "handle": "@RAYDENTEC",
+  "tagline": "Creator of Virtual Worlds",
+  "bio": "On a creative path to spark new worlds into existence using art, design and code.",
+  "joinPrompt": "Join me on this journey:",
+  "ctas": [
+    {
+      "label": "WATCH MY VIDEOS",
+      "href": "https://www.youtube.com/@raydentec",
+      "variant": "primary"
+    },
+    {
+      "label": "CONNECT ON SOCIALS",
+      "href": "/community",
+      "variant": "secondary"
+    }
+  ],
+  "sidebarSocials": [
+    {
+      "icon": "youtube",
+      "label": "YouTube",
+      "href": "https://www.youtube.com/@raydentec"
+    },
+    {
+      "icon": "instagram",
+      "label": "Instagram",
+      "href": "https://www.instagram.com/raydentec/"
+    },
+    {
+      "icon": "x",
+      "label": "X",
+      "href": "https://x.com/raydentec"
+    },
+    {
+      "icon": "globe",
+      "label": "Website",
+      "href": "https://www.raydentec.com/"
+    },
+    {
+      "icon": "mail",
+      "label": "Email",
+      "href": "mailto:info@raydentec.com"
+    }
+  ],
+  "pages": [
+    {
+      "id": "start",
+      "label": "Start"
+    },
+    {
+      "id": "games",
+      "label": "Games"
+    },
+    {
+      "id": "projects",
+      "label": "Projects"
+    },
+    {
+      "id": "community",
+      "label": "Community"
+    }
+  ],
+  "footer": {
+    "copyright": "© 2026 RAYDENTEC. All rights reserved.",
+    "legalLabel": "Legal Info",
+    "legalHref": "/legal"
+  }
+}

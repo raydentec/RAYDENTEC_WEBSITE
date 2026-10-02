@@ -1,0 +1,137 @@
+---
+/**
+ * Mobile bottom page menu (HANDOFF §9): bar with the current page + ☰, and a
+ * panel that grows up from it. Driven by scripts/mobile.ts (<html data-mmenu="open">).
+ */
+import Icon from './Icon.astro';
+import { getSite, ROUTES, type PageId } from '../lib/content';
+
+interface Props {
+  current: PageId;
+}
+
+const { current } = Astro.props;
+const site = await getSite();
+const currentLabel = site.pages.find((p) => p.id === current)?.label ?? '';
+---
+
+<div class="mmenu" transition:persist="mobile-menu">
+  <div class="mmenu__dimmer" data-mmenu-dimmer aria-hidden="true"></div>
+  <nav id="mmenu-panel" class="mmenu__panel" aria-label="Pages">
+    {
+      site.pages.map((p, i) => (
+        <a class="mmenu__row" href={ROUTES[p.id]} data-page={p.id} aria-current={p.id === current ? 'page' : undefined}>
+          <span>{p.label}</span>
+          <span class="mmenu__index" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+        </a>
+      ))
+    }
+  </nav>
+  <button
+    type="button"
+    class="mmenu__bar"
+    data-mmenu-toggle
+    aria-controls="mmenu-panel"
+    aria-expanded="false"
+    aria-label="Open page menu"
+  >
+    <span class="mmenu__current" data-mmenu-current>{currentLabel}</span>
+    <span class="mmenu__icon mmenu__icon--open"><Icon name="menu" size={30} /></span>
+    <span class="mmenu__icon mmenu__icon--close"><Icon name="close" size={30} /></span>
+  </button>
+</div>
+
+<style>
+  .mmenu {
+    display: none;
+  }
+  @media (max-width: 767px) {
+    .mmenu {
+      display: block;
+    }
+  }
+  .mmenu__dimmer {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 6;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity var(--t-fade) ease,
+      visibility 0s linear var(--t-fade);
+  }
+  .mmenu__panel {
+    position: fixed;
+    left: var(--gutter);
+    right: var(--gutter);
+    bottom: calc(var(--menu-bar-bottom) + var(--ctl-h) - 2px);
+    display: flex;
+    flex-direction: column;
+    padding: 8px 0;
+    background: var(--c-black);
+    z-index: 7;
+    visibility: hidden;
+    clip-path: inset(100% 0 0 0);
+    transition:
+      clip-path var(--t-ctl) var(--ease-out),
+      visibility 0s linear var(--t-ctl);
+  }
+  :global(html[data-mmenu='open']) .mmenu__dimmer {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity var(--t-fade) ease;
+  }
+  :global(html[data-mmenu='open']) .mmenu__panel {
+    visibility: visible;
+    clip-path: inset(0 0 0 0);
+    transition: clip-path var(--t-ctl) var(--ease-out);
+  }
+  .mmenu__row {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px 0 22px;
+    font-weight: 600;
+    font-size: 26px;
+    letter-spacing: -0.04em;
+    color: rgba(255, 255, 255, 0.5);
+  }
+  .mmenu__row[aria-current='page'] {
+    padding-left: 16px;
+    border-left: 6px solid var(--c-red);
+    background: rgba(204, 24, 30, 0.12);
+    color: var(--c-white);
+  }
+  .mmenu__index {
+    font-family: var(--f-mono);
+    font-size: 13px;
+    letter-spacing: 0;
+    color: var(--c-grey);
+  }
+  .mmenu__bar {
+    position: fixed;
+    left: var(--gutter);
+    right: var(--gutter);
+    bottom: var(--menu-bar-bottom);
+    height: var(--ctl-h);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18px 0 22px;
+    border: 2px solid var(--c-red);
+    background: var(--c-black);
+    font-weight: 600;
+    font-size: 22px;
+    letter-spacing: -0.04em;
+    z-index: 7;
+  }
+  .mmenu__icon--close,
+  :global(html[data-mmenu='open']) .mmenu__icon--open {
+    display: none;
+  }
+  :global(html[data-mmenu='open']) .mmenu__icon--close {
+    display: block;
+  }
+</style>

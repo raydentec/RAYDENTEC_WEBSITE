@@ -1,0 +1,57 @@
+---
+/** Top nav, centered on the viewport. Persisted; aria-current is updated by scripts/mobile-menu.ts. */
+import { getSite, ROUTES, type PageId } from '../lib/content';
+
+interface Props {
+  current: PageId;
+}
+
+const { current } = Astro.props;
+const site = await getSite();
+---
+
+<nav class="topnav" aria-label="Main" transition:persist="nav">
+  {
+    site.pages.map((p) => (
+      <a class="topnav__link" href={ROUTES[p.id]} data-page={p.id} aria-current={p.id === current ? 'page' : undefined}>
+        {p.label}
+      </a>
+    ))
+  }
+</nav>
+
+<style>
+  .topnav {
+    position: fixed;
+    top: var(--nav-top);
+    left: 0;
+    right: 0;
+    height: var(--nav-h);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--nav-gap);
+    z-index: 3;
+    pointer-events: none;
+  }
+  .topnav__link {
+    pointer-events: auto;
+    font-weight: 600;
+    font-size: var(--nav-size);
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: rgba(255, 255, 255, 0.5);
+    transition: color var(--t-fade);
+  }
+  .topnav__link:hover {
+    color: rgba(255, 255, 255, 0.8);
+  }
+  .topnav__link[aria-current='page'] {
+    color: var(--c-white);
+  }
+  @media (max-width: 767px) {
+    .topnav {
+      display: none;
+    }
+  }
+</style>

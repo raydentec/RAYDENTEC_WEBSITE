@@ -1,0 +1,127 @@
+---
+/**
+ * Expanded profile sidebar.
+ * Desktop: fixed column at the left; hidden when <html data-sidebar="collapsed">.
+ * Tablet: 400px overlay panel over the content, shown when <html data-overlay="open">.
+ * Mobile: not rendered (the profile is part of the scroll flow instead).
+ */
+import Icon from './Icon.astro';
+import Profile from './Profile.astro';
+---
+
+<aside id="sidebar" class="sidebar" aria-label="Profile" transition:persist="sidebar">
+  <Profile />
+  <button
+    type="button"
+    class="sidebar__collapse ctl"
+    data-sidebar-collapse
+    aria-controls="sidebar"
+    aria-label="Collapse profile sidebar"
+  >
+    <Icon name="arrowLeft" size={28} />
+  </button>
+</aside>
+<div class="sidebar-dimmer" data-sidebar-dimmer aria-hidden="true" transition:persist="sidebar-dimmer"></div>
+
+<style>
+  .sidebar {
+    position: fixed;
+    left: var(--gutter);
+    top: var(--nav-top);
+    bottom: var(--content-bottom);
+    width: var(--sidebar-w);
+    z-index: 4;
+    overflow: hidden auto;
+    scrollbar-width: none;
+    transition:
+      opacity var(--t-fade) ease,
+      visibility 0s linear 0s;
+  }
+  .sidebar::-webkit-scrollbar {
+    display: none;
+  }
+  :global(html[data-sidebar='collapsed']) .sidebar {
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity var(--t-fade) ease,
+      visibility 0s linear var(--t-fade);
+  }
+
+  /* ← sits beside the nav row: left 315px in viewport = 263px into the sidebar. */
+  .sidebar__collapse {
+    position: absolute;
+    left: 263px;
+    top: 0;
+    width: var(--ctl-h);
+    height: var(--ctl-h);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-color: rgba(255, 255, 255, 0.85);
+    z-index: 6;
+  }
+
+  .sidebar-dimmer {
+    display: none;
+  }
+
+  /* Tablet: overlay panel. */
+  @media (max-width: 1279px) {
+    .sidebar,
+    :global(html[data-sidebar='collapsed']) .sidebar {
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 400px;
+      padding: 44px 0 24px 50px;
+      background: var(--c-black);
+      box-shadow: 12px 0 40px rgba(0, 0, 0, 0.6);
+      z-index: 9;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateX(-24px);
+      transition:
+        opacity var(--t-fade) ease,
+        transform var(--t-sidebar) var(--ease-out),
+        visibility 0s linear var(--t-sidebar);
+    }
+    :global(html[data-overlay='open']) .sidebar {
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+      transition:
+        opacity var(--t-fade) ease,
+        transform var(--t-sidebar) var(--ease-out),
+        visibility 0s linear 0s;
+    }
+    .sidebar__collapse {
+      left: 303px;
+      top: 44px;
+    }
+    .sidebar-dimmer {
+      display: block;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 8;
+      opacity: 0;
+      visibility: hidden;
+      transition:
+        opacity var(--t-fade) ease,
+        visibility 0s linear var(--t-fade);
+    }
+    :global(html[data-overlay='open']) .sidebar-dimmer {
+      opacity: 1;
+      visibility: visible;
+      transition: opacity var(--t-fade) ease;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .sidebar,
+    .sidebar-dimmer {
+      display: none;
+    }
+  }
+</style>

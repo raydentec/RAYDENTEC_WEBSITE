@@ -1,0 +1,32 @@
+---
+/**
+ * Inline SVG from public/assets/icons/<name>.svg (icons use currentColor).
+ * Read at build time so the markup is inlined, not fetched.
+ */
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+interface Props {
+  name: string;
+  size?: number;
+  class?: string;
+}
+
+const { name, size = 24, class: className } = Astro.props;
+
+const cache = ((globalThis as { __iconCache?: Map<string, string> }).__iconCache ??= new Map());
+let svg = cache.get(name);
+if (!svg) {
+  // Only the root <svg> tag loses its width/height/xmlns (inner <rect>s keep theirs).
+  svg = readFileSync(join(process.cwd(), 'public/assets/icons', `${name}.svg`), 'utf8')
+    .trim()
+    .replace(/^<svg[^>]*>/, (tag) => tag.replace(/\s(width|height|xmlns)="[^"]*"/g, ''));
+  cache.set(name, svg);
+}
+const html = svg.replace(
+  '<svg',
+  `<svg width="${size}" height="${size}" aria-hidden="true" focusable="false"${className ? ` class="${className}"` : ''}`,
+);
+---
+
+<Fragment set:html={html} />

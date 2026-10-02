@@ -1,0 +1,170 @@
+---
+/**
+ * The shared container frame (HANDOFF §5): highlight on the LEFT, number at the TOP.
+ *
+ *   active   → 2px red body border, solid red column (num-col wide) down the left,
+ *              black number.
+ *   inactive → 1.5px dim-red body border, notch tab (num-col × notch-h) open to the
+ *              right, number in 60% red, body content at 42% opacity.
+ *
+ * Desktop/tablet sizes come from tokens (--num-col, --notch-h, --card-h).
+ * Mobile: the number moves into a 38px tab above the body (full-width red bar when
+ * active, 86px notch when inactive).
+ *
+ * `number` is omitted for the Start page (same frame, unnumbered).
+ * The active state is toggled at runtime by scripts/snap.ts (`.is-active`).
+ */
+interface Props {
+  variant: 'community' | 'game' | 'project' | 'start';
+  number?: number;
+  active?: boolean;
+  /** Desktop/tablet height override (Start intro 530, explore 330). */
+  height?: number;
+  label?: string;
+}
+
+const { variant, number, active = false, height, label } = Astro.props;
+---
+
+<article
+  class:list={['cf', `cf--${variant}`, { 'is-active': active, 'cf--unnumbered': number === undefined }]}
+  data-cf
+  aria-label={label}
+  style={height ? `--cf-h: ${height}px` : undefined}
+>
+  <div class="cf__tab" aria-hidden={number === undefined ? 'true' : undefined}>
+    {number !== undefined && <span class="cf__num">{number}</span>}
+  </div>
+  <div class="cf__body">
+    <div class="cf__content">
+      <slot />
+    </div>
+  </div>
+</article>
+
+<style>
+  .cf {
+    position: relative;
+    width: 100%;
+    height: var(--cf-h, var(--card-h));
+    flex-shrink: 0;
+    scroll-snap-align: start;
+  }
+
+  .cf__body {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--num-col);
+    right: 0;
+    border: 1.5px solid var(--c-red-dim);
+    background: var(--c-black);
+    overflow: hidden;
+    transition: border-color var(--t-state) ease;
+  }
+  .cf__content {
+    height: 100%;
+    opacity: var(--o-inactive);
+    transition: opacity var(--t-state) ease;
+  }
+
+  /* Inactive: notch tab, open to the right so it merges with the body. */
+  .cf__tab {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: calc(var(--num-col) + 2px);
+    height: var(--notch-h);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 12px;
+    border: 1.5px solid var(--c-red-dim);
+    border-right: none;
+    background: var(--c-black);
+    z-index: 2;
+    transition:
+      height var(--t-state) var(--ease-out),
+      background-color var(--t-state) ease,
+      border-color var(--t-state) ease,
+      padding var(--t-state) ease;
+  }
+  .cf__num {
+    font-family: var(--f-ui);
+    font-weight: 700;
+    font-size: 44px;
+    line-height: 1;
+    color: rgba(204, 24, 30, 0.6);
+    transition: color var(--t-state) ease;
+  }
+
+  /* Active: solid red column down the full left side. */
+  .is-active .cf__tab {
+    height: 100%;
+    padding-top: 14px;
+    background: var(--c-red);
+    border-color: var(--c-red);
+  }
+  .is-active .cf__num {
+    color: var(--c-black);
+  }
+  .is-active .cf__body {
+    border: 2px solid var(--c-red);
+  }
+  .is-active .cf__content,
+  .cf:hover .cf__content,
+  .cf:focus-within .cf__content {
+    opacity: 1;
+  }
+
+  @media (max-width: 1279px) {
+    .cf__num {
+      font-size: 38px;
+    }
+  }
+
+  /* Mobile: number tab above the body. */
+  @media (max-width: 767px) {
+    .cf {
+      height: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .cf__tab {
+      position: relative;
+      width: 86px;
+      height: 38px;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 0 14px;
+      margin-bottom: -1.5px;
+      border: 1.5px solid var(--c-red-dim);
+      border-bottom: none;
+      transition:
+        width var(--t-state) var(--ease-out),
+        background-color var(--t-state) ease,
+        border-color var(--t-state) ease;
+    }
+    .cf__num {
+      font-size: 34px;
+      color: var(--c-red);
+    }
+    .is-active .cf__tab {
+      width: 100%;
+      height: 38px;
+      padding: 0 14px;
+      margin-bottom: 0;
+    }
+    .cf__body {
+      position: relative;
+      inset: auto;
+      padding: 14px;
+    }
+    .is-active .cf__body {
+      border-top: none;
+    }
+    .cf__content {
+      height: auto;
+    }
+  }
+</style>

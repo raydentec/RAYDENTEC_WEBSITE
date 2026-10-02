@@ -1,0 +1,55 @@
+{
+  "page": "start",
+  "containerVariant": "start",
+  "numbered": false,
+  "items": [
+    {
+      "type": "intro",
+      "eyebrow": "Introduction",
+      "title": "Creator of Virtual Worlds",
+      "description": "On a creative path to spark new worlds into existence using art, design and code.",
+      "media": "assets/placeholder-render.jpg",
+      "mediaNote": "Showreel still or muted video loop",
+      "actions": [
+        {
+          "label": "EXPLORE GAMES",
+          "href": "/games",
+          "variant": "primary"
+        },
+        {
+          "label": "SEE PROJECTS",
+          "href": "/projects",
+          "variant": "secondary"
+        }
+      ]
+    },
+    {
+      "type": "explore",
+      "eyebrow": "Explore",
+      "title": "What you'll find here",
+      "columns": [
+        {
+          "icon": "gamepad",
+          "title": "Games",
+          "description": "Worlds you can play, from first prototype to release.",
+          "href": "/games",
+          "linkLabel": "GO TO GAMES"
+        },
+        {
+          "icon": "cube",
+          "title": "Projects",
+          "description": "Tools, tech and experiments beyond games.",
+          "href": "/projects",
+          "linkLabel": "GO TO PROJECTS"
+        },
+        {
+          "icon": "users",
+          "title": "Community",
+          "description": "Videos, streams and every place to follow along.",
+          "href": "/community",
+          "linkLabel": "GO TO COMMUNITY"
+        }
+      ]
+    }
+  ]
+}

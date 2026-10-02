@@ -1,0 +1,18 @@
+---
+import ContainerFrame from '../components/ContainerFrame.astro';
+import GameCard from '../components/GameCard.astro';
+import Shell from '../layouts/Shell.astro';
+import { getItems } from '../lib/content';
+
+const items = await getItems('games');
+---
+
+<Shell page="games">
+  {
+    items.map(({ data }, i) => (
+      <ContainerFrame variant="game" number={i + 1} active={i === 0} label={data.title}>
+        <GameCard {...data} />
+      </ContainerFrame>
+    ))
+  }
+</Shell>

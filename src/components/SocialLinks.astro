@@ -1,0 +1,64 @@
+---
+import Icon from './Icon.astro';
+import { getSite, linkAttrs } from '../lib/content';
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+const site = await getSite();
+---
+
+<ul class:list={['socials', className]} aria-label="Social links">
+  {
+    site.sidebarSocials.map((s) => (
+      <li>
+        <a class="socials__link" aria-label={s.label} {...linkAttrs(s.href)}>
+          <Icon name={s.icon} size={22} />
+        </a>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .socials {
+    display: flex;
+    gap: 7px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .socials__link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 45px;
+    height: 45px;
+    background: var(--c-social-tile);
+    color: var(--c-white);
+    transition: background-color var(--t-fade);
+  }
+  .socials__link:hover {
+    background: var(--c-red);
+  }
+  @media (max-width: 1279px) {
+    .socials {
+      gap: 8px;
+    }
+    .socials__link {
+      width: 44px;
+      height: 44px;
+    }
+  }
+  @media (max-width: 767px) {
+    .socials {
+      gap: 7px;
+    }
+    .socials__link {
+      width: 44px;
+      height: 44px;
+    }
+  }
+</style>

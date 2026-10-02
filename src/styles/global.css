@@ -1,0 +1,212 @@
+/*
+ * Global styles. Design tokens live in tokens.css (copied verbatim from the
+ * handoff, incl. .bg-video); fonts are linked from /assets/fonts/fonts.css.
+ * Only shell-level layout values derived from the artboards are added here.
+ */
+@import './tokens.css';
+
+:root {
+  --top-bar: 6px;
+  --nav-h: 56px;
+  --nav-size: 36px;
+  --nav-gap: 36px;
+  /* Distance of the content column / scroll control bottoms from the viewport bottom. */
+  --content-bottom: calc(var(--footer-h) + 31px);
+  --ctl-bottom: calc(var(--footer-h) + 31px);
+  --ctl-right: 31px;
+  --ctl-w: 318px;
+  --ctl-font: 24px;
+  --track-right: 14px;
+  --track-w: 6px;
+  --expand-h: 300px;
+  --col-left-expanded: 416px;
+  /* Expanded sidebar leaves 416px on the left; shrink the column on narrow desktops. */
+  --content-w-expanded: min(var(--content-w), calc(100vw - var(--col-left-expanded) - 30px));
+  --t-fade: 160ms;
+  --t-ctl: 200ms;
+  color-scheme: dark;
+}
+@media (min-width: 768px) and (max-width: 1279px) {
+  :root {
+    --nav-size: 32px;
+    --nav-gap: 30px;
+    --content-w: min(776px, calc(100vw - 192px));
+    --content-bottom: calc(var(--footer-h) + 36px);
+    --ctl-bottom: calc(var(--footer-h) + 32px);
+    --ctl-right: var(--gutter);
+    --ctl-w: 306px;
+    --ctl-font: 22px;
+    --expand-h: 287px;
+  }
+}
+@media (max-width: 767px) {
+  :root {
+    --header-h: 121px;
+    --menu-bar-bottom: calc(var(--footer-h) + 16px);
+    --ctl-bottom: calc(var(--menu-bar-bottom) + var(--ctl-h) + 12px);
+    --ctl-right: var(--gutter);
+    --track-right: 7px;
+    --track-w: 5px;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--bg-page);
+  background-attachment: fixed;
+  color: var(--c-white);
+  font-family: var(--f-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+img,
+svg,
+video {
+  display: block;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+h1,
+h2,
+h3,
+p,
+dl,
+dd {
+  margin: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--c-white);
+  outline-offset: 3px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 6px red bar across the very top of the viewport. */
+.top-bar {
+  position: fixed;
+  inset: 0 0 auto;
+  height: var(--top-bar);
+  background: var(--c-red);
+  z-index: 5;
+}
+
+/* ---------- Buttons ---------- */
+
+.btn {
+  --btn-h: 56px;
+  --btn-font: 21px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  height: var(--btn-h);
+  padding: 0 20px 0 28px;
+  border: 2px solid var(--c-red);
+  background: transparent;
+  color: var(--c-red);
+  font-family: var(--f-ui);
+  font-weight: 600;
+  font-size: var(--btn-font);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  line-height: 1;
+  transition:
+    background-color var(--t-fade),
+    color var(--t-fade);
+}
+.btn svg {
+  flex-shrink: 0;
+}
+.btn--primary {
+  background: var(--c-red);
+  color: var(--c-black);
+}
+.btn--outline:hover,
+.btn--outline:focus-visible {
+  background: var(--c-red);
+  color: var(--c-black);
+}
+.btn--primary:hover {
+  background: var(--c-black);
+  color: var(--c-red);
+}
+.btn[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.btn[aria-disabled='true']:hover {
+  background: transparent;
+  color: var(--c-red);
+}
+
+/* Glass control: SCROLL / BACK TO TOP, EXPAND, ← collapse. */
+.ctl {
+  border: 2px solid var(--c-white);
+  background: var(--c-control-fill);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  color: var(--c-white);
+}
+
+.eyebrow {
+  font-family: var(--f-mono);
+  font-weight: 400;
+  font-size: 15px;
+  color: var(--c-grey);
+}
+@media (max-width: 1279px) {
+  .eyebrow {
+    font-size: 13px;
+  }
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0s !important;
+    animation-duration: 0s !important;
+    scroll-behavior: auto !important;
+  }
+}

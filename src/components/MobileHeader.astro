@@ -1,0 +1,106 @@
+---
+/**
+ * Mobile fixed header (HANDOFF §9). Shown by scripts/mobile.ts once the
+ * in-flow profile block scrolls past the header line (<html data-mheader="on">).
+ */
+import Icon from './Icon.astro';
+import { getSite, ROUTES } from '../lib/content';
+
+const site = await getSite();
+---
+
+<header class="mheader" data-mheader transition:persist="mobile-header">
+  <img class="mheader__logo" src="/assets/logo.png" alt="" width="72" height="72" />
+  <div class="mheader__id">
+    <p class="mheader__name">{site.name}</p>
+    <p class="mheader__tagline">{site.tagline}<br /><span class="mheader__handle">{site.handle}</span></p>
+  </div>
+  <a class="mheader__socials" href={ROUTES.community} aria-label="Social links (Community page)">
+    <Icon name="arrowUR" size={22} />
+    <span aria-hidden="true">SOCIALS</span>
+  </a>
+</header>
+
+<style>
+  .mheader {
+    display: none;
+  }
+  @media (max-width: 767px) {
+    .mheader {
+      position: fixed;
+      top: var(--top-bar);
+      left: 0;
+      right: 0;
+      height: calc(var(--header-h) - var(--top-bar));
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 22px var(--gutter) 0;
+      z-index: 5;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-8px);
+      transition:
+        opacity var(--t-fade) ease,
+        transform var(--t-fade) ease,
+        visibility 0s linear var(--t-fade);
+    }
+    :global(html[data-mheader='on']) .mheader {
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+      transition:
+        opacity var(--t-fade) ease,
+        transform var(--t-fade) ease;
+    }
+  }
+  .mheader__logo {
+    width: 72px;
+    height: 72px;
+    flex-shrink: 0;
+  }
+  .mheader__id {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex-grow: 1;
+    min-width: 0;
+    padding-top: 2px;
+  }
+  .mheader__name {
+    font-family: var(--f-name);
+    font-size: 28px;
+    line-height: 1;
+  }
+  .mheader__tagline {
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1.15;
+  }
+  .mheader__handle {
+    color: var(--c-red);
+    font-weight: 700;
+  }
+  .mheader__socials {
+    width: 54px;
+    height: 54px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    border: 2px solid var(--c-red);
+    color: var(--c-red);
+    font-family: var(--f-ui);
+    font-weight: 600;
+    font-size: 9px;
+    transition:
+      background-color var(--t-fade),
+      color var(--t-fade);
+  }
+  .mheader__socials:hover {
+    background: var(--c-red);
+    color: var(--c-black);
+  }
+</style>

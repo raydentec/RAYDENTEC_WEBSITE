@@ -1,0 +1,21 @@
+---
+import ContainerFrame from '../components/ContainerFrame.astro';
+import StartExplore from '../components/StartExplore.astro';
+import StartIntro from '../components/StartIntro.astro';
+import Shell from '../layouts/Shell.astro';
+import { getItems } from '../lib/content';
+
+// Start containers are unnumbered (HANDOFF §5).
+const items = await getItems('start');
+const HEIGHTS = { intro: 530, explore: 330 } as const;
+---
+
+<Shell page="start" srHeading={!items.some(({ data }) => data.type === 'intro')}>
+  {
+    items.map(({ data }, i) => (
+      <ContainerFrame variant="start" active={i === 0} height={HEIGHTS[data.type]} label={data.title}>
+        {data.type === 'intro' ? <StartIntro {...data} /> : <StartExplore {...data} />}
+      </ContainerFrame>
+    ))
+  }
+</Shell>

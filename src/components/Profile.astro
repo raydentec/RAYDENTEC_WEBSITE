@@ -1,0 +1,158 @@
+---
+/**
+ * Profile stack: logo, name, tagline + handle, socials, bio, join prompt, CTAs.
+ * Rendered in the desktop sidebar / tablet overlay and as the first block of
+ * the mobile scroll flow; sizes follow the breakpoint (HANDOFF §4, §8, §9).
+ */
+import Icon from './Icon.astro';
+import SocialLinks from './SocialLinks.astro';
+import { getSite, linkAttrs } from '../lib/content';
+
+const site = await getSite();
+---
+
+<div class="profile">
+  <img class="profile__logo" src="/assets/logo.png" alt="RAYDENTEC logo" width="170" height="170" />
+  <p class="profile__name">{site.name}</p>
+  <p class="profile__tagline">
+    {site.tagline}<br /><span class="profile__handle">{site.handle}</span>
+  </p>
+  <SocialLinks class="profile__socials" />
+  <p class="profile__bio">{site.bio}</p>
+  <p class="profile__join">{site.joinPrompt}</p>
+  <div class="profile__ctas">
+    {
+      site.ctas.map((cta) => (
+        <a class:list={['btn', 'profile__cta', cta.variant === 'primary' ? 'btn--primary' : 'btn--outline']} {...linkAttrs(cta.href)}>
+          <span>{cta.label}</span>
+          <Icon name="arrowUR" size={26} />
+        </a>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  .profile {
+    display: flex;
+    flex-direction: column;
+    width: 320px;
+  }
+  .profile__logo {
+    width: 170px;
+    height: 170px;
+  }
+  .profile__name {
+    margin-top: 16px;
+    font-family: var(--f-name);
+    font-size: 46px;
+    line-height: 1;
+  }
+  .profile__tagline {
+    margin-top: 10px;
+    font-weight: 600;
+    font-size: 22px;
+    line-height: 1.15;
+  }
+  .profile__handle {
+    color: var(--c-red);
+    font-weight: 700;
+  }
+  .profile :global(.profile__socials) {
+    margin-top: 18px;
+  }
+  .profile__bio {
+    margin-top: 20px;
+    font-weight: 500;
+    font-size: 29px;
+    line-height: 0.98;
+    letter-spacing: -0.055em;
+    color: var(--c-grey);
+  }
+  .profile__join {
+    margin-top: 30px;
+    font-weight: 600;
+    font-size: 27px;
+    line-height: 1;
+    letter-spacing: -0.055em;
+  }
+  .profile__ctas {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 20px;
+  }
+  .profile__cta {
+    width: 318px;
+    --btn-font: 18px;
+  }
+
+  /* Tablet overlay panel. */
+  @media (max-width: 1279px) {
+    .profile__logo {
+      width: 162px;
+      height: 162px;
+      outline: 1px solid #3a3a3a;
+    }
+    .profile__name {
+      margin-top: 22px;
+      font-size: 44px;
+    }
+    .profile__bio {
+      margin-top: 22px;
+    }
+    .profile__join {
+      margin-top: 32px;
+      font-size: 28px;
+    }
+    .profile__ctas {
+      gap: 10px;
+    }
+    .profile__cta {
+      width: 306px;
+      --btn-h: 54px;
+      padding: 0 19px 0 27px;
+    }
+  }
+
+  /* Mobile: first block of the scroll flow. */
+  @media (max-width: 767px) {
+    .profile {
+      width: 100%;
+    }
+    .profile__logo {
+      width: 140px;
+      height: 140px;
+      outline: none;
+    }
+    .profile__name {
+      margin-top: 14px;
+      font-size: 40px;
+    }
+    .profile__tagline {
+      margin-top: 8px;
+      font-size: 20px;
+    }
+    .profile :global(.profile__socials) {
+      margin-top: 16px;
+    }
+    .profile__bio {
+      margin-top: 20px;
+      font-size: 27px;
+    }
+    .profile__join {
+      margin-top: 24px;
+      font-size: 26px;
+    }
+    .profile__ctas {
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .profile__cta {
+      width: min(307px, 100%);
+      --btn-h: 52px;
+      --btn-font: 17px;
+      padding: 0 18px 0 26px;
+    }
+  }
+</style>

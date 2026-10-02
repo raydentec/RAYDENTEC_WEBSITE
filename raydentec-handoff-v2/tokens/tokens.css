@@ -1,0 +1,47 @@
+:root {
+  /* Colors */
+  --c-red: #CC181E;
+  --c-black: #000000;
+  --c-white: #FFFFFF;
+  --c-grey: #808080;
+  --c-blue: #0039F0;            /* reserved — not used in v2 */
+  --c-red-dim: rgba(204, 24, 30, 0.5);
+  --c-control-fill: rgba(255, 255, 255, 0.5);
+  --c-social-tile: #1C1C1C;
+  --c-youtube: #FF0000; --c-twitch: #9146FF; --c-instagram: #E1306C; --c-x: #000000;
+  --c-github: #24292F; --c-artstation: #13AFF0; --c-discord: #5865F2; --c-email: #CC181E;
+
+  --bg-page: linear-gradient(180deg, rgba(204,24,30,0.25) 0%, rgba(204,24,30,0) 48%), #000000;
+
+  /* Fonts */
+  --f-name: 'Russo One', sans-serif;
+  --f-sans: 'Sora', sans-serif;
+  --f-ui: 'Chakra Petch', sans-serif;
+  --f-mono: 'IBM Plex Mono', monospace;
+
+  /* Motion */
+  --ease-out: cubic-bezier(.2, .8, .2, 1);
+  --t-sidebar: 320ms;
+  --t-state: 240ms;
+  --o-inactive: 0.42;
+
+  /* Desktop (≥1280) */
+  --gutter: 52px; --nav-top: 45px; --content-top: 113px; --content-w: 994px;
+  --sidebar-w: 320px; --rail-w: 56px; --num-col: 45px; --notch-h: 90px;
+  --card-h: 300px; --card-gap: 16px; --footer-h: 46px; --ctl-h: 56px;
+}
+@media (max-width: 1279px) { :root {
+  --gutter: 28px; --nav-top: 44px; --content-top: 110px; --content-w: 776px;
+  --rail-w: 54px; --num-col: 40px; --notch-h: 80px; --card-h: 287px; --footer-h: 42px; --ctl-h: 54px;
+} }
+@media (max-width: 767px) { :root {
+  --gutter: 22px; --content-w: calc(100vw - 44px); --card-gap: 22px; --footer-h: 45px; --ctl-h: 54px;
+} }
+
+/* Background video (v2) — same technique as raydentec.com */
+.bg-video {
+  position: fixed; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; mix-blend-mode: screen; opacity: 0.9;
+  pointer-events: none; z-index: 0;
+}
+@media (prefers-reduced-motion: reduce) { .bg-video { display: none; } }

@@ -1,0 +1,118 @@
+---
+/** Community · "More links" container body: grid of compact link rows (mono label + ↗). */
+import Icon from './Icon.astro';
+import { linkAttrs } from '../lib/content';
+
+interface Props {
+  eyebrow: string;
+  title: string;
+  links: { label: string; href: string }[];
+}
+
+const { eyebrow, title, links } = Astro.props;
+---
+
+<div class="lg">
+  <div class="lg__head">
+    <span class="eyebrow">{eyebrow}</span>
+    <h2 class="lg__title">{title}</h2>
+  </div>
+  <ul class="lg__grid">
+    {
+      links.map((l) => (
+        <li>
+          <a class="lg__link" {...linkAttrs(l.href)}>
+            <span>{l.label}</span>
+            <Icon name="arrowUR" size={20} />
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</div>
+
+<style>
+  .lg {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 22px;
+    height: 100%;
+    padding: 28px 36px 28px 28px;
+  }
+  .lg__head {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .lg__title {
+    font-weight: 600;
+    font-size: 28px;
+    line-height: 1.05;
+  }
+  .lg__grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .lg__link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    height: 52px;
+    padding: 0 12px 0 16px;
+    border: 1px solid var(--c-red-dim);
+    font-family: var(--f-mono);
+    font-weight: 500;
+    font-size: 15px;
+    color: var(--c-white);
+    transition:
+      background-color var(--t-fade),
+      border-color var(--t-fade);
+  }
+  .lg__link svg {
+    color: var(--c-red);
+    flex-shrink: 0;
+  }
+  .lg__link:hover {
+    border-color: var(--c-red);
+    background: rgba(204, 24, 30, 0.12);
+  }
+
+  @media (max-width: 1279px) {
+    .lg {
+      padding: 24px 26px 24px 24px;
+    }
+    .lg__title {
+      font-size: 25px;
+    }
+    .lg__grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .lg__link {
+      height: 46px;
+      font-size: 13px;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .lg {
+      padding: 0;
+      gap: 16px;
+    }
+    .lg__title {
+      font-size: 22px;
+    }
+    .lg__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .lg__link {
+      height: 48px;
+    }
+  }
+</style>

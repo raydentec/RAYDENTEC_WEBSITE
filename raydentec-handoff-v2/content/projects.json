@@ -1,0 +1,47 @@
+{
+  "page": "projects",
+  "containerVariant": "project",
+  "_note": "Placeholder entries. Replace bracketed values with real projects.",
+  "items": [
+    {
+      "eyebrow": "Project · [CATEGORY]",
+      "title": "[PROJECT NAME 1]",
+      "description": "[What it is, what it does and why it was built.]",
+      "stack": "[TOOLS / ENGINE]",
+      "year": "[YEAR]",
+      "href": "[URL]",
+      "buttonLabel": "VIEW PROJECT",
+      "image": "assets/placeholder-render.jpg"
+    },
+    {
+      "eyebrow": "Project · [CATEGORY]",
+      "title": "[PROJECT NAME 2]",
+      "description": "[What it is, what it does and why it was built.]",
+      "stack": "[TOOLS / ENGINE]",
+      "year": "[YEAR]",
+      "href": "[URL]",
+      "buttonLabel": "VIEW PROJECT",
+      "image": "assets/placeholder-render.jpg"
+    },
+    {
+      "eyebrow": "Project · [CATEGORY]",
+      "title": "[PROJECT NAME 3]",
+      "description": "[What it is, what it does and why it was built.]",
+      "stack": "[TOOLS / ENGINE]",
+      "year": "[YEAR]",
+      "href": "[URL]",
+      "buttonLabel": "VIEW PROJECT",
+      "image": "assets/placeholder-render.jpg"
+    },
+    {
+      "eyebrow": "Project · [CATEGORY]",
+      "title": "[PROJECT NAME 4]",
+      "description": "[What it is, what it does and why it was built.]",
+      "stack": "[TOOLS / ENGINE]",
+      "year": "[YEAR]",
+      "href": "[URL]",
+      "buttonLabel": "VIEW PROJECT",
+      "image": "assets/placeholder-render.jpg"
+    }
+  ]
+}

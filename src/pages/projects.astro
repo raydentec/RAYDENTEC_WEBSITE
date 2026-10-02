@@ -1,0 +1,18 @@
+---
+import ContainerFrame from '../components/ContainerFrame.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import Shell from '../layouts/Shell.astro';
+import { getItems } from '../lib/content';
+
+const items = await getItems('projects');
+---
+
+<Shell page="projects">
+  {
+    items.map(({ data }, i) => (
+      <ContainerFrame variant="project" number={i + 1} active={i === 0} label={data.title}>
+        <ProjectCard {...data} />
+      </ContainerFrame>
+    ))
+  }
+</Shell>

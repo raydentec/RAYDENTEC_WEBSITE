@@ -1,0 +1,45 @@
+---
+import { getSite } from '../lib/content';
+
+const site = await getSite();
+---
+
+<footer class="footer" transition:persist="footer">
+  <span>{site.footer.copyright}</span>
+  <a class="footer__legal" href={site.footer.legalHref}>{site.footer.legalLabel}</a>
+</footer>
+
+<style>
+  .footer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: var(--footer-h);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--gutter);
+    border-top: 1px solid var(--c-red);
+    background: rgba(0, 0, 0, 0.35);
+    font-family: var(--f-ui);
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--c-grey);
+    z-index: 4;
+  }
+  .footer__legal {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    transition: color var(--t-fade);
+  }
+  .footer__legal:hover {
+    color: var(--c-white);
+  }
+  @media (max-width: 767px) {
+    .footer {
+      padding: 0 28px;
+    }
+  }
+</style>

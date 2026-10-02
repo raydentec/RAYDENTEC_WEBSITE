@@ -1,0 +1,147 @@
+---
+/**
+ * Collapsed sidebar rail: logo, EXPAND, and "Join me:" VIDEOS / SOCIALS.
+ * Desktop: shown when <html data-sidebar="collapsed">. Tablet: always shown.
+ */
+import Icon from './Icon.astro';
+import { getSite, linkAttrs } from '../lib/content';
+
+const site = await getSite();
+const [videos, socials] = site.ctas;
+---
+
+<div class="rail" data-rail transition:persist="rail">
+  <img class="rail__logo" src="/assets/logo.png" alt="RAYDENTEC" width="56" height="56" />
+  <button
+    type="button"
+    class="rail__expand ctl"
+    data-sidebar-expand
+    aria-controls="sidebar"
+    aria-expanded="false"
+    aria-label="Expand profile sidebar"
+  >
+    <Icon name="arrowRight" size={30} />
+    <span class="rail__expand-label" aria-hidden="true">EXPAND</span>
+  </button>
+  <div class="rail__join">
+    <p class="rail__join-label">Join me:</p>
+    <a class="rail__cta rail__cta--primary" aria-label={videos.label} {...linkAttrs(videos.href)}>
+      <Icon name="arrowUR" size={22} />
+      <span aria-hidden="true">VIDEOS</span>
+    </a>
+    <a class="rail__cta rail__cta--outline" aria-label={socials.label} {...linkAttrs(socials.href)}>
+      <Icon name="arrowUR" size={22} />
+      <span aria-hidden="true">SOCIALS</span>
+    </a>
+  </div>
+</div>
+
+<style>
+  .rail {
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity var(--t-fade) ease,
+      visibility 0s linear var(--t-fade);
+  }
+  :global(html[data-sidebar='collapsed']) .rail {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity var(--t-fade) ease var(--t-fade);
+  }
+  .rail__logo,
+  .rail__expand,
+  .rail__join {
+    position: fixed;
+    left: var(--gutter);
+    z-index: 4;
+  }
+  .rail__logo {
+    top: var(--nav-top);
+    width: var(--rail-w);
+    height: var(--rail-w);
+  }
+  .rail__expand {
+    top: var(--content-top);
+    width: var(--rail-w);
+    height: var(--expand-h);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0 18px;
+  }
+  .rail__expand-label {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-family: var(--f-ui);
+    font-weight: 600;
+    font-size: 20px;
+    letter-spacing: 0.04em;
+  }
+  .rail__join {
+    bottom: var(--content-bottom);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .rail__join-label {
+    margin-bottom: 6px;
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: -0.055em;
+    white-space: nowrap;
+  }
+  .rail__cta {
+    width: var(--rail-w);
+    height: var(--rail-w);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    border: 2px solid var(--c-red);
+    font-family: var(--f-ui);
+    font-weight: 600;
+    font-size: 8px;
+    letter-spacing: 0.02em;
+    transition:
+      background-color var(--t-fade),
+      color var(--t-fade);
+  }
+  .rail__cta--primary {
+    background: var(--c-red);
+    color: var(--c-black);
+  }
+  .rail__cta--outline {
+    color: var(--c-red);
+  }
+  .rail__cta--outline:hover {
+    background: var(--c-red);
+    color: var(--c-black);
+  }
+  .rail__cta--primary:hover {
+    background: var(--c-black);
+    color: var(--c-red);
+  }
+
+  @media (max-width: 1279px) {
+    .rail,
+    :global(html[data-sidebar='collapsed']) .rail {
+      opacity: 1;
+      visibility: visible;
+      transition: none;
+    }
+    .rail__expand-label {
+      font-size: 18px;
+    }
+    .rail__join-label {
+      font-size: 14px;
+    }
+  }
+  @media (max-width: 767px) {
+    .rail {
+      display: none;
+    }
+  }
+</style>
