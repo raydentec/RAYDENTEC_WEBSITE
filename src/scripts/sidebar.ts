@@ -220,6 +220,13 @@ const onBreakpoint = () => {
   pinnedAt = null;
   setExpanded(activeIndex() <= 0);
   if (!mq.desktop.matches) expandBtn()?.setAttribute('aria-expanded', 'false');
+  // Entering tablet size: EXPAND starts as it would on page load — expanded while
+  // container 1 is selected (no countdown), collapsed otherwise.
+  if (isTablet()) {
+    firstActive = activeIndex() <= 0;
+    if (firstActive) openExpandButton();
+    else collapseExpandButton();
+  }
 };
 mq.desktop.addEventListener('change', onBreakpoint);
 mq.mobile.addEventListener('change', onBreakpoint);
