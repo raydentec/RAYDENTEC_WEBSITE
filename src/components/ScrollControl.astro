@@ -1,15 +1,18 @@
 ---
 /**
- * One control, three states (HANDOFF §7), driven by scripts/scroll-control.ts:
- *   data-state="top"     → SCROLL ↓ (snaps to the next container)
- *   data-state="scroll"  → BACK TO TOP ↑
- *   data-state="idle"    → 56×56 ↑ only, after 1.2s without scrolling
- * Mobile: full-width SCROLL at the top, the ↑ arrow otherwise.
+ * One control (HANDOFF §7), driven by scripts/scroll-control.ts.
+ * What it does — data-mode:
+ *   "down" → SCROLL ↓, snaps to the next container (until the last one is selected)
+ *   "up"   → BACK TO TOP ↑, scrolls to the very top (once the last container is selected)
+ * How big it is — data-state:
+ *   "top" (scrollTop 0) / "scroll" (hovered or focused) → full width with label
+ *   "idle" (scrolled; 2s after hover)                  → arrow-only square
+ * Mobile: full width at the top and on the last container, arrow-only otherwise.
  */
 import Icon from './Icon.astro';
 ---
 
-<button type="button" class="scroll-ctl ctl" data-scroll-ctl data-state="top" aria-label="Scroll to next item" transition:persist="scroll-ctl">
+<button type="button" class="scroll-ctl ctl" data-scroll-ctl data-state="top" data-mode="down" aria-label="Scroll to next item" transition:persist="scroll-ctl">
   <span class="scroll-ctl__label" aria-hidden="true">
     <span class="scroll-ctl__text scroll-ctl__text--top">SCROLL</span>
     <span class="scroll-ctl__text scroll-ctl__text--back">BACK TO TOP</span>
@@ -44,13 +47,12 @@ import Icon from './Icon.astro';
     transform: translateY(-50%);
     transition: opacity var(--t-ctl) ease;
   }
+  /* Label and arrow follow the mode. */
   .scroll-ctl__text--back,
-  [data-state='scroll'] .scroll-ctl__text--top,
-  [data-state='idle'] .scroll-ctl__text--top {
+  [data-mode='up'] .scroll-ctl__text--top {
     display: none;
   }
-  [data-state='scroll'] .scroll-ctl__text--back,
-  [data-state='idle'] .scroll-ctl__text--back {
+  [data-mode='up'] .scroll-ctl__text--back {
     display: inline;
   }
   .scroll-ctl__icon {
@@ -65,12 +67,10 @@ import Icon from './Icon.astro';
     right: calc((var(--ctl-h) - 4px - 30px) / 2);
   }
   .scroll-ctl__icon--up,
-  [data-state='scroll'] .scroll-ctl__icon--down,
-  [data-state='idle'] .scroll-ctl__icon--down {
+  [data-mode='up'] .scroll-ctl__icon--down {
     display: none;
   }
-  [data-state='scroll'] .scroll-ctl__icon--up,
-  [data-state='idle'] .scroll-ctl__icon--up {
+  [data-mode='up'] .scroll-ctl__icon--up {
     display: block;
   }
   [data-state='idle'] {
@@ -95,17 +95,18 @@ import Icon from './Icon.astro';
       width: calc(100vw - 2 * var(--gutter));
       z-index: 6;
     }
-    /* No BACK TO TOP label on mobile: arrow-only as soon as the page scrolls. */
-    [data-state='scroll'],
+    /* Mobile: arrow-only (↓ or ↑ by mode) as soon as the page scrolls — except the
+       full-width BACK TO TOP kept open on the last container. */
+    [data-state='scroll']:not([data-mode='up']),
     [data-state='idle'] {
       width: var(--ctl-h);
     }
-    [data-state='scroll'] .scroll-ctl__label,
+    [data-state='scroll']:not([data-mode='up']) .scroll-ctl__label,
     [data-state='idle'] .scroll-ctl__label {
       opacity: 0;
       transition: none;
     }
-    [data-state='scroll'] .scroll-ctl__icon,
+    [data-state='scroll']:not([data-mode='up']) .scroll-ctl__icon,
     [data-state='idle'] .scroll-ctl__icon {
       right: calc((var(--ctl-h) - 4px - 30px) / 2);
     }

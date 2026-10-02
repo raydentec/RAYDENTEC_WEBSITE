@@ -140,6 +140,11 @@ const { variant, number, active = false, height, label } = Astro.props;
        */
       padding-bottom: calc(var(--menu-bar-bottom) - var(--footer-h) + var(--ctl-h) - var(--edge-w));
     }
+    /* The last container's box ends at the expanded BACK TO TOP button instead (it sits
+       above the menu bar): bottom of the scroll area up to that button's top edge. */
+    .cf:last-child {
+      padding-bottom: calc(var(--ctl-bottom) - var(--footer-h) + var(--ctl-h) - var(--edge-w));
+    }
     .cf.is-active {
       --edge-w: 2px;
     }
