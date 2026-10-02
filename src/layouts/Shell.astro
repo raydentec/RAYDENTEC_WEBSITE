@@ -199,12 +199,14 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
       flex-direction: column;
       min-height: calc(100dvh - var(--top-bar) - var(--footer-h) - 24px);
     }
-    /* Empty space the size of the mobile controls stack (footer + menu bar +
-       SCROLL / back-to-top + gaps) + 16px, so the CTAs can scroll clear of it. */
+    /* Empty space the size of the controls above the footer (menu bar + SCROLL /
+       back-to-top + gaps) + 16px, so the CTAs can scroll clear of them. Small enough
+       that the profile's min-height wins on regular phones: container 1's top then sits
+       exactly on the footer's top edge at the top of the page. */
     .mprofile__spacer {
       flex-shrink: 0;
       margin-top: auto;
-      height: calc(var(--ctl-bottom) + var(--ctl-h) + 16px);
+      height: calc(var(--ctl-bottom) - var(--footer-h) + var(--ctl-h) + 16px);
     }
     .column {
       padding-bottom: max(var(--tail, 0px), calc(var(--ctl-bottom) - var(--footer-h) + var(--ctl-h) + 16px));
