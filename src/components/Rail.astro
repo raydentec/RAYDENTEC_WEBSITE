@@ -63,6 +63,8 @@ const [videos, socials] = site.ctas;
   }
   .rail__expand {
     --icon-top: 14px;
+    /* Above the "Join me:" group, which it overlaps in short windows. */
+    z-index: 5;
     top: var(--content-top);
     width: var(--rail-w);
     height: var(--expand-h);

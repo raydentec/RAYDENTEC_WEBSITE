@@ -22,6 +22,10 @@ import Profile from './Profile.astro';
   </button>
 </aside>
 <div class="sidebar-dimmer" data-sidebar-dimmer aria-hidden="true" transition:persist="sidebar-dimmer"></div>
+<!-- Shown only when the sidebar's content is taller than its box (scripts/sidebar.ts). -->
+<div class="sidebar-track" data-sidebar-track aria-hidden="true" transition:persist="sidebar-track">
+  <div class="sidebar-track__thumb" data-sidebar-thumb></div>
+</div>
 
 <style>
   /*
@@ -76,6 +80,49 @@ import Profile from './Profile.astro';
     display: none;
   }
 
+  /*
+   * Slim scroll indicator, as wide as the content column's track (--track-w). Desktop:
+   * centred between the ← button's right edge and the content column; from the ← button's
+   * top to where the content rests at the bottom.
+   */
+  .sidebar-track {
+    --btn-right: calc(var(--gutter) + 263px + var(--ctl-h));
+    --gap-right: var(--col-left-expanded);
+    position: fixed;
+    left: calc((var(--btn-right) + var(--gap-right)) / 2 - var(--track-w) / 2);
+    top: var(--nav-top);
+    bottom: var(--content-bottom);
+    width: var(--track-w);
+    background: rgba(255, 255, 255, 0.06);
+    z-index: 5;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity var(--t-fade) ease,
+      visibility 0s linear var(--t-fade);
+  }
+  :global(html:not([data-sidebar='collapsed'])) .sidebar-track[data-active] {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity var(--t-fade) ease;
+  }
+  /*
+   * Fixed-size handle: twice the ← button's height, at most 80% of a short track so it
+   * can still move. Its travel is remapped over the track: top at 0% scroll, flush with
+   * the bottom at 100% (--frac, set by scripts/sidebar.ts). Percentages are of the
+   * track's current height, so the handle always stays inside it.
+   */
+  .sidebar-track__thumb {
+    --thumb-h: min(calc(2 * var(--ctl-h)), 80%);
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc((100% - var(--thumb-h)) * var(--frac, 0));
+    height: var(--thumb-h);
+    background: rgba(255, 255, 255, 0.25); /* half the EXPAND button's white fill (0.5), no blur */
+  }
+
   /* Tablet: overlay panel. */
   @media (max-width: 1279px) {
     .sidebar,
@@ -128,9 +175,33 @@ import Profile from './Profile.astro';
     }
   }
 
+  /* Tablet panel: centred between ← (303–357px) and the panel edge (400px); panel
+     padding 44px / 24px. */
+  @media (max-width: 1279px) {
+    .sidebar-track,
+    :global(html:not([data-sidebar='collapsed'])) .sidebar-track[data-active] {
+      --btn-right: 357px;
+      --gap-right: 400px;
+      top: 44px;
+      bottom: 24px;
+      z-index: 10;
+      opacity: 0;
+      visibility: hidden;
+      transition:
+        opacity var(--t-fade) ease,
+        visibility 0s linear var(--t-fade);
+    }
+    :global(html[data-overlay='open']) .sidebar-track[data-active] {
+      opacity: 1;
+      visibility: visible;
+      transition: opacity var(--t-fade) ease;
+    }
+  }
+
   @media (max-width: 767px) {
     .sidebar,
-    .sidebar-dimmer {
+    .sidebar-dimmer,
+    .sidebar-track {
       display: none;
     }
   }

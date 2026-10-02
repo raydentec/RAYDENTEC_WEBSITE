@@ -25,6 +25,30 @@ import {
 let pinnedAt: number | null = null;
 
 const sidebar = () => document.getElementById('sidebar');
+
+/* ---------- Slim scroll indicator, shown only when the sidebar can scroll ---------- */
+
+function updateSidebarTrack() {
+  const box = sidebar();
+  const track = document.querySelector<HTMLElement>('[data-sidebar-track]');
+  const thumb = document.querySelector<HTMLElement>('[data-sidebar-thumb]');
+  if (!box || !track || !thumb) return;
+  const { scrollTop, scrollHeight, clientHeight } = box;
+  const scrollable = scrollHeight > clientHeight + 1;
+  track.toggleAttribute('data-active', scrollable);
+  if (!scrollable) return;
+  // Only the scroll fraction comes from here; the handle's size and travel are CSS
+  // relative to the track (Sidebar.astro), so it can never leave the track — even if
+  // the layout changes without a scroll/resize event to update this.
+  const frac = Math.min(1, Math.max(0, scrollTop / (scrollHeight - clientHeight)));
+  thumb.style.setProperty('--frac', String(frac));
+}
+
+// The sidebar is persisted across navigation, so these bind once.
+sidebar()?.addEventListener('scroll', updateSidebarTrack, { passive: true });
+window.addEventListener('resize', updateSidebarTrack);
+if (sidebar()) new ResizeObserver(updateSidebarTrack).observe(sidebar()!);
+void document.fonts?.ready.then(updateSidebarTrack); // content height settles once fonts load
 const expandBtn = () => document.querySelector<HTMLButtonElement>('[data-sidebar-expand]');
 const collapseBtn = () => document.querySelector<HTMLButtonElement>('[data-sidebar-collapse]');
 const isTablet = () => !mq.desktop.matches && !mq.mobile.matches;
@@ -203,6 +227,7 @@ mq.mobile.addEventListener('change', onBreakpoint);
 /* ---------- Every navigation: the new column starts at scrollTop 0 ---------- */
 
 onPageLoad(() => {
+  updateSidebarTrack();
   firstActive = activeIndex() <= 0;
   closeOverlay(false);
   pinnedAt = null;
