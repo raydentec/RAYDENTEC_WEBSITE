@@ -1,10 +1,11 @@
 /**
  * Scroll indicator / back to top (HANDOFF §7) and the custom scroll track.
  *   scrollTop 0            → data-state="top"    SCROLL ↓, click snaps to the next container
- *   while/after scrolling  → data-state="scroll" BACK TO TOP ↑, click scrolls to 0
+ *   while/after scrolling  → data-state="scroll" BACK TO TOP ↑, click scrolls to the very top
  *   1.2s without scrolling → data-state="idle"   arrow-only; any scroll re-expands it
  */
 import { containers, getScroller, onPageLoad, onScrollerScroll, scrollBehavior, snapOffset } from './dom';
+import { scrollToTop } from './snap';
 
 const IDLE_MS = 1200;
 let idleTimer = 0;
@@ -52,7 +53,7 @@ document.addEventListener('click', (e) => {
     const next = containers(scroller).find((cf) => cf.getBoundingClientRect().top > line + 2);
     if (next) scroller.scrollBy({ top: next.getBoundingClientRect().top - line, behavior: scrollBehavior() });
   } else {
-    scroller.scrollTo({ top: 0, behavior: scrollBehavior() });
+    scrollToTop(scroller);
   }
 });
 

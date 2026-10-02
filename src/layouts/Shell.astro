@@ -68,10 +68,12 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
       class="scroller"
       aria-label={`${pageLabel} content`}
       data-page={page}
+      data-snap="off"
       transition:animate={fade({ duration: '160ms' })}
     >
       <div class="mprofile" data-mprofile>
         <Profile />
+        <div class="mprofile__spacer" aria-hidden="true"></div>
       </div>
       {srHeading && <h1 class="sr-only">{pageLabel}</h1>}
       <div class="column" data-column>
@@ -179,12 +181,25 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
     :global(html[data-mheader='on']) .scroller {
       clip-path: inset(calc(var(--header-h) - var(--top-bar)) 0 0 0);
     }
-    /* At the top only the profile shows: it fills the scroll area down to the footer. */
+    /*
+     * Profile area: scrolls freely (no snap point). Snapping is switched off by
+     * scripts/snap.ts (data-snap="off") until container 1 is about to activate.
+     * At the top only the profile shows: it fills the scroll area down to the footer.
+     */
+    :global(.scroller[data-snap='off']) {
+      scroll-snap-type: none;
+    }
     .mprofile {
-      display: block;
+      display: flex;
+      flex-direction: column;
       min-height: calc(100dvh - var(--top-bar) - var(--footer-h) - 24px);
-      padding-bottom: 40px;
-      scroll-snap-align: start;
+    }
+    /* Empty space the size of the mobile controls stack (footer + menu bar +
+       SCROLL / back-to-top + gaps) + 16px, so the CTAs can scroll clear of it. */
+    .mprofile__spacer {
+      flex-shrink: 0;
+      margin-top: auto;
+      height: calc(var(--ctl-bottom) + var(--ctl-h) + 16px);
     }
     .column {
       padding-bottom: max(var(--tail, 0px), calc(var(--ctl-bottom) - var(--footer-h) + var(--ctl-h) + 16px));
