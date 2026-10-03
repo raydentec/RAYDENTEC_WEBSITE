@@ -101,38 +101,46 @@
     },
     {
       "type": "linkGrid",
-      "eyebrow": "More",
-      "title": "More links",
+      "eyebrow": "Other links",
+      "title": "More ways to connect:",
       "links": [
         {
+          "icon": "facebook",
           "label": "Facebook",
           "href": "https://www.facebook.com/raydentec"
         },
         {
+          "icon": "reddit",
           "label": "Reddit",
           "href": "https://www.reddit.com/user/raydentec"
         },
         {
+          "icon": "threads",
           "label": "Threads",
           "href": "https://www.threads.com/@raydentec"
         },
         {
+          "icon": "linkedin",
           "label": "LinkedIn",
           "href": "https://www.linkedin.com/company/raydentec/"
         },
         {
+          "icon": "gumroad",
           "label": "Gumroad",
           "href": "https://raydentec.gumroad.com/"
         },
         {
+          "icon": "patreon",
           "label": "Patreon",
           "href": "https://www.patreon.com/cw/raydentec"
         },
         {
+          "icon": "tiktok",
           "label": "TikTok",
           "href": "https://www.tiktok.com/@raydentec"
         },
         {
+          "icon": "snapchat",
           "label": "Snapchat",
           "href": "https://www.snapchat.com/add/raydentec"
         }

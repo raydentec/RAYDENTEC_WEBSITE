@@ -110,7 +110,7 @@ const community = defineCollection({
       type: z.literal('linkGrid'),
       eyebrow: z.string(),
       title: z.string(),
-      links: z.array(z.object({ label: z.string(), href })),
+      links: z.array(z.object({ icon: z.string().optional(), label: z.string(), href })),
     }),
     z.object({
       order: z.number(),

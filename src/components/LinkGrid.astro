@@ -1,12 +1,15 @@
 ---
-/** Community · "More links" container body: grid of compact link rows (mono label + ↗). */
+/**
+ * Community · "More links" container body: grid of flat link tiles — brand icon, then
+ * the label (as on raydentec.com's "more links").
+ */
 import Icon from './Icon.astro';
 import { linkAttrs } from '../lib/content';
 
 interface Props {
   eyebrow: string;
   title: string;
-  links: { label: string; href: string }[];
+  links: { icon?: string; label: string; href: string }[];
 }
 
 const { eyebrow, title, links } = Astro.props;
@@ -22,8 +25,8 @@ const { eyebrow, title, links } = Astro.props;
       links.map((l) => (
         <li>
           <a class="lg__link" {...linkAttrs(l.href)}>
-            <span>{l.label}</span>
-            <Icon name="arrowUR" size={20} />
+            {l.icon && <Icon name={l.icon} size={20} />}
+            <span class="lg__label">{l.label}</span>
           </a>
         </li>
       ))
@@ -53,34 +56,44 @@ const { eyebrow, title, links } = Astro.props;
   .lg__grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 10px 16px;
+    gap: 12px;
     margin: 0;
     padding: 0;
     list-style: none;
   }
+  /* Flat tile: #1E1E1E; on hover #2C2C2C with a white border (transparent at rest, so
+     nothing shifts). Icon then uppercase label. */
   .lg__link {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+    gap: 16px;
     height: 52px;
-    padding: 0 12px 0 16px;
-    border: 1px solid var(--c-red-dim);
-    font-family: var(--f-mono);
+    padding: 0 18px;
+    border: 2px solid transparent;
+    background: var(--c-link-tile);
+    font-family: var(--f-ui);
     font-weight: 500;
-    font-size: 15px;
+    font-size: 16px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
     color: var(--c-white);
     transition:
       background-color var(--t-fade),
       border-color var(--t-fade);
   }
-  .lg__link svg {
-    color: var(--c-red);
+  .lg__link:hover,
+  .lg__link:focus-visible {
+    background: var(--c-link-tile-hover);
+    border-color: var(--c-white);
+  }
+  .lg__link :global(svg) {
     flex-shrink: 0;
   }
-  .lg__link:hover {
-    border-color: var(--c-red);
-    background: rgba(204, 24, 30, 0.12);
+  .lg__label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   @media (max-width: 1279px) {
@@ -95,7 +108,9 @@ const { eyebrow, title, links } = Astro.props;
     }
     .lg__link {
       height: 46px;
-      font-size: 13px;
+      gap: 14px;
+      padding: 0 16px;
+      font-size: 15px;
     }
   }
 
@@ -113,6 +128,10 @@ const { eyebrow, title, links } = Astro.props;
     }
     .lg__link {
       height: 48px;
+      gap: 10px;
+      padding: 0 14px;
+      font-size: 13px;
+      letter-spacing: 0.06em;
     }
   }
 </style>
