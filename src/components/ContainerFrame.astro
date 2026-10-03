@@ -22,17 +22,22 @@ interface Props {
   height?: number;
   /** Tablet-only height override (defaults to `height`). */
   tabletHeight?: number;
+  /**
+   * No border/background on the body: its content draws its own framed sections
+   * (Community pairs). The number tab / red column stay as usual.
+   */
+  bare?: boolean;
   label?: string;
 }
 
-const { variant, number, active = false, height, tabletHeight, label } = Astro.props;
+const { variant, number, active = false, height, tabletHeight, bare = false, label } = Astro.props;
 const heightVars = [height && `--cf-h: ${height}px`, tabletHeight && `--cf-h-tablet: ${tabletHeight}px`]
   .filter(Boolean)
   .join('; ');
 ---
 
 <article
-  class:list={['cf', `cf--${variant}`, { 'is-active': active, 'cf--unnumbered': number === undefined }]}
+  class:list={['cf', `cf--${variant}`, { 'is-active': active, 'cf--unnumbered': number === undefined, 'cf--bare': bare }]}
   data-cf
   aria-label={label}
   style={heightVars || undefined}
@@ -131,6 +136,17 @@ const heightVars = [height && `--cf-h: ${height}px`, tabletHeight && `--cf-h-tab
     }
   }
 
+  /* Bare: the body draws nothing; its content frames itself (and dims its own text). */
+  .cf--bare .cf__body,
+  .cf--bare.is-active .cf__body {
+    border: 0;
+    background: transparent;
+    overflow: visible;
+  }
+  .cf--bare .cf__content {
+    opacity: 1;
+  }
+
   /* Mobile: number tab above the body. */
   @media (max-width: 767px) {
     .cf {
@@ -189,6 +205,9 @@ const heightVars = [height && `--cf-h: ${height}px`, tabletHeight && `--cf-h-tab
     }
     .is-active .cf__body {
       border-top: none;
+    }
+    .cf--bare .cf__body {
+      padding: 0;
     }
     .cf__content {
       height: auto;

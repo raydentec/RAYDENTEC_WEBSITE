@@ -5,15 +5,61 @@ import LinkGrid from '../components/LinkGrid.astro';
 import Shell from '../layouts/Shell.astro';
 import { getItems } from '../lib/content';
 
-const items = await getItems('community');
+const items = (await getItems('community')).map(({ data }) => data);
+
+type Item = (typeof items)[number];
+type Link = Exclude<Item, { type: 'linkGrid' }>;
+
+// Link items go two per container (in JSON order), each in its own framed section;
+// the "More links" grid keeps a container of its own. Community containers are
+// unnumbered (same frame and red column / notch tab, no number).
+const containers: ({ kind: 'pair'; links: Link[] } | { kind: 'grid'; item: Extract<Item, { type: 'linkGrid' }> })[] = [];
+for (const item of items) {
+  if (item.type === 'linkGrid') {
+    containers.push({ kind: 'grid', item });
+    continue;
+  }
+  const last = containers.at(-1);
+  if (last?.kind === 'pair' && last.links.length < 2) last.links.push(item);
+  else containers.push({ kind: 'pair', links: [item] });
+}
 ---
 
 <Shell page="community">
   {
-    items.map(({ data }, i) => (
-      <ContainerFrame variant="community" number={i + 1} active={i === 0} label={data.title}>
-        {data.type === 'linkGrid' ? <LinkGrid {...data} /> : <CommunityCard {...data} />}
-      </ContainerFrame>
-    ))
+    containers.map((c, i) =>
+      c.kind === 'grid' ? (
+        <ContainerFrame variant="community" active={i === 0} label={c.item.title}>
+          <LinkGrid {...c.item} />
+        </ContainerFrame>
+      ) : (
+        <ContainerFrame
+          variant="community"
+          active={i === 0}
+          bare
+          label={c.links.map((l) => l.title).join(' and ')}
+        >
+          <div class="pair">
+            {c.links.map((l) => (
+              <CommunityCard {...l} />
+            ))}
+          </div>
+        </ContainerFrame>
+      ),
+    )
   }
 </Shell>
+
+<style>
+  /* Two framed sections with a transparent gap between them. */
+  .pair {
+    display: flex;
+    gap: var(--card-gap);
+    height: 100%;
+  }
+  @media (max-width: 767px) {
+    .pair {
+      flex-direction: column;
+    }
+  }
+</style>

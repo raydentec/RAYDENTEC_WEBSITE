@@ -11,6 +11,7 @@
   --c-link-tile: #1E1E1E; --c-link-tile-hover: #2C2C2C;   /* "More links" tiles */
   --c-youtube: #FF0000; --c-twitch: #9146FF; --c-instagram: #E1306C; --c-x: #000000;
   --c-github: #24292F; --c-artstation: #13AFF0; --c-discord: #5865F2; --c-email: #CC181E;
+  --c-facebook: #1877F2; --c-reddit: #FF4500;
 
   --bg-page: linear-gradient(180deg, rgba(204,24,30,0.25) 0%, rgba(204,24,30,0) 48%), #000000;
 
