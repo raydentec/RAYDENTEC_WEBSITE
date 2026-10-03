@@ -16,7 +16,7 @@ const TABLET_HEIGHTS = { intro: 655, explore: 330 } as const;
 <Shell page="start" srHeading={!items.some(({ data }) => data.type === 'intro')}>
   {
     items.map(({ data }, i) => (
-      <ContainerFrame variant="start" active={i === 0} height={HEIGHTS[data.type]} tabletHeight={TABLET_HEIGHTS[data.type]} label={data.title}>
+      <ContainerFrame index={i} variant="start" active={i === 0} height={HEIGHTS[data.type]} tabletHeight={TABLET_HEIGHTS[data.type]} label={data.title}>
         {data.type === 'intro' ? <StartIntro {...data} /> : <StartExplore {...data} />}
       </ContainerFrame>
     ))

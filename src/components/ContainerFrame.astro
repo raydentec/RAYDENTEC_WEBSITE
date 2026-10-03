@@ -27,11 +27,13 @@ interface Props {
    * (Community pairs). The number tab / red column stay as usual.
    */
   bare?: boolean;
+  /** Position on the page (0-based): staggers the fade-in when the page opens. */
+  index?: number;
   label?: string;
 }
 
-const { variant, number, active = false, height, tabletHeight, bare = false, label } = Astro.props;
-const heightVars = [height && `--cf-h: ${height}px`, tabletHeight && `--cf-h-tablet: ${tabletHeight}px`]
+const { variant, number, active = false, height, tabletHeight, bare = false, index = 0, label } = Astro.props;
+const heightVars = [height && `--cf-h: ${height}px`, tabletHeight && `--cf-h-tablet: ${tabletHeight}px`, `--cf-i: ${index}`]
   .filter(Boolean)
   .join('; ');
 ---
@@ -59,6 +61,23 @@ const heightVars = [height && `--cf-h: ${height}px`, tabletHeight && `--cf-h-tab
     height: var(--cf-h, var(--card-h));
     flex-shrink: 0;
     scroll-snap-align: start;
+  }
+
+  /* Page open: containers fade in one after another, from the first — one 180ms step
+     apart, the first one step in too (capped at 8 steps). */
+  .cf {
+    animation: cf-fade-in 600ms var(--ease-out) both;
+    animation-delay: calc(min(var(--cf-i, 0) + 1, 8) * 180ms);
+  }
+  @keyframes cf-fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cf {
+      animation: none;
+    }
   }
 
   .cf__body {

@@ -29,11 +29,12 @@ for (const item of items) {
   {
     containers.map((c, i) =>
       c.kind === 'grid' ? (
-        <ContainerFrame variant="community" active={i === 0} label={c.item.title}>
+        <ContainerFrame index={i} variant="community" active={i === 0} label={c.item.title}>
           <LinkGrid {...c.item} />
         </ContainerFrame>
       ) : (
         <ContainerFrame
+          index={i}
           variant="community"
           active={i === 0}
           bare
