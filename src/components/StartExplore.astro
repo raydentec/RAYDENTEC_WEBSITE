@@ -39,7 +39,7 @@ const { eyebrow, title, columns } = Astro.props;
     flex-direction: column;
     gap: 22px;
     height: 100%;
-    padding: 28px 40px 28px 28px;
+    padding: 28px; /* equal left/right so the red rule ends the same distance from both borders */
   }
   .explore__head {
     display: flex;
@@ -50,12 +50,14 @@ const { eyebrow, title, columns } = Astro.props;
     font-weight: 600;
     font-size: 30px;
   }
+  /* One red rule across the whole grid (not one per column). */
   .explore__grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 32px;
     margin: 0;
-    padding: 0;
+    padding: 18px 0 0;
+    border-top: 2px solid var(--c-red);
     list-style: none;
   }
   .explore__col {
@@ -63,8 +65,6 @@ const { eyebrow, title, columns } = Astro.props;
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
-    padding-top: 18px;
-    border-top: 2px solid var(--c-red);
   }
   .explore__col-title {
     font-weight: 600;
@@ -95,7 +95,7 @@ const { eyebrow, title, columns } = Astro.props;
 
   @media (max-width: 1279px) {
     .explore {
-      padding: 24px 26px 24px 24px;
+      padding: 24px;
     }
     .explore__grid {
       gap: 22px;
@@ -122,10 +122,10 @@ const { eyebrow, title, columns } = Astro.props;
     .explore__grid {
       grid-template-columns: 1fr;
       gap: 20px;
+      padding-top: 14px;
     }
     .explore__col {
       gap: 10px;
-      padding-top: 14px;
     }
     .explore__link {
       min-height: 44px;

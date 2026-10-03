@@ -18,19 +18,24 @@ interface Props {
   variant: 'community' | 'game' | 'project' | 'start';
   number?: number;
   active?: boolean;
-  /** Desktop/tablet height override (Start intro 530, explore 330). */
+  /** Desktop/tablet height override (Start intro, explore). */
   height?: number;
+  /** Tablet-only height override (defaults to `height`). */
+  tabletHeight?: number;
   label?: string;
 }
 
-const { variant, number, active = false, height, label } = Astro.props;
+const { variant, number, active = false, height, tabletHeight, label } = Astro.props;
+const heightVars = [height && `--cf-h: ${height}px`, tabletHeight && `--cf-h-tablet: ${tabletHeight}px`]
+  .filter(Boolean)
+  .join('; ');
 ---
 
 <article
   class:list={['cf', `cf--${variant}`, { 'is-active': active, 'cf--unnumbered': number === undefined }]}
   data-cf
   aria-label={label}
-  style={height ? `--cf-h: ${height}px` : undefined}
+  style={heightVars || undefined}
 >
   <div class="cf__tab" aria-hidden={number === undefined ? 'true' : undefined}>
     {number !== undefined && <span class="cf__num">{number}</span>}
@@ -118,6 +123,9 @@ const { variant, number, active = false, height, label } = Astro.props;
   }
 
   @media (max-width: 1279px) {
+    .cf {
+      height: var(--cf-h-tablet, var(--cf-h, var(--card-h)));
+    }
     .cf__num {
       font-size: 38px;
     }

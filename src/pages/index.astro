@@ -7,13 +7,16 @@ import { getItems } from '../lib/content';
 
 // Start containers are unnumbered (HANDOFF §5).
 const items = await getItems('start');
-const HEIGHTS = { intro: 530, explore: 330 } as const;
+// Desktop / tablet container heights (mobile sizes to content). The intro holds the
+// banner, title, subheadline, a 4–6 line paragraph and the buttons.
+const HEIGHTS = { intro: 645, explore: 330 } as const;
+const TABLET_HEIGHTS = { intro: 655, explore: 330 } as const;
 ---
 
 <Shell page="start" srHeading={!items.some(({ data }) => data.type === 'intro')}>
   {
     items.map(({ data }, i) => (
-      <ContainerFrame variant="start" active={i === 0} height={HEIGHTS[data.type]} label={data.title}>
+      <ContainerFrame variant="start" active={i === 0} height={HEIGHTS[data.type]} tabletHeight={TABLET_HEIGHTS[data.type]} label={data.title}>
         {data.type === 'intro' ? <StartIntro {...data} /> : <StartExplore {...data} />}
       </ContainerFrame>
     ))

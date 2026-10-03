@@ -49,6 +49,8 @@ const start = defineCollection({
       eyebrow: z.string(),
       title: z.string(),
       description: z.string(),
+      /** Optional paragraph under the description. */
+      body: z.string().optional(),
       media: assetPath,
       mediaNote: z.string().optional(),
       actions: z.array(action),
