@@ -122,8 +122,10 @@ const tileEdge = platform === 'x' || platform === 'github';
   .card :global(.card__btn) {
     width: 210px;
   }
+  /* Fills the space to the section's right padding (as far from the border as the button). */
   .card__caption {
-    max-width: 150px;
+    flex: 1 1 auto;
+    min-width: 0;
     font-family: var(--f-mono);
     font-size: 14px;
     line-height: 1.3;
