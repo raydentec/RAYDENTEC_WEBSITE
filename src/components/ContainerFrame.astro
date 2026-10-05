@@ -12,7 +12,8 @@
  * active, 86px notch when inactive).
  *
  * `number` is omitted for the Start page (same frame, unnumbered).
- * The active state is toggled at runtime by scripts/snap.ts (`.is-active`).
+ * The active state is toggled at runtime by scripts/snap.ts (`.is-active`); for games in
+ * sideways rows by scripts/game-rows.ts.
  */
 interface Props {
   variant: 'community' | 'game' | 'project' | 'start';
@@ -128,19 +129,19 @@ const heightVars = [height && `--cf-h: ${height}px`, tabletHeight && `--cf-h-tab
   }
 
   /* Active: solid red column down the full left side. */
-  .is-active .cf__tab {
+  .cf.is-active .cf__tab {
     height: 100%;
     padding-top: 14px;
     background: var(--c-red);
     border-color: var(--c-red);
   }
-  .is-active .cf__num {
+  .cf.is-active .cf__num {
     color: var(--c-black);
   }
-  .is-active .cf__body {
+  .cf.is-active .cf__body {
     border: 2px solid var(--c-red);
   }
-  .is-active .cf__content,
+  .cf.is-active .cf__content,
   .cf:hover .cf__content,
   .cf:focus-within .cf__content {
     opacity: 1;
@@ -164,6 +165,42 @@ const heightVars = [height && `--cf-h: ${height}px`, tabletHeight && `--cf-h-tab
   }
   .cf--bare .cf__content {
     opacity: 1;
+  }
+
+  /*
+   * Games (desktop/tablet, horizontal row): the number sits in a bar along the TOP-LEFT —
+   * a red bar across the left half of the top edge when selected, a notch tab otherwise.
+   */
+  @media (min-width: 768px) {
+    /* Height comes from the content (16:9 art + text + buttons), not a fixed size. */
+    .cf--game {
+      height: auto;
+    }
+    .cf--game .cf__body {
+      position: relative;
+      inset: auto;
+      margin-top: var(--num-col);
+    }
+    .cf--game .cf__tab {
+      width: var(--notch-h);
+      height: calc(var(--num-col) + 2px);
+      justify-content: flex-start;
+      align-items: center;
+      padding: 0 0 0 16px;
+      border: 1.5px solid var(--c-red-dim);
+      border-bottom: none;
+      transition:
+        width var(--t-state) var(--ease-out),
+        background-color var(--t-state) ease,
+        border-color var(--t-state) ease;
+    }
+    .cf--game.is-active .cf__tab {
+      width: 50%;
+      height: calc(var(--num-col) + 2px);
+      padding: 0 0 0 16px;
+      background: var(--c-red);
+      border-color: var(--c-red);
+    }
   }
 
   /* Mobile: number tab above the body. */
@@ -210,7 +247,7 @@ const heightVars = [height && `--cf-h: ${height}px`, tabletHeight && `--cf-h-tab
       font-size: 34px;
       color: var(--c-red);
     }
-    .is-active .cf__tab {
+    .cf.is-active .cf__tab {
       width: 100%;
       height: 38px;
       padding: 0 14px;
@@ -222,7 +259,7 @@ const heightVars = [height && `--cf-h: ${height}px`, tabletHeight && `--cf-h-tab
       /* The bordered black box ends 14px below the last row. */
       padding: 14px;
     }
-    .is-active .cf__body {
+    .cf.is-active .cf__body {
       border-top: none;
     }
     .cf--bare .cf__body {

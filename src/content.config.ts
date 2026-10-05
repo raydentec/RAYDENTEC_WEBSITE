@@ -77,6 +77,8 @@ const games = defineCollection({
   loader: file('src/content/games.json', { parser: itemsParser }),
   schema: z.object({
     order: z.number(),
+    /** Games with the same category share one row, headed by it (pages/games.astro). */
+    category: z.string(),
     eyebrow: z.string(),
     title: z.string(),
     description: z.string(),
@@ -84,6 +86,7 @@ const games = defineCollection({
     status: z.string(),
     href,
     buttonLabel: z.string(),
+    /** First line of the caption beside the button; `platform` is the second line. */
     caption: z.string().optional(),
     image: assetPath,
   }),

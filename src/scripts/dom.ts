@@ -57,7 +57,17 @@ export function snapOffset(scroller: HTMLElement) {
   return parseFloat(getComputedStyle(scroller).scrollPaddingTop) || 0;
 }
 
-export const containers = (scroller: HTMLElement) => Array.from(scroller.querySelectorAll<HTMLElement>('[data-cf]'));
+/**
+ * The containers the column snaps between. On Games (desktop/tablet) those are the
+ * sideways rows ([data-row], scripts/game-rows.ts), not the games inside them; on
+ * mobile the rows just stack, so the games themselves snap.
+ */
+export const containers = (scroller: HTMLElement) =>
+  Array.from(
+    scroller.querySelectorAll<HTMLElement>(
+      mq.mobile.matches ? '[data-cf]:not([data-row])' : '[data-cf]:not([data-row] [data-cf])',
+    ),
+  );
 
 /** Fired on document by snap.ts when the active container changes; detail = its index. */
 export const ACTIVE_CHANGE = 'raydentec:active-change';

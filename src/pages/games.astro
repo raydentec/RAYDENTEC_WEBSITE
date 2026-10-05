@@ -1,18 +1,38 @@
 ---
 import ContainerFrame from '../components/ContainerFrame.astro';
 import GameCard from '../components/GameCard.astro';
+import GameRow from '../components/GameRow.astro';
 import Shell from '../layouts/Shell.astro';
 import { getItems } from '../lib/content';
 
-const items = await getItems('games');
+const items = (await getItems('games')).map(({ data }) => data);
+
+// One row per category, in order of first appearance; games are numbered across rows.
+const rows: { category: string; first: number; games: typeof items }[] = [];
+for (const game of items) {
+  const row = rows.find((r) => r.category === game.category);
+  if (row) row.games.push(game);
+  else rows.push({ category: game.category, first: 0, games: [game] });
+}
+rows.forEach((row, r) => (row.first = r ? rows[r - 1].first + rows[r - 1].games.length : 0));
 ---
 
-<Shell page="games">
+<Shell page="games" rows>
   {
-    items.map(({ data }, i) => (
-      <ContainerFrame index={i} variant="game" number={i + 1} active={i === 0} label={data.title}>
-        <GameCard {...data} />
-      </ContainerFrame>
+    rows.map((row, r) => (
+      <GameRow title={row.category} titles={row.games.map((g) => g.title)} index={row.first} row={r} active={r === 0}>
+        {row.games.map((game, i) => (
+          <ContainerFrame
+            index={row.first + i}
+            variant="game"
+            number={row.first + i + 1}
+            active={r === 0 && i === 0}
+            label={game.title}
+          >
+            <GameCard {...game} />
+          </ContainerFrame>
+        ))}
+      </GameRow>
     ))
   }
 </Shell>

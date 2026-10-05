@@ -1,0 +1,200 @@
+---
+/**
+ * One sideways row of games (Games page, desktop/tablet), headed by its category. The
+ * column snaps between rows
+ * like it snaps between containers on other pages; inside a row the games scroll and
+ * snap sideways (scripts/game-rows.ts). Instead of a scrollbar, an indicator above the
+ * row shows one line per game — together as wide as a selected game's red top bar — with
+ * the current game's line lit; clicking a line scrolls to that game. The lines are left
+ * out of the Tab order — on the keyboard ← / → step through the row (game-rows.ts).
+ *
+ * Opening the page: the rows fade in one after another like containers on other pages
+ * (the games in them don't fade in on their own).
+ *
+ * Mobile: no row — the headline stays, and the games stack under it in the column like
+ * containers on other pages.
+ */
+interface Props {
+  /** Headline: the games' category. */
+  title: string;
+  /** Titles of the games in the row, for the indicator buttons. */
+  titles: string[];
+  /** Position of the row's first game on the page (0-based): staggers the mobile fade-in. */
+  index: number;
+  /** Position of the row on the page (0-based): staggers its fade-in. */
+  row: number;
+  active?: boolean;
+}
+
+const { title, titles, index, row, active = false } = Astro.props;
+const headingId = `games-${index}`;
+---
+
+<section class:list={['grow', { 'is-active': active }]} data-cf data-row aria-labelledby={headingId} style={`--cf-i: ${index}; --row-i: ${row}`}>
+  <h2 class="grow__title" id={headingId}>{title}</h2>
+  <div class="grow__dots" role="group" aria-label={`Games in ${title}`}>
+    {
+      titles.map((game, i) => (
+        <button type="button" class="grow__dot" data-row-dot tabindex="-1" aria-label={`Show ${game}`} aria-current={i === 0 ? 'true' : undefined} />
+      ))
+    }
+  </div>
+  <div class="grow__track" data-row-track>
+    <div class="grow__list">
+      <slot />
+    </div>
+  </div>
+</section>
+
+<style>
+  .grow {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    scroll-snap-align: start;
+  }
+
+  /* Headline: lined up with the games' left edge; dimmed with the indicator while the
+     row isn't selected. */
+  .grow__title {
+    margin-left: var(--row-left);
+    padding-right: var(--gutter);
+    font-weight: 700;
+    font-size: 30px;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    opacity: var(--o-inactive);
+    transition: opacity var(--t-state) ease;
+  }
+  .grow.is-active .grow__title,
+  .grow:hover .grow__title,
+  .grow:focus-within .grow__title {
+    opacity: 1;
+  }
+
+  /* Indicator: lined up with the games' left edge, as wide as the red top bar (half a game). */
+  .grow__dots {
+    display: flex;
+    gap: 8px;
+    width: calc(var(--row-w) / 3);
+    margin-left: var(--row-left);
+  }
+
+  /* Page open: whole rows fade in one 180ms step apart, the first one step in too (as
+     ContainerFrame does for containers); the games inside don't animate on their own. */
+  .grow {
+    animation: grow-fade-in 600ms var(--ease-out) both;
+    animation-delay: calc(min(var(--row-i, 0) + 1, 8) * 180ms);
+  }
+  @media (min-width: 768px) {
+    .grow__list > :global(.cf) {
+      animation: none;
+    }
+  }
+  @keyframes grow-fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .grow,
+    .grow__title {
+      animation: none;
+    }
+  }
+  /* One line per game; the button is taller than the line for an easier hit. */
+  .grow__dot {
+    position: relative;
+    flex: 1 1 0;
+    height: 12px;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    opacity: var(--o-inactive);
+    transition: opacity var(--t-state) ease;
+  }
+  .grow__dot::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 3px;
+    transform: translateY(-50%);
+    background: var(--c-white);
+    opacity: 0.35;
+    transition:
+      background-color var(--t-state) ease,
+      opacity var(--t-state) ease;
+  }
+  .grow__dot:hover::before {
+    opacity: 0.7;
+  }
+  .grow__dot[aria-current='true']::before {
+    background: var(--c-red);
+    opacity: 1;
+  }
+  .grow.is-active .grow__dot,
+  .grow:hover .grow__dot,
+  .grow:focus-within .grow__dot {
+    opacity: 1;
+  }
+
+  /* Sideways track: no scrollbar; snaps each game to the column's left edge. */
+  .grow__track {
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: var(--row-left);
+    scrollbar-width: none;
+  }
+  .grow__track::-webkit-scrollbar {
+    display: none;
+  }
+  /* Games ⅔ of the column wide, one red-column width apart; the right padding lets the
+     last one snap to the left edge too. */
+  .grow__list {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--num-col);
+    width: max-content;
+    padding: 0 calc(100vw - var(--row-left) - var(--row-w) * 2 / 3) 0 var(--row-left);
+  }
+  .grow__list > :global(.cf) {
+    flex: 0 0 calc(var(--row-w) * 2 / 3);
+  }
+
+  @media (max-width: 1279px) {
+    .grow__title {
+      font-size: 26px;
+    }
+    /* Tablet: games as close together as the Projects containers. */
+    .grow__list {
+      gap: var(--card-gap);
+    }
+  }
+
+  /* Mobile: the games stack in the column like any other containers. */
+  @media (max-width: 767px) {
+    .grow,
+    .grow__track,
+    .grow__list {
+      display: contents;
+    }
+    .grow__dots {
+      display: none;
+    }
+    /* Rows have no box here: the games fade in one by one (ContainerFrame), the headline
+       with the row's first game. */
+    .grow__title {
+      animation: grow-fade-in 600ms var(--ease-out) both;
+      animation-delay: calc(min(var(--cf-i, 0) + 1, 8) * 180ms);
+      margin: 8px 0 -4px;
+      padding: 0;
+      font-size: 24px;
+      opacity: 1;
+    }
+  }
+</style>

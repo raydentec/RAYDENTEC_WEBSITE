@@ -20,9 +20,11 @@ interface Props {
   page: PageId;
   /** Render a visually hidden <h1> (pages whose first container has no h1). */
   srHeading?: boolean;
+  /** The containers are sideways-scrolling rows of games on desktop/tablet (Games). */
+  rows?: boolean;
 }
 
-const { page, srHeading = true } = Astro.props;
+const { page, srHeading = true, rows = false } = Astro.props;
 const site = await getSite();
 const pageLabel = site.pages.find((p) => p.id === page)?.label ?? '';
 const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabel} · ${site.name}`;
@@ -65,10 +67,11 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
 
     <main
       id="scroller"
-      class="scroller"
+      class:list={['scroller', { 'scroller--rows': rows }]}
       aria-label={`${pageLabel} content`}
       data-page={page}
       data-snap="off"
+      transition:name={rows ? 'scroller-rows' : 'scroller'}
       transition:animate={fade({ duration: '160ms' })}
     >
       <div class="mprofile" data-mprofile>
@@ -95,6 +98,7 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
       import '../scripts/scroll-control';
       import '../scripts/mobile-menu';
       import '../scripts/wheel';
+      import '../scripts/game-rows';
     </script>
   </body>
 </html>
@@ -168,6 +172,67 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
     height: 0;
     background: var(--c-red);
     will-change: transform;
+  }
+
+  /*
+   * ---------- Rows of games (Games, desktop/tablet) ----------
+   * The column scrolls vertically between rows like everywhere else, but spans the whole
+   * window so each row (GameRow.astro) can run out to the right edge; on the left it is
+   * cut off at the rail's / sidebar's edge (--clip-left). Rows line their games up with
+   * the usual column (--row-left, --row-w).
+   *
+   * Opening / closing the sidebar animates these variables themselves (registered below),
+   * so the rows' padding, widths and snap position (scroll-padding) all move together and
+   * the games glide over like the column on other pages. Animating the padding alone left
+   * the snap position to change at once, and the rows jumped to it.
+   */
+  @property --row-left {
+    syntax: '<length>';
+    inherits: true;
+    initial-value: 0px;
+  }
+  @property --row-w {
+    syntax: '<length>';
+    inherits: true;
+    initial-value: 0px;
+  }
+  @property --clip-left {
+    syntax: '<length>';
+    inherits: true;
+    initial-value: 0px;
+  }
+  @media (min-width: 768px) {
+    .scroller--rows {
+      --row-left: calc((100vw - var(--content-w)) / 2);
+      --row-w: var(--content-w);
+      --clip-left: calc(var(--gutter) + var(--rail-w));
+      left: 0;
+      width: 100%;
+      clip-path: inset(0 0 0 var(--clip-left));
+      transition:
+        --row-left var(--t-sidebar) var(--ease-out),
+        --row-w var(--t-sidebar) var(--ease-out),
+        --clip-left var(--t-sidebar) var(--ease-out);
+    }
+    /* Rows one game button's height apart (the card buttons: 56px, 52px on tablet). */
+    .scroller--rows .column {
+      gap: 56px;
+    }
+  }
+  @media (min-width: 768px) and (max-width: 1279px) {
+    .scroller--rows .column {
+      gap: 52px;
+    }
+  }
+  @media (min-width: 1280px) {
+    /* Sidebar open: the column sits right of it; games are cut off at the sidebar's edge. */
+    :global(html[data-sidebar='expanded']) .scroller--rows {
+      --row-left: var(--col-left-expanded);
+      --row-w: var(--content-w-expanded);
+      --clip-left: calc(var(--gutter) + var(--sidebar-w));
+      left: 0;
+      width: 100%;
+    }
   }
 
   /* ---------- Mobile ---------- */

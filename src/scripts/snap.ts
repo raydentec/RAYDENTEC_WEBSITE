@@ -188,7 +188,7 @@ onPageLoad(() => {
   updateSnapping(scroller);
   // The scroller is swapped on navigation, so this listener is bound once per page.
   scroller.addEventListener('focusin', (e) => {
-    const cf = (e.target as Element).closest<HTMLElement>('[data-cf]');
+    const cf = containers(scroller).find((c) => c.contains(e.target as Node));
     if (cf) setActive(scroller, cf);
   });
 });
