@@ -88,6 +88,8 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
       <div class="track__thumb" data-track-thumb></div>
     </div>
     <ScrollControl />
+    <!-- Page overlays outside the column (Projects filter panel): above SCROLL, below the menu. -->
+    <slot name="overlay" />
     <MobileMenu current={page} />
     <Footer />
 

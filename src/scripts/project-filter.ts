@@ -1,7 +1,7 @@
 /**
  * Projects category filter (pages/projects.astro). Category buttons toggle on and off
- * and can be combined; the groups of the selected categories are shown. All clears the
- * selection and shows every group (also when the last category is switched off).
+ * and can be combined; the groups of the selected categories are shown. With none
+ * selected every group shows; Clear (disabled then) switches them all off.
  *
  * Every change reloads the list: the shown headlines and containers fade out (as the
  * column does when leaving a page), then the new selection is shown from the start —
@@ -46,9 +46,9 @@ function load(): Set<string> {
  */
 function show(root: ParentNode, selected: Set<string>) {
   root.querySelectorAll<HTMLElement>('[data-filter-btn]').forEach((b) => {
-    const category = b.dataset.filterBtn ?? '';
-    b.setAttribute('aria-pressed', String(category === 'All' ? selected.size === 0 : selected.has(category)));
+    b.setAttribute('aria-pressed', String(selected.has(b.dataset.filterBtn ?? '')));
   });
+  root.querySelectorAll<HTMLButtonElement>('[data-filter-clear]').forEach((c) => (c.disabled = selected.size === 0));
   root.querySelectorAll<HTMLElement>('[data-category]').forEach((group) => {
     group.hidden = selected.size > 0 && !selected.has(group.dataset.category ?? '');
   });
@@ -65,12 +65,15 @@ function show(root: ParentNode, selected: Set<string>) {
   return shown;
 }
 
-/** Open Projects with the remembered selection: the first shown container is selected. */
-function restore(scroller: HTMLElement) {
+/**
+ * Open Projects with the remembered selection: the first shown container is selected.
+ * `root` is the (incoming) document — the filter panel sits outside the column.
+ */
+function restore(root: ParentNode) {
   const selected = load();
-  if (!selected.size || !scroller.querySelector('[data-filter]')) return;
-  const shown = show(scroller, selected);
-  scroller.querySelectorAll('[data-cf]').forEach((cf) => cf.classList.toggle('is-active', cf === shown[0]));
+  if (!selected.size || !root.querySelector('[data-filter]')) return;
+  const shown = show(root, selected);
+  root.querySelectorAll('[data-cf]').forEach((cf) => cf.classList.toggle('is-active', cf === shown[0]));
 }
 
 /** Same as the content column's fade when leaving a page (Shell.astro). */
@@ -99,14 +102,14 @@ function fadeOut(scroller: HTMLElement, then: () => void) {
   });
 }
 
-function apply(scroller: HTMLElement, buttons: HTMLElement[]) {
+function apply(scroller: HTMLElement) {
   const selected = new Set(
-    buttons
-      .filter((b) => b.dataset.filterBtn !== 'All' && b.getAttribute('aria-pressed') === 'true')
-      .map((b) => b.dataset.filterBtn ?? ''),
+    Array.from(document.querySelectorAll<HTMLElement>('[data-filter-btn][aria-pressed="true"]')).map(
+      (b) => b.dataset.filterBtn ?? '',
+    ),
   );
   save(selected);
-  const shown = show(scroller, selected);
+  const shown = show(document, selected);
 
   // Clear the selection (it may sit on a now hidden container) and go back to the start:
   // the first shown container — with the buttons and its headline — on the snap line.
@@ -131,30 +134,25 @@ function apply(scroller: HTMLElement, buttons: HTMLElement[]) {
 }
 
 document.addEventListener('click', (e) => {
-  const btn = (e.target as Element).closest<HTMLButtonElement>('[data-filter-btn]');
+  const target = e.target as Element;
+  const btn = target.closest<HTMLElement>('[data-filter-btn]');
+  const clear = target.closest<HTMLButtonElement>('[data-filter-clear]');
   const scroller = getScroller();
-  const buttons = Array.from(btn?.parentElement?.querySelectorAll<HTMLElement>('[data-filter-btn]') ?? []);
-  const all = buttons.find((b) => b.dataset.filterBtn === 'All');
-  if (!btn || !scroller || !all) return;
+  if (!scroller || (!btn && !clear)) return;
+  const buttons = Array.from(document.querySelectorAll<HTMLElement>('[data-filter-btn]'));
   const pressed = (b: HTMLElement) => b.getAttribute('aria-pressed') === 'true';
-  const press = (b: HTMLElement, on: boolean) => b.setAttribute('aria-pressed', String(on));
 
-  if (btn === all) {
-    if (pressed(all)) return;
-    buttons.forEach((b) => press(b, b === all));
-  } else {
-    press(btn, !pressed(btn));
-    press(all, !buttons.some((b) => b !== all && pressed(b)));
-  }
-  fadeOut(scroller, () => apply(scroller, buttons));
+  if (btn) btn.setAttribute('aria-pressed', String(!pressed(btn)));
+  else if (buttons.some(pressed)) buttons.forEach((b) => b.setAttribute('aria-pressed', 'false'));
+  else return;
+  document
+    .querySelectorAll<HTMLButtonElement>('[data-filter-clear]')
+    .forEach((c) => (c.disabled = !buttons.some(pressed)));
+  fadeOut(scroller, () => apply(scroller));
 });
 
 // Coming back to Projects: apply the selection to the incoming page before the swap,
 // so snap.ts positions and selects within the filtered list.
-document.addEventListener('astro:before-swap', (e) => {
-  const scroller = (e as TransitionBeforeSwapEvent).newDocument.getElementById('scroller');
-  if (scroller) restore(scroller);
-});
+document.addEventListener('astro:before-swap', (e) => restore((e as TransitionBeforeSwapEvent).newDocument));
 // Full page load (first visit in the tab, reload).
-const initial = getScroller();
-if (initial) restore(initial);
+restore(document);

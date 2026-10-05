@@ -2,11 +2,13 @@
 /**
  * Mobile fixed header (HANDOFF §9). Shown by scripts/mobile.ts once the
  * in-flow profile block scrolls past the header line (<html data-mheader="on">).
+ * Right side: SOCIALS and VIDEOS squares, styled like the rail's (Rail.astro).
  */
 import Icon from './Icon.astro';
-import { getSite, ROUTES } from '../lib/content';
+import { getSite, linkAttrs, ROUTES } from '../lib/content';
 
 const site = await getSite();
+const [videos] = site.ctas;
 ---
 
 <header class="mheader" data-mheader transition:persist="mobile-header">
@@ -15,10 +17,16 @@ const site = await getSite();
     <p class="mheader__name">{site.name}</p>
     <p class="mheader__tagline">{site.tagline}<br /><span class="mheader__handle">{site.handle}</span></p>
   </div>
-  <a class="mheader__socials" href={ROUTES.community} aria-label="Social links (Community page)">
-    <Icon name="arrowUR" size={22} />
-    <span aria-hidden="true">SOCIALS</span>
-  </a>
+  <div class="mheader__ctas">
+    <a class="mheader__cta mheader__cta--outline" href={ROUTES.community} aria-label="Social links (Community page)">
+      <Icon name="arrowUR" size={22} />
+      <span aria-hidden="true">SOCIALS</span>
+    </a>
+    <a class="mheader__cta mheader__cta--primary" aria-label={videos.label} {...linkAttrs(videos.href)}>
+      <Icon name="arrowUR" size={22} />
+      <span aria-hidden="true">VIDEOS</span>
+    </a>
+  </div>
 </header>
 
 <style>
@@ -81,7 +89,12 @@ const site = await getSite();
     color: var(--c-red);
     font-weight: 700;
   }
-  .mheader__socials {
+  .mheader__ctas {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .mheader__cta {
     width: 54px;
     height: 54px;
     flex-shrink: 0;
@@ -97,10 +110,38 @@ const site = await getSite();
     font-size: 9px;
     transition:
       background-color var(--t-fade),
+      border-color var(--t-fade),
       color var(--t-fade);
   }
-  .mheader__socials:hover {
+  .mheader__cta--outline:hover {
     background: var(--c-red);
     color: var(--c-black);
+  }
+  .mheader__cta--primary {
+    background: var(--c-red);
+    color: var(--c-black);
+  }
+  .mheader__cta--primary:hover,
+  .mheader__cta--primary:focus-visible {
+    background: var(--c-white);
+    border-color: var(--c-white);
+  }
+
+  /* Narrow phones: smaller logo and gaps; the name (about 4.1 × its size wide) scales
+     down to fit beside the two buttons. */
+  @media (max-width: 379px) {
+    .mheader {
+      gap: 10px;
+    }
+    .mheader__logo {
+      width: 56px;
+      height: 56px;
+    }
+    .mheader__name {
+      font-size: min(28px, calc((100vw - 236px) / 4.2));
+    }
+    .mheader__tagline {
+      font-size: 12px;
+    }
   }
 </style>

@@ -1,5 +1,7 @@
 ---
 import ContainerFrame from '../components/ContainerFrame.astro';
+import FilterButton from '../components/FilterButton.astro';
+import FilterPanel from '../components/FilterPanel.astro';
 import ProjectCard from '../components/ProjectCard.astro';
 import Shell from '../layouts/Shell.astro';
 import { getItems, newestFirst } from '../lib/content';
@@ -23,15 +25,6 @@ const groups = projectCategories
 ---
 
 <Shell page="projects">
-  <div class="pfilter" role="group" aria-label="Filter projects by category" data-filter>
-    {
-      ['All', ...projectCategories].map((label, i) => (
-        <button type="button" class="pfilter__btn" data-filter-btn={label} aria-pressed={i === 0 ? 'true' : 'false'}>
-          {label}
-        </button>
-      ))
-    }
-  </div>
   {
     groups.map((g) => (
       <section class="pgroup" data-category={g.category} aria-labelledby={`projects-${g.category}`}>
@@ -46,59 +39,23 @@ const groups = projectCategories
       </section>
     ))
   }
+  <FilterPanel slot="overlay" />
+  <FilterButton />
 </Shell>
 
 <style>
   /*
-   * The filter buttons and each category headline have no snap point of their own: they
-   * ride along with the container below them. That container's scroll-margin-top reaches
-   * up to the headline — and, for the first group shown, up to the buttons too — so it
-   * snaps with them on top (CSS snapping, and the scripts via dom.ts snapTop).
-   * Sizes are fixed so these margins can be computed here: --filter-h (one row of
-   * buttons), --title-size (headline, line-height 1), --title-gap (headline → container),
-   * --title-top (extra space above a headline, on top of the column gap).
+   * Each category headline has no snap point of its own: it rides along with the
+   * container below it — that container's scroll-margin-top reaches up to the headline,
+   * so it snaps with it on top (CSS snapping, and the scripts via dom.ts snapTop). Sizes
+   * are fixed so the margin can be computed here: --title-size (headline, line-height 1),
+   * --title-gap (headline → container), --title-top (extra space above a headline, on top
+   * of the column gap). The category filter is a panel over the content (FilterPanel.astro).
    */
-  .pfilter,
   .pgroup {
-    --filter-h: 44px;
     --title-size: 30px;
     --title-gap: 12px;
     --title-top: 20px;
-  }
-
-  .pfilter {
-    display: flex;
-    gap: 10px;
-    height: var(--filter-h);
-    animation: p-fade-in 600ms var(--ease-out) both;
-    animation-delay: 180ms;
-  }
-  /* Inactive: red border and label, no fill. Hover and active: solid red fill, black label. */
-  .pfilter__btn {
-    height: 100%;
-    padding: 0 22px;
-    border: 1.5px solid var(--c-red);
-    background: rgba(204, 24, 30, 0);
-    color: var(--c-red);
-    font-family: var(--f-ui);
-    font-weight: 600;
-    font-size: 20px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition:
-      background-color var(--t-state) ease,
-      border-color var(--t-state) ease,
-      color var(--t-state) ease;
-  }
-  .pfilter__btn:hover,
-  .pfilter__btn[aria-pressed='true'] {
-    border-color: var(--c-red);
-    background: var(--c-red);
-    color: var(--c-black);
-  }
-  .pfilter__btn:focus-visible {
-    outline: 2px solid var(--c-white);
-    outline-offset: 2px;
   }
 
   .pgroup:not([hidden]) {
@@ -127,46 +84,29 @@ const groups = projectCategories
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .pfilter,
     .pgroup__title {
       animation: none;
     }
   }
 
-  /* Snap edges: the headline rides with the group's first container… */
+  /* The first headline shown starts the column (no space above it). */
+  .pgroup:not([hidden]):not(.pgroup:not([hidden]) ~ .pgroup) .pgroup__title {
+    margin-top: 0;
+  }
+
+  /* Snap edges: the headline rides with the group's first container. */
   .pgroup__title + :global(.cf) {
     scroll-margin-top: calc(var(--title-size) + var(--title-gap));
   }
-  /* …and the buttons too with the first group shown. */
-  .pgroup:not([hidden]):not(.pgroup:not([hidden]) ~ .pgroup) .pgroup__title + :global(.cf) {
-    scroll-margin-top: calc(var(--filter-h) + var(--card-gap) + var(--title-top) + var(--title-size) + var(--title-gap));
-  }
 
   @media (max-width: 1279px) {
-    .pfilter,
     .pgroup {
-      --filter-h: 42px;
       --title-size: 26px;
     }
-    .pfilter__btn {
-      padding: 0 18px;
-      font-size: 18px;
-    }
   }
-  /* Mobile: the four buttons fill the row, each as wide as its label plus an equal share
-     of what's left. */
   @media (max-width: 767px) {
-    .pfilter,
     .pgroup {
       --title-size: 24px;
-    }
-    .pfilter {
-      gap: 8px;
-    }
-    .pfilter__btn {
-      flex: 1 1 auto;
-      padding: 0 10px;
-      font-size: 16px;
     }
   }
 </style>

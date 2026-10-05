@@ -1,0 +1,203 @@
+---
+/**
+ * Projects FILTER control (pages/projects.astro) — a glass square like SCROLL (global
+ * .ctl), right above it (as far apart as SCROLL is from what's below it). Pressing it
+ * opens / closes the category filter panel (FilterPanel.astro); so do the panel's ×
+ * button, Escape, and a click anywhere outside the panel.
+ *
+ * Opening sideways works like SCROLL (scripts/scroll-control.ts): hover or keyboard focus
+ * sets data-state="open", and it goes back to "idle" 2s after the pointer / focus leaves.
+ * CSS only decides how each state looks per size: on desktop / tablet "open" is SCROLL's
+ * full width — "FILTER" on the left, the icon on the right — while on mobile it stays a
+ * square (and is shown once the header is). So the state outlives a size change: back
+ * from mobile it opens again if it's still meant to be open.
+ */
+import Icon from './Icon.astro';
+---
+
+<button
+  type="button"
+  class="pfilter-ctl ctl"
+  aria-label="Filter projects"
+  aria-controls="project-filter"
+  aria-expanded="false"
+  data-filter-toggle
+  data-state="idle"
+>
+  <span class="pfilter-ctl__label" aria-hidden="true">FILTER</span>
+  <Icon name="filter" size={30} />
+</button>
+
+<script>
+  /* ---------- Filter panel: open / close ---------- */
+
+  const panel = () => document.querySelector<HTMLElement>('[data-filter-panel]');
+  const isOpen = () => panel()?.hasAttribute('data-open') ?? false;
+
+  function setOpen(open: boolean) {
+    const p = panel();
+    if (!p) return;
+    p.toggleAttribute('data-open', open);
+    document
+      .querySelectorAll('[data-filter-toggle]')
+      .forEach((btn) => btn.setAttribute('aria-expanded', String(open)));
+  }
+
+  /** Close, and give focus back to the FILTER button if it was inside the panel. */
+  function close() {
+    const hadFocus = panel()?.contains(document.activeElement);
+    setOpen(false);
+    if (hadFocus) document.querySelector<HTMLElement>('[data-filter-toggle]')?.focus();
+  }
+
+  document.addEventListener('click', (e) => {
+    const target = e.target as Element;
+    if (target.closest('[data-filter-toggle]')) return setOpen(!isOpen());
+    if (target.closest('[data-filter-close]')) return close();
+    // A click anywhere outside the panel closes it.
+    if (isOpen() && !target.closest('[data-filter-panel]')) setOpen(false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isOpen()) close();
+  });
+
+  /* ---------- Hover / keyboard focus: open sideways, close 2s after leaving ---------- */
+  /* (as SCROLL in scripts/scroll-control.ts) */
+
+  const HOVER_COLLAPSE_MS = 2000;
+  let collapseTimer = 0;
+  /** Pointer over (or keyboard focus on) the button: don't collapse it. */
+  let held = false;
+
+  const button = () => document.querySelector<HTMLElement>('[data-filter-toggle]');
+  const setState = (state: 'open' | 'idle') => {
+    const btn = button();
+    if (btn && btn.dataset.state !== state) btn.dataset.state = state;
+  };
+
+  function hold() {
+    held = true;
+    window.clearTimeout(collapseTimer);
+    setState('open');
+  }
+  function release() {
+    held = false;
+    window.clearTimeout(collapseTimer);
+    collapseTimer = window.setTimeout(() => {
+      if (!held) setState('idle');
+    }, HOVER_COLLAPSE_MS);
+  }
+
+  document.addEventListener('pointerover', (e) => {
+    if ((e.target as Element | null)?.closest('[data-filter-toggle]')) hold();
+  });
+  document.addEventListener('pointerout', (e) => {
+    const btn = (e.target as Element | null)?.closest('[data-filter-toggle]');
+    if (btn && !btn.contains(e.relatedTarget as Node | null) && !btn.matches(':focus-visible')) release();
+  });
+  document.addEventListener('focusin', (e) => {
+    if ((e.target as Element | null)?.closest('[data-filter-toggle]')?.matches(':focus-visible')) hold();
+  });
+  document.addEventListener('focusout', (e) => {
+    const btn = (e.target as Element | null)?.closest('[data-filter-toggle]');
+    if (btn && !btn.matches(':hover')) release();
+  });
+
+  /** A new page brings a fresh (closed) button: forget the old one's hover / timer. */
+  document.addEventListener('astro:after-swap', () => {
+    window.clearTimeout(collapseTimer);
+    held = false;
+  });
+</script>
+
+<style>
+  .pfilter-ctl {
+    position: fixed;
+    right: var(--ctl-right);
+    bottom: calc(var(--ctl-bottom) + var(--ctl-h) + 12px);
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    width: var(--ctl-h);
+    height: var(--ctl-h);
+    padding: 0;
+    overflow: hidden;
+    font-family: var(--f-ui);
+    font-weight: 600;
+    font-size: var(--ctl-font);
+    letter-spacing: 0.02em;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    animation: pfilter-ctl-in 600ms var(--ease-out) 180ms both;
+    transition: width var(--t-ctl) var(--ease-out);
+  }
+  /* Collapsing hides the label at once; opening fades it back in. */
+  .pfilter-ctl__label {
+    position: absolute;
+    left: 28px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    transition: none;
+  }
+  /* Anchored to the right edge, so it stays put while the width animates. */
+  .pfilter-ctl :global(svg) {
+    position: absolute;
+    top: 50%;
+    right: calc((var(--ctl-h) - 4px - 30px) / 2);
+    transform: translateY(-50%);
+    transition: right var(--t-ctl) var(--ease-out);
+  }
+  @keyframes pfilter-ctl-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pfilter-ctl {
+      animation: none;
+    }
+  }
+
+  /* Desktop / tablet, open: SCROLL's full width, label fades in. */
+  @media (min-width: 768px) {
+    .pfilter-ctl[data-state='open'] {
+      width: var(--ctl-w);
+    }
+    .pfilter-ctl[data-state='open'] .pfilter-ctl__label {
+      opacity: 1;
+      transition: opacity var(--t-ctl) ease;
+    }
+    .pfilter-ctl[data-state='open'] :global(svg) {
+      right: 23px;
+    }
+  }
+  @media (min-width: 768px) and (max-width: 1279px) {
+    .pfilter-ctl__label {
+      left: 27px;
+    }
+    .pfilter-ctl[data-state='open'] :global(svg) {
+      right: 22px;
+    }
+  }
+
+  /*
+   * Mobile: a square in every state; shown with the header — fading in as the header
+   * appears, hidden at once (so crossing sizes never fades it). Crossing into mobile while
+   * open, it glides shut (the width transition above).
+   */
+  @media (max-width: 767px) {
+    .pfilter-ctl {
+      opacity: 0;
+      visibility: hidden;
+    }
+    :global(html[data-mheader='on']) .pfilter-ctl {
+      opacity: 1;
+      visibility: visible;
+      transition:
+        width var(--t-ctl) var(--ease-out),
+        opacity var(--t-fade) ease;
+    }
+  }
+</style>
