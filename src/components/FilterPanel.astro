@@ -8,7 +8,9 @@
  * that scrolls sideways across the whole panel width (scripts/project-filter.ts filters
  * the list as they're toggled). FILTER, Escape or a click outside close it.
  *
- * Closed it's hidden (and out of the tab order); open, it fades / slides in.
+ * Closed it's hidden (and out of the tab order); open, it fades / slides in. Sideways
+ * scrolling anywhere on the panel — trackpad / shift+wheel, or a touch swipe — moves the
+ * button row.
  */
 import { projectCategories } from '../lib/project-categories';
 ---
@@ -29,6 +31,54 @@ import { projectCategories } from '../lib/project-categories';
   </div>
 </div>
 
+<script>
+  // Sideways scroll gestures anywhere on the panel scroll the category row (the row itself
+  // scrolls natively).
+  const rowOf = (el: Element | null) =>
+    el?.closest('[data-filter-panel]')?.querySelector<HTMLElement>('[data-filter]') ?? null;
+  const onRow = (el: Element | null) => !!el?.closest('[data-filter]');
+
+  // Trackpad sideways swipe, or shift + wheel.
+  document.addEventListener(
+    'wheel',
+    (e) => {
+      const target = e.target as Element | null;
+      const row = rowOf(target);
+      if (!row || onRow(target) || e.ctrlKey) return;
+      const dx = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.shiftKey ? e.deltaY : 0;
+      if (!dx) return;
+      e.preventDefault();
+      e.stopPropagation(); // not forwarded to the page (scripts/wheel.ts)
+      row.scrollLeft += e.deltaMode === WheelEvent.DOM_DELTA_LINE ? dx * 16 : dx;
+    },
+    { passive: false, capture: true },
+  );
+
+  // Touch: drag sideways anywhere on the panel (vertical drags are left alone).
+  let drag: { row: HTMLElement; id: number; x: number; y: number; on: boolean } | null = null;
+  document.addEventListener('pointerdown', (e) => {
+    const target = e.target as Element | null;
+    const row = rowOf(target);
+    if (e.pointerType !== 'touch' || !row || onRow(target)) return;
+    drag = { row, id: e.pointerId, x: e.clientX, y: e.clientY, on: false };
+  });
+  document.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const dx = e.clientX - drag.x;
+    if (!drag.on) {
+      if (Math.abs(dx) < 6 || Math.abs(dx) < Math.abs(e.clientY - drag.y)) return;
+      drag.on = true;
+    }
+    drag.row.scrollLeft -= dx;
+    drag.x = e.clientX;
+  });
+  const endDrag = (e: PointerEvent) => {
+    if (drag && e.pointerId === drag.id) drag = null;
+  };
+  document.addEventListener('pointerup', endDrag);
+  document.addEventListener('pointercancel', endDrag);
+</script>
+
 <style>
   /*
    * As wide as the column (as Shell.astro), at the bottom: from SCROLL's bottom edge up,
@@ -37,10 +87,13 @@ import { projectCategories } from '../lib/project-categories';
   .fpanel {
     --box-pad: 20px;
     --title-size: 30px;
-    --filter-h: 44px;
+    /* Buttons as tall as FILTER / SCROLL. */
+    --filter-h: var(--ctl-h);
     position: fixed;
     display: flex;
     flex-direction: column;
+    /* Horizontal touch drags are handled by the script (sideways scroll of the row). */
+    touch-action: pan-y;
     bottom: var(--ctl-bottom);
     /* About three button heights plus the padding, at every size. */
     height: calc(3 * var(--ctl-h) + 2 * var(--box-pad));
@@ -155,13 +208,16 @@ import { projectCategories } from '../lib/project-categories';
   .pfilter__btn {
     flex-shrink: 0;
     height: 100%;
-    padding: 0 22px;
+    /* Space left and right of the label 1.5× the space above and below its capitals
+       (Chakra Petch caps are 0.7em tall), inside the 1.5px border. */
+    padding: 0 calc(1.5 * (var(--filter-h) - 3px - 0.7em) / 2);
     border: 1.5px solid rgba(255, 255, 255, 0.5);
     background: rgba(255, 255, 255, 0);
     color: var(--c-white);
     font-family: var(--f-ui);
     font-weight: 600;
     font-size: 20px;
+    line-height: 1;
     text-transform: uppercase;
     cursor: pointer;
     transition:
@@ -187,10 +243,8 @@ import { projectCategories } from '../lib/project-categories';
     .fpanel {
       --box-pad: 16px;
       --title-size: 26px;
-      --filter-h: 42px;
     }
     .pfilter__btn {
-      padding: 0 18px;
       font-size: 18px;
     }
   }
@@ -204,7 +258,6 @@ import { projectCategories } from '../lib/project-categories';
       gap: 8px;
     }
     .pfilter__btn {
-      padding: 0 14px;
       font-size: 16px;
     }
   }

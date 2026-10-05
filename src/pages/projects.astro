@@ -62,6 +62,10 @@ const groups = projectCategories
   .pgroup:not([hidden]) {
     display: contents;
   }
+  /* A container that isn't selected can be clicked to scroll to it (scripts/snap.ts). */
+  .pgroup :global(.cf:not(.is-active)) {
+    cursor: pointer;
+  }
   /* Headline: dimmed with its container while that isn't selected. */
   .pgroup__title {
     margin: var(--title-top) 0 calc(var(--title-gap) - var(--card-gap));

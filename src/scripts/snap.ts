@@ -97,6 +97,19 @@ function updateTail(scroller: HTMLElement) {
   column.style.setProperty('--tail', `${tail}px`);
 }
 
+/**
+ * Projects: clicking a container that isn't selected (anywhere but its links / buttons)
+ * scrolls it onto the snap line; once scrolling settles it becomes the selected one.
+ */
+document.addEventListener('click', (e) => {
+  const scroller = getScroller();
+  const target = e.target as Element | null;
+  if (!scroller || !target || scroller.dataset.page !== 'projects' || target.closest('a, button')) return;
+  const cf = containers(scroller).find((c) => c.contains(target));
+  if (!cf || cf.classList.contains('is-active')) return;
+  scroller.scrollBy({ top: snapTop(cf) - snapLine(scroller), behavior: scrollBehavior() });
+});
+
 /** Re-measure after the column's contents change (Projects filter, project-filter.ts). */
 export function refreshColumn(scroller: HTMLElement) {
   updateTail(scroller);
