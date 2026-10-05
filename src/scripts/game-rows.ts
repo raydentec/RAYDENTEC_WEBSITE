@@ -1,14 +1,12 @@
 /**
- * Games rows (desktop/tablet, GameRow.astro). Each row's games scroll sideways in its
+ * Games rows (GameRow.astro). Each row's games scroll sideways in its
  * track (CSS x-snapping). The game resting at the row's left edge is the row's current
  * one: its indicator line is lit and — while the row is the active container (snap.ts)
  * — it shows as selected (`.is-active`). Clicking an indicator line or a partly visible
  * game scrolls the row to that game. The ← / → keys step through the selected row's
  * games — no need to click or focus it first.
- *
- * Mobile: the rows just stack; snap.ts selects the games directly.
  */
-import { ACTIVE_CHANGE, getRootState, getScroller, mq, onPageLoad, scrollBehavior } from './dom';
+import { ACTIVE_CHANGE, getRootState, getScroller, onPageLoad, scrollBehavior } from './dom';
 
 const SETTLE_MS = 90;
 const settleTimers = new WeakMap<HTMLElement, number>();
@@ -42,7 +40,6 @@ function currentIndex(row: HTMLElement) {
 
 function sync(row: HTMLElement) {
   targets.delete(row);
-  if (mq.mobile.matches) return;
   const current = currentIndex(row);
   const active = row.classList.contains('is-active');
   games(row).forEach((game, i) => game.classList.toggle('is-active', active && i === current));
@@ -85,7 +82,6 @@ document.addEventListener('scrollend', (e) => onTrackScroll(e, 0), {
 });
 
 document.addEventListener('click', (e) => {
-  if (mq.mobile.matches) return;
   const target = e.target as Element;
   const row = target.closest<HTMLElement>('[data-row]');
   if (!row) return;
@@ -105,7 +101,7 @@ document.addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
   if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
-  if (mq.mobile.matches || getRootState('mmenu') === 'open') return;
+  if (getRootState('mmenu') === 'open') return;
   const target = e.target as HTMLElement;
   if (target.closest('input, textarea, select, [contenteditable]')) return;
   const row =
@@ -121,12 +117,3 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener(ACTIVE_CHANGE, syncAll);
 window.addEventListener('resize', syncAll);
 onPageLoad(syncAll);
-
-// Crossing the mobile breakpoint swaps what snaps (rows ↔ games, dom.ts containers()):
-// clear the selection and let snap.ts pick the container at the snap line again.
-mq.mobile.addEventListener('change', () => {
-  const scroller = getScroller();
-  if (!scroller?.querySelector('[data-row]')) return;
-  scroller.querySelectorAll('[data-cf].is-active').forEach((cf) => cf.classList.remove('is-active'));
-  scroller.dispatchEvent(new Event('scroll'));
-});

@@ -1,6 +1,6 @@
 ---
 /**
- * One Community link section (no picture): brand icon tile + eyebrow/title, description,
+ * One Community link section (no picture): brand icon tile + title (centred on it), description,
  * then the action button with its caption. Two of these sit side by side in each
  * Community container (pages/community.astro), each with its own black background and
  * red border — bright 2px when the container is selected, dim 1.5px otherwise, like the
@@ -13,7 +13,6 @@ interface Props {
   platform: string;
   icon: string;
   color: string;
-  eyebrow: string;
   title: string;
   description: string;
   caption: string;
@@ -21,7 +20,7 @@ interface Props {
   buttonLabel: string;
 }
 
-const { platform, icon, color, eyebrow, title, description, caption, href, buttonLabel } = Astro.props;
+const { platform, icon, color, title, description, caption, href, buttonLabel } = Astro.props;
 
 // YouTube uses the filled play glyph; X and GitHub tiles get a light edge (dark fills).
 const tileIcon = platform === 'youtube' ? 'play-filled' : icon;
@@ -34,10 +33,7 @@ const tileEdge = platform === 'x' || platform === 'github';
       <span class:list={['card__tile', { 'card__tile--edge': tileEdge }]} style={`background: ${color}`}>
         <Icon name={tileIcon} size={26} />
       </span>
-      <div class="card__titles">
-        <span class="eyebrow">{eyebrow}</span>
-        <h2 class="card__title">{title}</h2>
-      </div>
+      <h2 class="card__title">{title}</h2>
     </div>
     <p class="card__desc">{description}</p>
     <div class="card__actions">
@@ -94,13 +90,8 @@ const tileEdge = platform === 'x' || platform === 'github';
   .card__tile--edge {
     border: 1px solid rgba(255, 255, 255, 0.35);
   }
-  .card__titles {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 0;
-  }
   .card__title {
+    min-width: 0;
     font-weight: 600;
     font-size: 28px;
     line-height: 1.05;
@@ -184,9 +175,6 @@ const tileEdge = platform === 'x' || platform === 'github';
     .card__tile {
       width: 46px;
       height: 46px;
-    }
-    .card__titles {
-      gap: 3px;
     }
     .card__title {
       font-size: 22px;

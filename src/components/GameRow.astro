@@ -1,9 +1,8 @@
 ---
 /**
- * One sideways row of games (Games page, desktop/tablet), headed by its category. The
- * column snaps between rows
- * like it snaps between containers on other pages; inside a row the games scroll and
- * snap sideways (scripts/game-rows.ts). Instead of a scrollbar, an indicator above the
+ * One sideways row of games (Games page), headed by its category. The column snaps
+ * between rows — at the headline — like it snaps between containers on other pages;
+ * inside a row the games scroll and snap sideways (scripts/game-rows.ts). Instead of a scrollbar, an indicator above the
  * row shows one line per game — together as wide as a selected game's red top bar — with
  * the current game's line lit; clicking a line scrolls to that game. The lines are left
  * out of the Tab order — on the keyboard ← / → step through the row (game-rows.ts).
@@ -11,15 +10,15 @@
  * Opening the page: the rows fade in one after another like containers on other pages
  * (the games in them don't fade in on their own).
  *
- * Mobile: no row — the headline stays, and the games stack under it in the column like
- * containers on other pages.
+ * Mobile: the same, with games 85% of the column wide so the next one peeks in. The red
+ * bar spans the whole selected game there (ContainerFrame), and so does the indicator.
  */
 interface Props {
   /** Headline: the games' category. */
   title: string;
   /** Titles of the games in the row, for the indicator buttons. */
   titles: string[];
-  /** Position of the row's first game on the page (0-based): staggers the mobile fade-in. */
+  /** Position of the row's first game on the page (0-based). */
   index: number;
   /** Position of the row on the page (0-based): staggers its fade-in. */
   row: number;
@@ -30,7 +29,7 @@ const { title, titles, index, row, active = false } = Astro.props;
 const headingId = `games-${index}`;
 ---
 
-<section class:list={['grow', { 'is-active': active }]} data-cf data-row aria-labelledby={headingId} style={`--cf-i: ${index}; --row-i: ${row}`}>
+<section class:list={['grow', { 'is-active': active }]} data-cf data-row aria-labelledby={headingId} style={`--row-i: ${row}`}>
   <h2 class="grow__title" id={headingId}>{title}</h2>
   <div class="grow__dots" role="group" aria-label={`Games in ${title}`}>
     {
@@ -48,6 +47,8 @@ const headingId = `games-${index}`;
 
 <style>
   .grow {
+    /* --row-left / --row-w: the usual column's left edge and width (Shell.astro). */
+    --game-w: calc(var(--row-w) * 2 / 3);
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -66,6 +67,11 @@ const headingId = `games-${index}`;
     opacity: var(--o-inactive);
     transition: opacity var(--t-state) ease;
   }
+  /* Rows that aren't selected can't be clicked or hovered (wheel / touch input goes to the
+     column underneath, so scrolling to them still works). */
+  .grow:not(.is-active) {
+    pointer-events: none;
+  }
   .grow.is-active .grow__title,
   .grow:hover .grow__title,
   .grow:focus-within .grow__title {
@@ -76,7 +82,7 @@ const headingId = `games-${index}`;
   .grow__dots {
     display: flex;
     gap: 8px;
-    width: calc(var(--row-w) / 3);
+    width: calc(var(--game-w) / 2);
     margin-left: var(--row-left);
   }
 
@@ -86,10 +92,8 @@ const headingId = `games-${index}`;
     animation: grow-fade-in 600ms var(--ease-out) both;
     animation-delay: calc(min(var(--row-i, 0) + 1, 8) * 180ms);
   }
-  @media (min-width: 768px) {
-    .grow__list > :global(.cf) {
-      animation: none;
-    }
+  .grow .grow__list > :global(.cf) {
+    animation: none;
   }
   @keyframes grow-fade-in {
     from {
@@ -97,8 +101,7 @@ const headingId = `games-${index}`;
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .grow,
-    .grow__title {
+    .grow {
       animation: none;
     }
   }
@@ -153,48 +156,54 @@ const headingId = `games-${index}`;
   .grow__track::-webkit-scrollbar {
     display: none;
   }
-  /* Games ⅔ of the column wide, one red-column width apart; the right padding lets the
+  /* Games ⅔ of the column wide, 32px apart at every size; the right padding lets the
      last one snap to the left edge too. */
   .grow__list {
     display: flex;
     align-items: flex-start;
-    gap: var(--num-col);
+    gap: 32px;
     width: max-content;
-    padding: 0 calc(100vw - var(--row-left) - var(--row-w) * 2 / 3) 0 var(--row-left);
+    padding: 0 calc(100vw - var(--row-left) - var(--game-w)) 0 var(--row-left);
   }
   .grow__list > :global(.cf) {
-    flex: 0 0 calc(var(--row-w) * 2 / 3);
+    flex: 0 0 var(--game-w);
   }
 
   @media (max-width: 1279px) {
     .grow__title {
       font-size: 26px;
     }
-    /* Tablet: games as close together as the Projects containers. */
-    .grow__list {
-      gap: var(--card-gap);
-    }
   }
 
-  /* Mobile: the games stack in the column like any other containers. */
+  /*
+   * Mobile: the column is padded by the gutter, so headline and indicator line up by
+   * themselves; the track reaches out to both screen edges. The transparent space below
+   * the box (see ContainerFrame) moves from the games to the row.
+   */
   @media (max-width: 767px) {
-    .grow,
-    .grow__track,
-    .grow__list {
-      display: contents;
+    .grow {
+      --row-left: var(--gutter);
+      --row-w: calc(100vw - 2 * var(--gutter));
+      --game-w: calc(var(--row-w) * 0.85);
+      padding-bottom: calc(var(--menu-bar-bottom) - var(--footer-h) + var(--ctl-h) - 2px);
+    }
+    .grow:last-child {
+      padding-bottom: calc(var(--ctl-bottom) - var(--footer-h) + var(--ctl-h) - 2px);
+    }
+    .grow__title {
+      margin-left: 0;
+      padding-right: 0;
+      font-size: 24px;
     }
     .grow__dots {
-      display: none;
+      width: var(--game-w);
+      margin-left: 0;
     }
-    /* Rows have no box here: the games fade in one by one (ContainerFrame), the headline
-       with the row's first game. */
-    .grow__title {
-      animation: grow-fade-in 600ms var(--ease-out) both;
-      animation-delay: calc(min(var(--cf-i, 0) + 1, 8) * 180ms);
-      margin: 8px 0 -4px;
-      padding: 0;
-      font-size: 24px;
-      opacity: 1;
+    .grow__track {
+      margin: 0 calc(-1 * var(--gutter));
+    }
+    .grow .grow__list > :global(.cf) {
+      padding-bottom: 0;
     }
   }
 </style>

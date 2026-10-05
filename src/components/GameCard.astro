@@ -1,6 +1,6 @@
 ---
 /**
- * Games container body: key art on top, then eyebrow / title / description, and under
+ * Games container body: key art on top, then title / description, and under
  * them the VIEW GAME button with a two-line caption ("Available for" / platform) to its
  * right. The art is full width at 16:9; the card's height follows.
  */
@@ -8,7 +8,6 @@ import LinkButton from './LinkButton.astro';
 import { asset } from '../lib/content';
 
 interface Props {
-  eyebrow: string;
   title: string;
   description: string;
   platform: string;
@@ -18,13 +17,12 @@ interface Props {
   image: string;
 }
 
-const { eyebrow, title, description, platform, href, buttonLabel, caption, image } = Astro.props;
+const { title, description, platform, href, buttonLabel, caption, image } = Astro.props;
 ---
 
 <div class="card">
   <img class="card__media" src={asset(image)} alt="" width="1280" height="720" loading="lazy" decoding="async" />
   <div class="card__text">
-    <span class="eyebrow">{eyebrow}</span>
     <h3 class="card__title">{title}</h3>
     <p class="card__desc">{description}</p>
   </div>

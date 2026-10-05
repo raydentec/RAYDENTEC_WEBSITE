@@ -79,7 +79,6 @@ const games = defineCollection({
     order: z.number(),
     /** Games with the same category share one row, headed by it (pages/games.astro). */
     category: z.string(),
-    eyebrow: z.string(),
     title: z.string(),
     description: z.string(),
     platform: z.string(),
@@ -96,11 +95,10 @@ const projects = defineCollection({
   loader: file('src/content/projects.json', { parser: itemsParser }),
   schema: z.object({
     order: z.number(),
-    eyebrow: z.string(),
     title: z.string(),
     description: z.string(),
+    /** Shown beside the button as "Tech used:" / stack. */
     stack: z.string(),
-    year: z.string(),
     href,
     buttonLabel: z.string(),
     image: assetPath,
@@ -123,7 +121,6 @@ const community = defineCollection({
       platform: z.string(),
       icon: z.string(),
       color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
-      eyebrow: z.string(),
       title: z.string(),
       description: z.string(),
       caption: z.string(),

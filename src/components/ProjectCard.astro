@@ -1,63 +1,63 @@
 ---
-/** Projects container body: image left, text right (as on the Games cards), Stack / Year list. */
+/**
+ * Projects container body: image left; right of it the title and description at the top
+ * and, at the bottom, the button with a two-line "Tech used:" / stack caption to its
+ * right (as on the Games cards). The text column is as tall as the image.
+ */
 import LinkButton from './LinkButton.astro';
 import { asset } from '../lib/content';
 
 interface Props {
-  eyebrow: string;
   title: string;
   description: string;
   stack: string;
-  year: string;
   href: string;
   buttonLabel: string;
   image: string;
 }
 
-const { eyebrow, title, description, stack, year, href, buttonLabel, image } = Astro.props;
+const { title, description, stack, href, buttonLabel, image } = Astro.props;
 ---
 
 <div class="card">
   <img class="card__media" src={asset(image)} alt="" width="426" height="239" loading="lazy" decoding="async" />
   <div class="card__text">
-    <span class="eyebrow">{eyebrow}</span>
     <h2 class="card__title">{title}</h2>
     <p class="card__desc">{description}</p>
-    <dl class="card__meta">
-      <div>
-        <dt>Stack</dt>
-        <dd>{stack}</dd>
-      </div>
-      <div>
-        <dt>Year</dt>
-        <dd>{year}</dd>
-      </div>
-    </dl>
-    <LinkButton href={href} label={buttonLabel} class="card__btn" />
+    <div class="card__actions">
+      <LinkButton href={href} label={buttonLabel} class="card__btn" />
+      <p class="card__caption">
+        <span>Tech used:</span>
+        <span class="card__stack">{stack}</span>
+      </p>
+    </div>
   </div>
 </div>
 
 <style>
+  /* One row, centred in the container: the image sets its height and the text column
+     stretches to match. */
   .card {
-    display: flex;
-    align-items: center;
-    gap: 40px;
+    display: grid;
+    grid-template-columns: min(426px, 48%) minmax(0, 1fr);
+    align-content: center;
+    align-items: stretch;
+    column-gap: 40px;
     height: 100%;
     padding: 0 36px 0 28px;
   }
   .card__media {
-    width: min(426px, 48%);
+    align-self: center;
+    width: 100%;
     aspect-ratio: 426 / 239;
     height: auto;
     object-fit: cover;
-    flex-shrink: 0;
   }
   .card__text {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
-    flex-grow: 1;
     min-width: 0;
   }
   .card__title {
@@ -73,36 +73,40 @@ const { eyebrow, title, description, stack, year, href, buttonLabel, image } = A
     letter-spacing: -0.05em;
     color: var(--c-grey);
   }
-  .card__meta {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: 16px;
-    width: 100%;
-    font-family: var(--f-mono);
-    font-size: 13px;
-  }
-  .card__meta div {
+  /* Bottom of the column: button, caption to its right (below it when there's no room). */
+  .card__actions {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 20px;
+    width: 100%;
+    margin-top: auto;
   }
-  .card__meta dt {
+  .card__caption {
+    display: flex;
+    flex: 1 1 120px;
+    flex-direction: column;
+    min-width: 0;
+    font-family: var(--f-mono);
+    font-size: 14px;
+    line-height: 1.3;
     color: var(--c-grey);
   }
-  .card__meta dd {
+  .card__stack {
     color: var(--c-white);
   }
   .card :global(.card__btn) {
-    width: 270px;
+    flex-shrink: 0;
+    width: 240px;
   }
 
   @media (max-width: 1279px) {
     .card {
-      gap: 28px;
+      grid-template-columns: min(230px, 36%) minmax(0, 1fr);
+      column-gap: 28px;
       padding: 0 26px 0 24px;
     }
     .card__media {
-      width: min(230px, 36%);
       aspect-ratio: 1;
     }
     .card__text {
@@ -114,8 +118,11 @@ const { eyebrow, title, description, stack, year, href, buttonLabel, image } = A
     .card__desc {
       font-size: 21px;
     }
+    .card__caption {
+      font-size: 13px;
+    }
     .card :global(.card__btn) {
-      width: 250px;
+      width: 230px;
       --btn-h: 52px;
       --btn-font: 20px;
       padding: 0 18px 0 26px;
@@ -124,15 +131,14 @@ const { eyebrow, title, description, stack, year, href, buttonLabel, image } = A
 
   @media (max-width: 767px) {
     .card {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 14px;
+      grid-template-columns: minmax(0, 1fr);
+      align-content: start;
+      row-gap: 14px;
       padding: 0;
     }
+    /* Full width at 16:9, like the Games art. */
     .card__media {
-      width: 100%;
-      height: 230px;
-      aspect-ratio: auto;
+      aspect-ratio: 16 / 9;
     }
     .card__text {
       align-items: stretch;
@@ -145,6 +151,19 @@ const { eyebrow, title, description, stack, year, href, buttonLabel, image } = A
       font-size: 21px;
       line-height: 1.25;
       letter-spacing: -0.045em;
+    }
+    /* Stacked: full-width button, caption on one line under it. */
+    .card__actions {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+    .card__caption {
+      flex: none;
+      flex-direction: row;
+      justify-content: center;
+      gap: 0.6em;
+      text-align: center;
     }
     /* Full width, ↗ right after the label (the right end stays clear for the ↑ square). */
     .card :global(.card__btn) {
