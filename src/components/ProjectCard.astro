@@ -2,7 +2,12 @@
 /**
  * Projects container body: image left; right of it the title and description at the top
  * and, at the bottom, the button with a two-line "Tech used:" / stack caption to its
- * right (as on the Games cards). The text column is as tall as the image.
+ * right (as on the Games cards). The text column runs between the container's top and
+ * bottom padding — the same spacing as on the right.
+ *
+ * The image fills the row's full height. It is as wide as 16:9 (tablet: 1:1) allows;
+ * when the container gets narrower it loses width, not height — cropped evenly from
+ * both sides.
  */
 import LinkButton from './LinkButton.astro';
 import { asset } from '../lib/content';
@@ -22,7 +27,7 @@ const { title, description, stack, href, buttonLabel, image } = Astro.props;
 <div class="card">
   <img class="card__media" src={asset(image)} alt="" width="426" height="239" loading="lazy" decoding="async" />
   <div class="card__text">
-    <h2 class="card__title">{title}</h2>
+    <h3 class="card__title">{title}</h3>
     <p class="card__desc">{description}</p>
     <div class="card__actions">
       <LinkButton href={href} label={buttonLabel} class="card__btn" />
@@ -35,23 +40,24 @@ const { title, description, stack, href, buttonLabel, image } = Astro.props;
 </div>
 
 <style>
-  /* One row, centred in the container: the image sets its height and the text column
-     stretches to match. */
+  /* One full-height row with equal padding on every side; image and text both fill it.
+     --media-h: that row's height (container height − 2px borders − padding). */
   .card {
+    --pad: 28px;
+    --media-h: calc(var(--card-h) - 4px - 2 * var(--pad));
     display: grid;
-    grid-template-columns: min(426px, 48%) minmax(0, 1fr);
-    align-content: center;
+    grid-template-columns: min(calc(var(--media-h) * 16 / 9), 48%) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
     align-items: stretch;
     column-gap: 40px;
     height: 100%;
-    padding: 0 36px 0 28px;
+    padding: var(--pad);
   }
   .card__media {
-    align-self: center;
     width: 100%;
-    aspect-ratio: 426 / 239;
-    height: auto;
+    height: 100%;
     object-fit: cover;
+    object-position: center;
   }
   .card__text {
     display: flex;
@@ -102,12 +108,9 @@ const { title, description, stack, href, buttonLabel, image } = Astro.props;
 
   @media (max-width: 1279px) {
     .card {
-      grid-template-columns: min(230px, 36%) minmax(0, 1fr);
+      --pad: 24px;
+      grid-template-columns: min(var(--media-h), 36%) minmax(0, 1fr);
       column-gap: 28px;
-      padding: 0 26px 0 24px;
-    }
-    .card__media {
-      aspect-ratio: 1;
     }
     .card__text {
       gap: 10px;
@@ -132,12 +135,14 @@ const { title, description, stack, href, buttonLabel, image } = Astro.props;
   @media (max-width: 767px) {
     .card {
       grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: none;
       align-content: start;
       row-gap: 14px;
       padding: 0;
     }
     /* Full width at 16:9, like the Games art. */
     .card__media {
+      height: auto;
       aspect-ratio: 16 / 9;
     }
     .card__text {

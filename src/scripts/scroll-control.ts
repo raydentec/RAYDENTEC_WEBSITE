@@ -20,6 +20,7 @@ import {
   onScrollerScroll,
   scrollBehavior,
   snapOffset,
+  snapTop,
 } from './dom';
 import { scrollToTop } from './snap';
 
@@ -133,8 +134,8 @@ document.addEventListener('click', (e) => {
   }
   // Snap to the next container below the snap line.
   const line = scroller.getBoundingClientRect().top + snapOffset(scroller);
-  const next = containers(scroller).find((cf) => cf.getBoundingClientRect().top > line + 2);
-  if (next) scroller.scrollBy({ top: next.getBoundingClientRect().top - line, behavior: scrollBehavior() });
+  const next = containers(scroller).find((cf) => snapTop(cf) > line + 2);
+  if (next) scroller.scrollBy({ top: snapTop(next) - line, behavior: scrollBehavior() });
 });
 
 window.addEventListener('resize', () => {

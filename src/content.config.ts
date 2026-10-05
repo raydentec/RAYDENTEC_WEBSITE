@@ -1,6 +1,7 @@
 import { defineCollection } from 'astro:content';
 import { file } from 'astro/loaders';
 import { z } from 'astro/zod';
+import { projectCategories } from './lib/project-categories';
 
 /**
  * Each handoff JSON file is `{ page, items: [...] }`. The file() loader needs
@@ -77,8 +78,11 @@ const games = defineCollection({
   loader: file('src/content/games.json', { parser: itemsParser }),
   schema: z.object({
     order: z.number(),
-    /** Games with the same category share one row, headed by it (pages/games.astro). */
-    category: z.string(),
+    /**
+     * One row per category, headed by it (pages/games.astro); a game in several
+     * categories shows in each of their rows. Listed at the bottom of the game card.
+     */
+    categories: z.array(z.string()).min(1),
     title: z.string(),
     description: z.string(),
     platform: z.string(),
@@ -95,6 +99,8 @@ const projects = defineCollection({
   loader: file('src/content/projects.json', { parser: itemsParser }),
   schema: z.object({
     order: z.number(),
+    /** Group and filter on the Projects page (pages/projects.astro). */
+    category: z.enum(projectCategories),
     title: z.string(),
     description: z.string(),
     /** Shown beside the button as "Tech used:" / stack. */

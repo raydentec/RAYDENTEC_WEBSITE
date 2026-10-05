@@ -1,21 +1,26 @@
 {
   "page": "games",
   "containerVariant": "game",
-  "_note": "Placeholder entries. Replace bracketed values with real games; add/remove items freely. Games with the same \"category\" share one sideways row headed by that category (rows in order of first appearance).",
+  "_note": "Placeholder entries. Replace bracketed values with real games; add/remove items freely. A game shows in one sideways row per entry in \"categories\" (rows in order of first appearance) and lists them at the bottom of its container.",
   "items": [
     {
-      "category": "[CATEGORY 1]",
+      "categories": [
+        "[CATEGORY 1]"
+      ],
       "title": "[GAME TITLE 1]",
       "description": "[One or two lines pitching the game and its world.]",
       "platform": "Windows",
       "status": "[STATUS]",
-      "href": "[URL]",
+      "href": "https://www.raydentec.com",
       "buttonLabel": "VIEW GAME",
       "caption": "Available for",
       "image": "assets/placeholder-render.jpg"
     },
     {
-      "category": "[CATEGORY 1]",
+      "categories": [
+        "[CATEGORY 1]",
+        "[CATEGORY 2]"
+      ],
       "title": "[GAME TITLE 2]",
       "description": "[One or two lines pitching the game and its world.]",
       "platform": "Windows",
@@ -26,7 +31,9 @@
       "image": "assets/placeholder-render.jpg"
     },
     {
-      "category": "[CATEGORY 1]",
+      "categories": [
+        "[CATEGORY 1]"
+      ],
       "title": "[GAME TITLE 3]",
       "description": "[One or two lines pitching the game and its world.]",
       "platform": "Windows",
@@ -37,7 +44,9 @@
       "image": "assets/placeholder-render.jpg"
     },
     {
-      "category": "[CATEGORY 1]",
+      "categories": [
+        "[CATEGORY 1]"
+      ],
       "title": "[GAME TITLE 4]",
       "description": "[One or two lines pitching the game and its world.]",
       "platform": "Windows",
@@ -48,7 +57,9 @@
       "image": "assets/placeholder-render.jpg"
     },
     {
-      "category": "[CATEGORY 2]",
+      "categories": [
+        "[CATEGORY 2]"
+      ],
       "title": "[GAME TITLE 5]",
       "description": "[One or two lines pitching the game and its world.]",
       "platform": "Windows",
@@ -59,7 +70,9 @@
       "image": "assets/placeholder-render.jpg"
     },
     {
-      "category": "[CATEGORY 2]",
+      "categories": [
+        "[CATEGORY 2]"
+      ],
       "title": "[GAME TITLE 6]",
       "description": "[One or two lines pitching the game and its world.]",
       "platform": "Windows",
@@ -70,7 +83,10 @@
       "image": "assets/placeholder-render.jpg"
     },
     {
-      "category": "[CATEGORY 2]",
+      "categories": [
+        "[CATEGORY 2]",
+        "[CATEGORY 3]"
+      ],
       "title": "[GAME TITLE 7]",
       "description": "[One or two lines pitching the game and its world.]",
       "platform": "Windows",
@@ -81,7 +97,9 @@
       "image": "assets/placeholder-render.jpg"
     },
     {
-      "category": "[CATEGORY 3]",
+      "categories": [
+        "[CATEGORY 3]"
+      ],
       "title": "[GAME TITLE 8]",
       "description": "[One or two lines pitching the game and its world.]",
       "platform": "Windows",
@@ -92,7 +110,9 @@
       "image": "assets/placeholder-render.jpg"
     },
     {
-      "category": "[CATEGORY 3]",
+      "categories": [
+        "[CATEGORY 3]"
+      ],
       "title": "[GAME TITLE 9]",
       "description": "[One or two lines pitching the game and its world.]",
       "platform": "Windows",
@@ -103,7 +123,9 @@
       "image": "assets/placeholder-render.jpg"
     },
     {
-      "category": "[CATEGORY 3]",
+      "categories": [
+        "[CATEGORY 3]"
+      ],
       "title": "[GAME TITLE 10]",
       "description": "[One or two lines pitching the game and its world.]",
       "platform": "Windows",

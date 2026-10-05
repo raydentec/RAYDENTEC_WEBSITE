@@ -21,6 +21,7 @@ import {
   onScrollerScroll,
   scrollBehavior,
   snapOffset,
+  snapTop,
 } from './dom';
 
 const SETTLE_MS = 90;
@@ -40,7 +41,7 @@ function nearestToSnapLine(scroller: HTMLElement) {
   let best: HTMLElement | undefined;
   let bestDistance = Infinity;
   for (const cf of containers(scroller)) {
-    const d = Math.abs(cf.getBoundingClientRect().top - line);
+    const d = Math.abs(snapTop(cf) - line);
     if (d < bestDistance) {
       bestDistance = d;
       best = cf;
@@ -53,7 +54,7 @@ function nearestToSnapLine(scroller: HTMLElement) {
 function containerAtSnapLine(scroller: HTMLElement) {
   const line = snapLine(scroller) + 1;
   return containers(scroller).find((cf) => {
-    const r = cf.getBoundingClientRect();
+    const r = { top: snapTop(cf), bottom: cf.getBoundingClientRect().bottom };
     return r.top <= line && r.bottom > line;
   });
 }
@@ -80,7 +81,7 @@ function settle(scroller: HTMLElement, align: boolean) {
   }
   if (target === home) return;
   home = target;
-  const offset = target.getBoundingClientRect().top - snapLine(scroller);
+  const offset = snapTop(target) - snapLine(scroller);
   if (Math.abs(offset) > 1) scroller.scrollBy({ top: offset, behavior: scrollBehavior() });
 }
 
@@ -89,8 +90,17 @@ function updateTail(scroller: HTMLElement) {
   const column = scroller.querySelector<HTMLElement>('[data-column]');
   const last = containers(scroller).at(-1);
   if (!column || !last) return;
-  const tail = Math.max(0, scroller.clientHeight - snapOffset(scroller) - last.offsetHeight);
+  const tail = Math.max(
+    0,
+    scroller.clientHeight - snapOffset(scroller) - (last.getBoundingClientRect().bottom - snapTop(last)),
+  );
   column.style.setProperty('--tail', `${tail}px`);
+}
+
+/** Re-measure after the column's contents change (Projects filter, project-filter.ts). */
+export function refreshColumn(scroller: HTMLElement) {
+  updateTail(scroller);
+  updateSnapping(scroller);
 }
 
 /** True while a back-to-top scroll is running: snapping stays off until it reaches 0. */
@@ -107,7 +117,7 @@ function updateSnapping(scroller: HTMLElement) {
     const line = scroller.getBoundingClientRect().top + snapOffset(scroller);
     const bottom =
       document.querySelector('[data-scroll-ctl]')?.getBoundingClientRect().top ?? scroller.getBoundingClientRect().bottom;
-    on = first.getBoundingClientRect().top <= (line + bottom) / 2;
+    on = snapTop(first) <= (line + bottom) / 2;
   }
   const value = on ? 'on' : 'off';
   if (scroller.dataset.snap !== value) scroller.dataset.snap = value;
@@ -169,7 +179,7 @@ document.addEventListener('astro:after-swap', () => {
   if (!scroller || !first || !mq.mobile.matches || scroller.dataset.page === 'start') return;
   returningToTop = false;
   scroller.dataset.snap = 'on';
-  scroller.scrollTop += first.getBoundingClientRect().top - snapLine(scroller);
+  scroller.scrollTop += snapTop(first) - snapLine(scroller);
   home = first;
   setActive(scroller, first);
   positionedOnSwap = true;

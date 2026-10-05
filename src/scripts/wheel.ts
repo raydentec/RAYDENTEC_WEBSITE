@@ -13,7 +13,7 @@
  * scroll direction once it has moved a little. Containers taller than the visible area
  * (short phones) can rest anywhere inside, as with native scrolling.
  */
-import { containers, getRootState, getScroller, scrollBehavior, snapOffset } from './dom';
+import { containers, getRootState, getScroller, scrollBehavior, snapOffset, snapTop } from './dom';
 
 const SETTLE_MS = 140;
 /** Moving at least this far commits to the next container in that direction. */
@@ -28,15 +28,16 @@ function normalizedDelta(e: WheelEvent, scroller: HTMLElement) {
   return e.deltaY;
 }
 
-/** Scroll positions at which each container's top sits on the snap line. */
+/** Scroll positions at which each container's snap edge (dom.ts snapTop) sits on the snap line. */
 function snapPositions(scroller: HTMLElement) {
   const line = scroller.getBoundingClientRect().top + snapOffset(scroller);
   const max = scroller.scrollHeight - scroller.clientHeight;
   return containers(scroller).map((cf) => {
-    const r = cf.getBoundingClientRect();
-    const start = Math.min(max, Math.max(0, scroller.scrollTop + (r.top - line)));
+    const top = snapTop(cf);
+    const height = cf.getBoundingClientRect().bottom - top;
+    const start = Math.min(max, Math.max(0, scroller.scrollTop + (top - line)));
     // A container taller than the visible area can rest anywhere between its start and end.
-    const end = Math.min(max, start + Math.max(0, r.height - (scroller.clientHeight - snapOffset(scroller))));
+    const end = Math.min(max, start + Math.max(0, height - (scroller.clientHeight - snapOffset(scroller))));
     return { start, end };
   });
 }

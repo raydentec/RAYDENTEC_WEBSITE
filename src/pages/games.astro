@@ -7,12 +7,15 @@ import { getItems } from '../lib/content';
 
 const items = (await getItems('games')).map(({ data }) => data);
 
-// One row per category, in order of first appearance; games are numbered across rows.
+// One row per category, in order of first appearance; a game in several categories
+// shows in each of their rows. Containers are numbered across rows.
 const rows: { category: string; first: number; games: typeof items }[] = [];
 for (const game of items) {
-  const row = rows.find((r) => r.category === game.category);
-  if (row) row.games.push(game);
-  else rows.push({ category: game.category, first: 0, games: [game] });
+  for (const category of game.categories) {
+    const row = rows.find((r) => r.category === category);
+    if (row) row.games.push(game);
+    else rows.push({ category, first: 0, games: [game] });
+  }
 }
 rows.forEach((row, r) => (row.first = r ? rows[r - 1].first + rows[r - 1].games.length : 0));
 ---

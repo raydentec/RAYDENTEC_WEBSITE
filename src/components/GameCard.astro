@@ -2,7 +2,8 @@
 /**
  * Games container body: key art on top, then title / description, and under
  * them the VIEW GAME button with a two-line caption ("Available for" / platform) to its
- * right. The art is full width at 16:9; the card's height follows.
+ * right. The categories the game is in sit as grey tags in the art's lower-left corner. The art is full width at 16:9;
+ * the card's height follows.
  */
 import LinkButton from './LinkButton.astro';
 import { asset } from '../lib/content';
@@ -15,13 +16,19 @@ interface Props {
   buttonLabel: string;
   caption?: string;
   image: string;
+  categories: string[];
 }
 
-const { title, description, platform, href, buttonLabel, caption, image } = Astro.props;
+const { title, description, platform, href, buttonLabel, caption, image, categories } = Astro.props;
 ---
 
 <div class="card">
-  <img class="card__media" src={asset(image)} alt="" width="1280" height="720" loading="lazy" decoding="async" />
+  <div class="card__art">
+    <img class="card__media" src={asset(image)} alt="" width="1280" height="720" loading="lazy" decoding="async" />
+    <p class="card__categories">
+      {categories.map((c) => <span class="card__category">{c}</span>)}
+    </p>
+  </div>
   <div class="card__text">
     <h3 class="card__title">{title}</h3>
     <p class="card__desc">{description}</p>
@@ -43,8 +50,12 @@ const { title, description, platform, href, buttonLabel, caption, image } = Astr
     height: 100%;
     padding: 28px;
   }
-  /* 16:9 art, full card width. */
+  /* 16:9 art, full card width; category tags overlaid in its lower-left corner. */
+  .card__art {
+    position: relative;
+  }
   .card__media {
+    display: block;
     width: 100%;
     aspect-ratio: 16 / 9;
     height: auto;
@@ -89,6 +100,28 @@ const { title, description, platform, href, buttonLabel, caption, image } = Astr
   .card__platform {
     color: var(--c-white);
   }
+  /* Bottom line: the categories the game is in, under a faint rule. */
+  .card__categories {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--f-mono);
+    font-size: 14px;
+    line-height: 1.3;
+    color: var(--c-white);
+  }
+  /* 20% black over the art, 50% white text. */
+  .card__category {
+    padding: 4px 10px;
+    background: rgba(0, 0, 0, 0.2);
+    color: rgba(255, 255, 255, 0.5);
+    white-space: nowrap;
+  }
   .card :global(.card__btn) {
     flex-shrink: 0;
     width: 210px;
@@ -105,7 +138,8 @@ const { title, description, platform, href, buttonLabel, caption, image } = Astr
     .card__desc {
       font-size: 20px;
     }
-    .card__caption {
+    .card__caption,
+    .card__categories {
       font-size: 13px;
     }
     .card :global(.card__btn) {
@@ -132,6 +166,17 @@ const { title, description, platform, href, buttonLabel, caption, image } = Astr
       font-size: 21px;
       line-height: 1.25;
       letter-spacing: -0.045em;
+    }
+    /* Narrower art: tags a little tighter so a couple fit on one line. */
+    .card__categories {
+      left: 8px;
+      right: 8px;
+      bottom: 8px;
+      gap: 6px;
+      font-size: 12px;
+    }
+    .card__category {
+      padding: 3px 8px;
     }
     /* Stacked: full-width button, caption under it. */
     .card__actions {

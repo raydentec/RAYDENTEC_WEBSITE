@@ -216,6 +216,10 @@ dd {
 .scroll-ctl {
   view-transition-name: scroll-ctl;
 }
+/* The scroll track too: Games' column spans the whole window, under the track. */
+.track {
+  view-transition-name: scroll-track;
+}
 .mmenu__bar {
   view-transition-name: mobile-menu-bar;
 }
@@ -223,6 +227,7 @@ dd {
   view-transition-name: mobile-header;
 }
 ::view-transition-group(scroll-ctl),
+::view-transition-group(scroll-track),
 ::view-transition-group(mobile-menu-bar),
 ::view-transition-group(mobile-header) {
   z-index: 10;
@@ -230,11 +235,13 @@ dd {
 }
 /* Show their new state straight away instead of cross-fading old and new labels. */
 ::view-transition-old(scroll-ctl),
+::view-transition-old(scroll-track),
 ::view-transition-old(mobile-menu-bar),
 ::view-transition-old(mobile-header) {
   display: none;
 }
 ::view-transition-new(scroll-ctl),
+::view-transition-new(scroll-track),
 ::view-transition-new(mobile-menu-bar),
 ::view-transition-new(mobile-header) {
   animation: none;

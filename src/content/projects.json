@@ -1,9 +1,10 @@
 {
   "page": "projects",
   "containerVariant": "project",
-  "_note": "Placeholder entries. Replace bracketed values with real projects.",
+  "_note": "Placeholder entries. Replace bracketed values with real projects. \"category\" is one of Tools, Apps, Products; the page groups projects by category in that order (JSON order within a group).",
   "items": [
     {
+      "category": "Tools",
       "title": "[PROJECT NAME 1]",
       "description": "[What it is, what it does and why it was built.]",
       "stack": "[TOOLS / ENGINE]",
@@ -12,6 +13,7 @@
       "image": "assets/placeholder-render.jpg"
     },
     {
+      "category": "Tools",
       "title": "[PROJECT NAME 2]",
       "description": "[What it is, what it does and why it was built.]",
       "stack": "[TOOLS / ENGINE]",
@@ -20,6 +22,7 @@
       "image": "assets/placeholder-render.jpg"
     },
     {
+      "category": "Tools",
       "title": "[PROJECT NAME 3]",
       "description": "[What it is, what it does and why it was built.]",
       "stack": "[TOOLS / ENGINE]",
@@ -28,7 +31,53 @@
       "image": "assets/placeholder-render.jpg"
     },
     {
+      "category": "Apps",
       "title": "[PROJECT NAME 4]",
+      "description": "[What it is, what it does and why it was built.]",
+      "stack": "[TOOLS / ENGINE]",
+      "href": "[URL]",
+      "buttonLabel": "VIEW PROJECT",
+      "image": "assets/placeholder-render.jpg"
+    },
+    {
+      "category": "Apps",
+      "title": "[PROJECT NAME 5]",
+      "description": "[What it is, what it does and why it was built.]",
+      "stack": "[TOOLS / ENGINE]",
+      "href": "[URL]",
+      "buttonLabel": "VIEW PROJECT",
+      "image": "assets/placeholder-render.jpg"
+    },
+    {
+      "category": "Apps",
+      "title": "[PROJECT NAME 6]",
+      "description": "[What it is, what it does and why it was built.]",
+      "stack": "[TOOLS / ENGINE]",
+      "href": "[URL]",
+      "buttonLabel": "VIEW PROJECT",
+      "image": "assets/placeholder-render.jpg"
+    },
+    {
+      "category": "Products",
+      "title": "[PROJECT NAME 7]",
+      "description": "[What it is, what it does and why it was built.]",
+      "stack": "[TOOLS / ENGINE]",
+      "href": "[URL]",
+      "buttonLabel": "VIEW PROJECT",
+      "image": "assets/placeholder-render.jpg"
+    },
+    {
+      "category": "Products",
+      "title": "[PROJECT NAME 8]",
+      "description": "[What it is, what it does and why it was built.]",
+      "stack": "[TOOLS / ENGINE]",
+      "href": "[URL]",
+      "buttonLabel": "VIEW PROJECT",
+      "image": "assets/placeholder-render.jpg"
+    },
+    {
+      "category": "Products",
+      "title": "[PROJECT NAME 9]",
       "description": "[What it is, what it does and why it was built.]",
       "stack": "[TOOLS / ENGINE]",
       "href": "[URL]",

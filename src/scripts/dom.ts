@@ -59,10 +59,21 @@ export function snapOffset(scroller: HTMLElement) {
 
 /**
  * The containers the column snaps between. On Games those are the sideways rows
- * ([data-row], scripts/game-rows.ts), not the games inside them.
+ * ([data-row], scripts/game-rows.ts), not the games inside them. Containers hidden by
+ * the Projects filter (scripts/project-filter.ts) are left out.
  */
 export const containers = (scroller: HTMLElement) =>
-  Array.from(scroller.querySelectorAll<HTMLElement>('[data-cf]:not([data-row] [data-cf])'));
+  Array.from(scroller.querySelectorAll<HTMLElement>('[data-cf]:not([data-row] [data-cf])')).filter(
+    (cf) => cf.getClientRects().length > 0,
+  );
+
+/**
+ * A container's snap edge (viewport px): its top — or higher by its `scroll-margin-top`
+ * when something above rides along with it (a Projects category headline and filter
+ * buttons, scripts/project-filter.ts). CSS snapping honours the margin natively.
+ */
+export const snapTop = (cf: Element) =>
+  cf.getBoundingClientRect().top - (parseFloat(getComputedStyle(cf).scrollMarginTop) || 0);
 
 /** Fired on document by snap.ts when the active container changes; detail = its index. */
 export const ACTIVE_CHANGE = 'raydentec:active-change';

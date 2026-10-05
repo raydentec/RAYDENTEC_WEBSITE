@@ -3,16 +3,167 @@ import ContainerFrame from '../components/ContainerFrame.astro';
 import ProjectCard from '../components/ProjectCard.astro';
 import Shell from '../layouts/Shell.astro';
 import { getItems } from '../lib/content';
+import { projectCategories } from '../lib/project-categories';
 
-const items = await getItems('projects');
+const items = (await getItems('projects')).map(({ data }) => data);
+
+// One group per category (filter-button order), each headed by its category name;
+// containers are numbered across groups (scripts/project-filter.ts renumbers when filtering).
+let index = 0;
+const groups = projectCategories
+  .map((category) => ({
+    category,
+    projects: items.filter((p) => p.category === category).map((data) => ({ data, index: index++ })),
+  }))
+  .filter((g) => g.projects.length > 0);
 ---
 
 <Shell page="projects">
+  <div class="pfilter" role="group" aria-label="Filter projects by category" data-filter>
+    {
+      ['All', ...projectCategories].map((label, i) => (
+        <button type="button" class="pfilter__btn" data-filter-btn={label} aria-pressed={i === 0 ? 'true' : 'false'}>
+          {label}
+        </button>
+      ))
+    }
+  </div>
   {
-    items.map(({ data }, i) => (
-      <ContainerFrame index={i} variant="project" number={i + 1} active={i === 0} label={data.title}>
-        <ProjectCard {...data} />
-      </ContainerFrame>
+    groups.map((g) => (
+      <section class="pgroup" data-category={g.category} aria-labelledby={`projects-${g.category}`}>
+        <h2 class="pgroup__title" id={`projects-${g.category}`} style={`--cf-i: ${g.projects[0].index}`}>
+          {g.category}
+        </h2>
+        {g.projects.map(({ data, index }) => (
+          <ContainerFrame index={index} variant="project" number={index + 1} active={index === 0} label={data.title}>
+            <ProjectCard {...data} />
+          </ContainerFrame>
+        ))}
+      </section>
     ))
   }
 </Shell>
+
+<style>
+  /*
+   * The filter buttons and each category headline have no snap point of their own: they
+   * ride along with the container below them. That container's scroll-margin-top reaches
+   * up to the headline — and, for the first group shown, up to the buttons too — so it
+   * snaps with them on top (CSS snapping, and the scripts via dom.ts snapTop).
+   * Sizes are fixed so these margins can be computed here: --filter-h (one row of
+   * buttons), --title-size (headline, line-height 1), --title-gap (headline → container),
+   * --title-top (extra space above a headline, on top of the column gap).
+   */
+  .pfilter,
+  .pgroup {
+    --filter-h: 44px;
+    --title-size: 30px;
+    --title-gap: 12px;
+    --title-top: 20px;
+  }
+
+  .pfilter {
+    display: flex;
+    gap: 10px;
+    height: var(--filter-h);
+    animation: p-fade-in 600ms var(--ease-out) both;
+    animation-delay: 180ms;
+  }
+  .pfilter__btn {
+    height: 100%;
+    padding: 0 22px;
+    border: 1.5px solid var(--c-red-dim);
+    background: var(--c-black);
+    color: var(--c-white);
+    font-family: var(--f-ui);
+    font-weight: 600;
+    font-size: 20px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+      background-color var(--t-state) ease,
+      border-color var(--t-state) ease,
+      color var(--t-state) ease;
+  }
+  .pfilter__btn:hover {
+    border-color: var(--c-red);
+  }
+  .pfilter__btn[aria-pressed='true'] {
+    border-color: var(--c-red);
+    background: var(--c-red);
+    color: var(--c-black);
+  }
+  .pfilter__btn:focus-visible {
+    outline: 2px solid var(--c-white);
+    outline-offset: 2px;
+  }
+
+  .pgroup:not([hidden]) {
+    display: contents;
+  }
+  /* Headline: dimmed with its container while that isn't selected. */
+  .pgroup__title {
+    margin: var(--title-top) 0 calc(var(--title-gap) - var(--card-gap));
+    font-weight: 700;
+    font-size: var(--title-size);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    opacity: var(--o-inactive);
+    transition: opacity var(--t-state) ease;
+    animation: p-fade-in 600ms var(--ease-out) both;
+    animation-delay: calc(min(var(--cf-i, 0) + 1, 8) * 180ms);
+  }
+  .pgroup__title:has(+ :global(.cf.is-active)),
+  .pgroup__title:has(+ :global(.cf:hover)),
+  .pgroup__title:has(+ :global(.cf:focus-within)) {
+    opacity: 1;
+  }
+  @keyframes p-fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pfilter,
+    .pgroup__title {
+      animation: none;
+    }
+  }
+
+  /* Snap edges: the headline rides with the group's first container… */
+  .pgroup__title + :global(.cf) {
+    scroll-margin-top: calc(var(--title-size) + var(--title-gap));
+  }
+  /* …and the buttons too with the first group shown. */
+  .pgroup:not([hidden]):not(.pgroup:not([hidden]) ~ .pgroup) .pgroup__title + :global(.cf) {
+    scroll-margin-top: calc(var(--filter-h) + var(--card-gap) + var(--title-top) + var(--title-size) + var(--title-gap));
+  }
+
+  @media (max-width: 1279px) {
+    .pfilter,
+    .pgroup {
+      --filter-h: 42px;
+      --title-size: 26px;
+    }
+    .pfilter__btn {
+      padding: 0 18px;
+      font-size: 18px;
+    }
+  }
+  /* Mobile: the four buttons fill the row, each as wide as its label plus an equal share
+     of what's left. */
+  @media (max-width: 767px) {
+    .pfilter,
+    .pgroup {
+      --title-size: 24px;
+    }
+    .pfilter {
+      gap: 8px;
+    }
+    .pfilter__btn {
+      flex: 1 1 auto;
+      padding: 0 10px;
+      font-size: 16px;
+    }
+  }
+</style>
