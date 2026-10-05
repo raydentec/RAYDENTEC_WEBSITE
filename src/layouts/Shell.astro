@@ -178,9 +178,10 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
   /*
    * ---------- Rows of games (Games, desktop/tablet; mobile: GameRow.astro) ----------
    * The column scrolls vertically between rows like everywhere else, but spans the whole
-   * window so each row (GameRow.astro) can run out to the right edge; on the left it is
-   * cut off at the rail's / sidebar's edge (--clip-left). Rows line their games up with
-   * the usual column (--row-left, --row-w).
+   * window so each row (GameRow.astro) runs edge to edge — passing under the rail. With
+   * the desktop sidebar open, it is cut off beside the sidebar instead: midway between the
+   * sidebar and the column (--side-edge). Rows line their games up with the usual column
+   * (--row-left, --row-w).
    *
    * Opening / closing the sidebar animates these variables themselves (registered below),
    * so the rows' padding, widths and snap position (scroll-padding) all move together and
@@ -197,23 +198,27 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
     inherits: true;
     initial-value: 0px;
   }
-  @property --clip-left {
+  @property --side-edge {
     syntax: '<length>';
     inherits: true;
     initial-value: 0px;
+  }
+  /* Space between the games in a row (GameRow.astro). */
+  .scroller--rows {
+    --games-gap: 32px;
   }
   @media (min-width: 768px) {
     .scroller--rows {
       --row-left: calc((100vw - var(--content-w)) / 2);
       --row-w: var(--content-w);
-      --clip-left: calc(var(--gutter) + var(--rail-w));
+      --side-edge: 0px;
       left: 0;
       width: 100%;
-      clip-path: inset(0 0 0 var(--clip-left));
+      clip-path: inset(0 0 0 var(--side-edge));
+      /* --side-edge isn't transitioned: closing drops the cut to the window edge at once. */
       transition:
         --row-left var(--t-sidebar) var(--ease-out),
-        --row-w var(--t-sidebar) var(--ease-out),
-        --clip-left var(--t-sidebar) var(--ease-out);
+        --row-w var(--t-sidebar) var(--ease-out);
     }
     /* Rows one game button's height apart (the card buttons: 56px, 52px on tablet). */
     .scroller--rows .column {
@@ -226,13 +231,25 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
     }
   }
   @media (min-width: 1280px) {
-    /* Sidebar open: the column sits right of it; games are cut off at the sidebar's edge. */
+    /* Sidebar open: the column sits right of it; games are cut off beside the sidebar. */
     :global(html[data-sidebar='expanded']) .scroller--rows {
       --row-left: var(--col-left-expanded);
       --row-w: var(--content-w-expanded);
-      --clip-left: calc(var(--gutter) + var(--sidebar-w));
+      --side-edge: calc((var(--gutter) + var(--sidebar-w) + var(--col-left-expanded)) / 2);
       left: 0;
       width: 100%;
+      /* Opening: the cut starts just left of the selected game — the column's closed-sidebar
+         left edge minus half the gap between games — and glides to beside the sidebar along
+         with the games. */
+      transition:
+        --row-left var(--t-sidebar) var(--ease-out),
+        --row-w var(--t-sidebar) var(--ease-out);
+      animation: side-edge-open var(--t-sidebar) var(--ease-out);
+    }
+    @keyframes side-edge-open {
+      from {
+        --side-edge: calc((100vw - var(--content-w)) / 2 - var(--games-gap) / 2);
+      }
     }
   }
 

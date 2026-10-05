@@ -37,7 +37,14 @@ const [videos, socials] = site.ctas;
 </div>
 
 <style>
+  /*
+   * While fading, the rail's opacity makes it a stacking context of its own; give that a
+   * place above the content column (z 1) — and the sidebar box (z 4) — so the rail never
+   * slips under content (Games rows run under it), mid-fade included.
+   */
   .rail {
+    position: relative;
+    z-index: 5;
     opacity: 0;
     visibility: hidden;
     transition:
@@ -146,7 +153,9 @@ const [videos, socials] = site.ctas;
     background: var(--c-red);
     color: var(--c-black);
   }
+  /* Half-black fill so it reads over content passing under the rail (Games). */
   .rail__cta--outline {
+    background: rgba(0, 0, 0, 0.5);
     color: var(--c-red);
   }
   .rail__cta--outline:hover {

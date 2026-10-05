@@ -156,12 +156,12 @@ const headingId = `games-${index}`;
   .grow__track::-webkit-scrollbar {
     display: none;
   }
-  /* Games ⅔ of the column wide, 32px apart at every size; the right padding lets the
+  /* Games ⅔ of the column wide, --games-gap (Shell.astro) apart at every size; the right padding lets the
      last one snap to the left edge too. */
   .grow__list {
     display: flex;
     align-items: flex-start;
-    gap: 32px;
+    gap: var(--games-gap);
     width: max-content;
     padding: 0 calc(100vw - var(--row-left) - var(--game-w)) 0 var(--row-left);
   }
