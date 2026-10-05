@@ -1,13 +1,14 @@
 {
   "page": "games",
   "containerVariant": "game",
-  "_note": "Placeholder entries. Replace bracketed values with real games; add/remove items freely. A game shows in one sideways row per entry in \"categories\" (rows in order of first appearance) and lists them at the bottom of its container.",
+  "_note": "Placeholder entries. Replace bracketed values with real games; add/remove items freely. A game shows in one sideways row per entry in \"categories\" (rows in order of first appearance) and lists them at the bottom of its container. \"releaseDate\" (YYYY-MM-DD) orders the games in each row, newest first; rows are ordered alphabetically by category.",
   "items": [
     {
       "categories": [
         "[CATEGORY 1]"
       ],
       "title": "[GAME TITLE 1]",
+      "releaseDate": "2025-03-14",
       "description": "[One or two lines pitching the game and its world.]",
       "platform": "Windows",
       "status": "[STATUS]",
@@ -22,6 +23,7 @@
         "[CATEGORY 2]"
       ],
       "title": "[GAME TITLE 2]",
+      "releaseDate": "2026-06-02",
       "description": "[One or two lines pitching the game and its world.]",
       "platform": "Windows",
       "status": "[STATUS]",
@@ -35,6 +37,7 @@
         "[CATEGORY 1]"
       ],
       "title": "[GAME TITLE 3]",
+      "releaseDate": "2024-11-20",
       "description": "[One or two lines pitching the game and its world.]",
       "platform": "Windows",
       "status": "[STATUS]",
@@ -48,6 +51,7 @@
         "[CATEGORY 1]"
       ],
       "title": "[GAME TITLE 4]",
+      "releaseDate": "2025-09-08",
       "description": "[One or two lines pitching the game and its world.]",
       "platform": "Windows",
       "status": "[STATUS]",
@@ -61,6 +65,7 @@
         "[CATEGORY 2]"
       ],
       "title": "[GAME TITLE 5]",
+      "releaseDate": "2023-05-30",
       "description": "[One or two lines pitching the game and its world.]",
       "platform": "Windows",
       "status": "[STATUS]",
@@ -74,6 +79,7 @@
         "[CATEGORY 2]"
       ],
       "title": "[GAME TITLE 6]",
+      "releaseDate": "2026-01-15",
       "description": "[One or two lines pitching the game and its world.]",
       "platform": "Windows",
       "status": "[STATUS]",
@@ -88,6 +94,7 @@
         "[CATEGORY 3]"
       ],
       "title": "[GAME TITLE 7]",
+      "releaseDate": "2024-07-04",
       "description": "[One or two lines pitching the game and its world.]",
       "platform": "Windows",
       "status": "[STATUS]",
@@ -101,6 +108,7 @@
         "[CATEGORY 3]"
       ],
       "title": "[GAME TITLE 8]",
+      "releaseDate": "2025-12-01",
       "description": "[One or two lines pitching the game and its world.]",
       "platform": "Windows",
       "status": "[STATUS]",
@@ -114,6 +122,7 @@
         "[CATEGORY 3]"
       ],
       "title": "[GAME TITLE 9]",
+      "releaseDate": "2022-10-10",
       "description": "[One or two lines pitching the game and its world.]",
       "platform": "Windows",
       "status": "[STATUS]",
@@ -127,6 +136,7 @@
         "[CATEGORY 3]"
       ],
       "title": "[GAME TITLE 10]",
+      "releaseDate": "2026-08-21",
       "description": "[One or two lines pitching the game and its world.]",
       "platform": "Windows",
       "status": "[STATUS]",

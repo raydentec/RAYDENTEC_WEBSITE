@@ -2,18 +2,22 @@
 import ContainerFrame from '../components/ContainerFrame.astro';
 import ProjectCard from '../components/ProjectCard.astro';
 import Shell from '../layouts/Shell.astro';
-import { getItems } from '../lib/content';
+import { getItems, newestFirst } from '../lib/content';
 import { projectCategories } from '../lib/project-categories';
 
 const items = (await getItems('projects')).map(({ data }) => data);
 
-// One group per category (filter-button order), each headed by its category name;
-// containers are numbered across groups (scripts/project-filter.ts renumbers when filtering).
+// One group per category (filter-button order), each headed by its category name, its
+// projects newest first; containers are numbered across groups (scripts/project-filter.ts
+// renumbers when filtering).
 let index = 0;
 const groups = projectCategories
   .map((category) => ({
     category,
-    projects: items.filter((p) => p.category === category).map((data) => ({ data, index: index++ })),
+    projects: items
+      .filter((p) => p.category === category)
+      .sort(newestFirst)
+      .map((data) => ({ data, index: index++ })),
   }))
   .filter((g) => g.projects.length > 0);
 ---
@@ -69,12 +73,13 @@ const groups = projectCategories
     animation: p-fade-in 600ms var(--ease-out) both;
     animation-delay: 180ms;
   }
+  /* Inactive: red border and label, no fill. Hover and active: solid red fill, black label. */
   .pfilter__btn {
     height: 100%;
     padding: 0 22px;
-    border: 1.5px solid var(--c-red-dim);
-    background: var(--c-black);
-    color: var(--c-white);
+    border: 1.5px solid var(--c-red);
+    background: rgba(204, 24, 30, 0);
+    color: var(--c-red);
     font-family: var(--f-ui);
     font-weight: 600;
     font-size: 20px;
@@ -85,9 +90,7 @@ const groups = projectCategories
       border-color var(--t-state) ease,
       color var(--t-state) ease;
   }
-  .pfilter__btn:hover {
-    border-color: var(--c-red);
-  }
+  .pfilter__btn:hover,
   .pfilter__btn[aria-pressed='true'] {
     border-color: var(--c-red);
     background: var(--c-red);

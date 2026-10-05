@@ -21,6 +21,10 @@ export async function getSite() {
   return entry.data;
 }
 
+/** Sort comparator: newest release date first (dates are YYYY-MM-DD, so they sort as text). */
+export const newestFirst = (a: { releaseDate: string }, b: { releaseDate: string }) =>
+  b.releaseDate.localeCompare(a.releaseDate);
+
 /** Content paths are relative to public/ ("assets/…"); make them root-absolute. */
 export const asset = (path: string) => (path.startsWith('/') ? path : `/${path}`);
 

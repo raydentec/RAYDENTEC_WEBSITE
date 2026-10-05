@@ -17,6 +17,8 @@ const itemsParser = (text: string) =>
 
 /** Asset paths are relative to the public folder, e.g. "assets/placeholder-render.jpg". */
 const assetPath = z.string().regex(/^assets\//, 'must start with "assets/"');
+/** Release date as YYYY-MM-DD: Games rows and Projects groups list newest first. */
+const releaseDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'must be a date as YYYY-MM-DD');
 /** Real URL, site route, mailto — or a "[PLACEHOLDER]" that renders as a disabled button. */
 const href = z.string().min(1);
 
@@ -84,6 +86,7 @@ const games = defineCollection({
      */
     categories: z.array(z.string()).min(1),
     title: z.string(),
+    releaseDate,
     description: z.string(),
     platform: z.string(),
     status: z.string(),
@@ -102,6 +105,7 @@ const projects = defineCollection({
     /** Group and filter on the Projects page (pages/projects.astro). */
     category: z.enum(projectCategories),
     title: z.string(),
+    releaseDate,
     description: z.string(),
     /** Shown beside the button as "Tech used:" / stack. */
     stack: z.string(),

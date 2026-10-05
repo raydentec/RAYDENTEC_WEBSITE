@@ -7,9 +7,71 @@
  * column does when leaving a page), then the new selection is shown from the start —
  * renumbered 1…n, first container selected — and fades in one after another by its
  * position in the filtered list, as when the page opens.
+ *
+ * The selection is remembered for the tab (sessionStorage): coming back to Projects —
+ * from another page or on reload — opens with it already applied (set on the incoming
+ * page before it is swapped in, so it doesn't flash the full list).
  */
-import { containers, getScroller, mq, snapOffset, snapTop } from './dom';
+import type { TransitionBeforeSwapEvent } from 'astro:transitions/client';
+import { getScroller, mq, snapOffset, snapTop } from './dom';
 import { refreshColumn } from './snap';
+
+const STORE_KEY = 'raydentec:project-filter';
+/** Fallback when sessionStorage is unavailable: kept while the tab stays on the site. */
+let remembered: string[] = [];
+
+function save(selected: Set<string>) {
+  remembered = [...selected];
+  try {
+    sessionStorage.setItem(STORE_KEY, JSON.stringify(remembered));
+  } catch {
+    /* private mode / storage blocked: the in-memory copy still covers page switches */
+  }
+}
+
+function load(): Set<string> {
+  try {
+    const stored = JSON.parse(sessionStorage.getItem(STORE_KEY) ?? 'null');
+    if (Array.isArray(stored)) return new Set(stored.filter((c): c is string => typeof c === 'string'));
+  } catch {
+    /* fall back to the in-memory copy */
+  }
+  return new Set(remembered);
+}
+
+/**
+ * Show the groups of `selected` (all when empty) in `root`'s column — buttons, hidden
+ * groups, numbers and fade-in order. Works on a page not yet swapped in (no layout).
+ * Returns the shown containers.
+ */
+function show(root: ParentNode, selected: Set<string>) {
+  root.querySelectorAll<HTMLElement>('[data-filter-btn]').forEach((b) => {
+    const category = b.dataset.filterBtn ?? '';
+    b.setAttribute('aria-pressed', String(category === 'All' ? selected.size === 0 : selected.has(category)));
+  });
+  root.querySelectorAll<HTMLElement>('[data-category]').forEach((group) => {
+    group.hidden = selected.size > 0 && !selected.has(group.dataset.category ?? '');
+  });
+  // Renumber, and stagger the fade-in by position in the filtered list (a headline
+  // comes in with its container).
+  const shown = Array.from(root.querySelectorAll<HTMLElement>('[data-category]:not([hidden]) [data-cf]'));
+  shown.forEach((cf, i) => {
+    const num = cf.querySelector('.cf__num');
+    if (num) num.textContent = String(i + 1);
+    cf.style.setProperty('--cf-i', String(i));
+    const head = cf.previousElementSibling;
+    if (head instanceof HTMLElement && head.matches('.pgroup__title')) head.style.setProperty('--cf-i', String(i));
+  });
+  return shown;
+}
+
+/** Open Projects with the remembered selection: the first shown container is selected. */
+function restore(scroller: HTMLElement) {
+  const selected = load();
+  if (!selected.size || !scroller.querySelector('[data-filter]')) return;
+  const shown = show(scroller, selected);
+  scroller.querySelectorAll('[data-cf]').forEach((cf) => cf.classList.toggle('is-active', cf === shown[0]));
+}
 
 /** Same as the content column's fade when leaving a page (Shell.astro). */
 const FADE_OUT_MS = 160;
@@ -41,22 +103,10 @@ function apply(scroller: HTMLElement, buttons: HTMLElement[]) {
   const selected = new Set(
     buttons
       .filter((b) => b.dataset.filterBtn !== 'All' && b.getAttribute('aria-pressed') === 'true')
-      .map((b) => b.dataset.filterBtn),
+      .map((b) => b.dataset.filterBtn ?? ''),
   );
-  scroller.querySelectorAll<HTMLElement>('[data-category]').forEach((group) => {
-    group.hidden = selected.size > 0 && !selected.has(group.dataset.category);
-  });
-
-  // Renumber, and stagger the fade-in by position in the filtered list (a headline
-  // comes in with its container).
-  const shown = containers(scroller);
-  shown.forEach((cf, i) => {
-    const num = cf.querySelector('.cf__num');
-    if (num) num.textContent = String(i + 1);
-    cf.style.setProperty('--cf-i', String(i));
-    const head = cf.previousElementSibling;
-    if (head instanceof HTMLElement && head.matches('.pgroup__title')) head.style.setProperty('--cf-i', String(i));
-  });
+  save(selected);
+  const shown = show(scroller, selected);
 
   // Clear the selection (it may sit on a now hidden container) and go back to the start:
   // the first shown container — with the buttons and its headline — on the snap line.
@@ -98,3 +148,13 @@ document.addEventListener('click', (e) => {
   }
   fadeOut(scroller, () => apply(scroller, buttons));
 });
+
+// Coming back to Projects: apply the selection to the incoming page before the swap,
+// so snap.ts positions and selects within the filtered list.
+document.addEventListener('astro:before-swap', (e) => {
+  const scroller = (e as TransitionBeforeSwapEvent).newDocument.getElementById('scroller');
+  if (scroller) restore(scroller);
+});
+// Full page load (first visit in the tab, reload).
+const initial = getScroller();
+if (initial) restore(initial);
