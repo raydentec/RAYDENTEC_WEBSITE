@@ -38,23 +38,38 @@ const [videos, socials] = site.ctas;
 
 <style>
   /*
-   * While fading, the rail's opacity makes it a stacking context of its own; give that a
-   * place above the content column (z 1) — and the sidebar box (z 4) — so the rail never
-   * slips under content (Games rows run under it), mid-fade included.
+   * The rail sits above the content column (z 1) and the sidebar box (z 4), so it never
+   * slips under content (Games rows run under it).
+   *
+   * It fades in (after the sidebar has faded out) and out part by part — logo, EXPAND,
+   * Join me — not as a whole: opacity on the rail itself would cut EXPAND's backdrop blur
+   * off from what's behind the rail until the fade ended. --rail-fade is that fade.
    */
   .rail {
     position: relative;
     z-index: 5;
-    opacity: 0;
     visibility: hidden;
-    transition:
-      opacity var(--t-fade) ease,
-      visibility 0s linear var(--t-fade);
+    transition: visibility 0s linear var(--t-fade);
   }
   :global(html[data-sidebar='collapsed']) .rail {
-    opacity: 1;
     visibility: visible;
-    transition: opacity var(--t-fade) ease var(--t-fade);
+    transition: none;
+  }
+  .rail__logo,
+  .rail__expand,
+  .rail__join {
+    --rail-fade: opacity var(--t-fade) ease;
+    opacity: 0;
+  }
+  :global(html[data-sidebar='collapsed']) .rail__logo,
+  :global(html[data-sidebar='collapsed']) .rail__expand,
+  :global(html[data-sidebar='collapsed']) .rail__join {
+    --rail-fade: opacity var(--t-fade) ease var(--t-fade);
+    opacity: 1;
+  }
+  .rail__logo,
+  .rail__join {
+    transition: var(--rail-fade);
   }
   .rail__logo,
   .rail__expand,
@@ -76,7 +91,9 @@ const [videos, socials] = site.ctas;
     width: var(--rail-w);
     height: var(--expand-h);
     overflow: hidden;
-    transition: height var(--t-ctl) var(--ease-out);
+    transition:
+      height var(--t-ctl) var(--ease-out),
+      var(--rail-fade);
   }
   .rail__expand :global(svg) {
     position: absolute;
@@ -94,8 +111,11 @@ const [videos, socials] = site.ctas;
     --icon-top: calc((var(--rail-w) - 4px - 30px) / 2);
     height: var(--rail-w);
   }
-  /* Opened instantly when the sidebar closes on container 1 (scripts/sidebar.ts). */
-  :global(html[data-expand-instant]) .rail__expand,
+  /* Opened instantly when the sidebar closes on container 1 (scripts/sidebar.ts) — it
+     still fades in with the rest of the rail. */
+  :global(html[data-expand-instant]) .rail__expand {
+    transition: var(--rail-fade);
+  }
   :global(html[data-expand-instant]) .rail__expand :global(svg),
   :global(html[data-expand-instant]) .rail__expand-label {
     transition: none;
@@ -170,11 +190,17 @@ const [videos, socials] = site.ctas;
   }
 
   @media (max-width: 1279px) {
+    /* Tablet: always shown. */
     .rail,
     :global(html[data-sidebar='collapsed']) .rail {
-      opacity: 1;
       visibility: visible;
       transition: none;
+    }
+    .rail__logo,
+    .rail__expand,
+    .rail__join {
+      --rail-fade: opacity 0s;
+      opacity: 1;
     }
     .rail__join-label {
       font-size: 14px;
