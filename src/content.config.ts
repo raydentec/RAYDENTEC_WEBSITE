@@ -1,7 +1,7 @@
 import { defineCollection } from 'astro:content';
 import { file } from 'astro/loaders';
 import { z } from 'astro/zod';
-import { projectCategories } from './lib/project-categories';
+import { projectCategoryNames } from './lib/project-categories';
 
 /**
  * Each handoff JSON file is `{ page, items: [...] }`. The file() loader needs
@@ -103,7 +103,7 @@ const projects = defineCollection({
   schema: z.object({
     order: z.number(),
     /** Group and filter on the Projects page (pages/projects.astro). */
-    category: z.enum(projectCategories),
+    category: z.enum(projectCategoryNames),
     title: z.string(),
     releaseDate,
     description: z.string(),

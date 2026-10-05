@@ -9,7 +9,8 @@ import { projectCategories } from '../lib/project-categories';
 
 const items = (await getItems('projects')).map(({ data }) => data);
 
-// One group per category (filter-button order), each headed by its category name, its
+// One group per category (by category order, lib/project-categories.ts — as the filter
+// buttons), each headed by its category name, its
 // projects newest first; containers are numbered across groups (scripts/project-filter.ts
 // renumbers when filtering).
 let index = 0;

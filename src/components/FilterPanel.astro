@@ -49,14 +49,15 @@ import { projectCategories } from '../lib/project-categories';
     /* Above the content and SCROLL (same level, later in the page), below the menu. */
     z-index: 6;
     padding: var(--box-pad);
-    /* Dark grey (as the Community "More links" tiles) under a gradient from transparent
-       at the top to black at the bottom, with a red line along the top edge (as thick as
-       the red bar at the top of the window). */
+    /* Dark grey, as the Community "More links" tiles, with a red line along the top edge
+       (as thick as the red bar at the top of the window). */
     border-top: var(--top-bar) solid var(--c-red);
-    background: linear-gradient(to top, var(--c-black), rgba(0, 0, 0, 0)), var(--c-link-tile);
+    background: var(--c-link-tile);
+    /* Opening, it flies up into place from --rise below (eased out); closing just fades. */
+    --rise: 32px;
     opacity: 0;
     visibility: hidden;
-    transform: translateY(8px);
+    transform: translateY(var(--rise));
     transition:
       opacity var(--t-fade) ease,
       transform var(--t-fade) ease,
@@ -70,7 +71,7 @@ import { projectCategories } from '../lib/project-categories';
     transform: none;
     transition:
       opacity var(--t-fade) ease,
-      transform var(--t-fade) ease,
+      transform var(--t-sidebar) var(--ease-out),
       left var(--t-sidebar) var(--ease-out),
       width var(--t-sidebar) var(--ease-out);
   }
@@ -79,7 +80,7 @@ import { projectCategories } from '../lib/project-categories';
   @media (min-width: 768px) {
     .fpanel {
       left: 50%;
-      transform: translate(-50%, 8px);
+      transform: translate(-50%, var(--rise));
     }
     .fpanel[data-open] {
       transform: translateX(-50%);
