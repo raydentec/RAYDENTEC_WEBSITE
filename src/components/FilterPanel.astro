@@ -1,43 +1,38 @@
 ---
 /**
  * Projects category filter panel (pages/projects.astro, in Shell's overlay slot), opened
- * by the FILTER button (FilterButton.astro). A black box at the bottom of the content,
- * covering SCROLL and FILTER above it, as wide as the column: a "Filter"
- * headline with a close (×) button on the right, and along the bottom the category
- * buttons (scrolling sideways if needed) with Clear fixed on the right
- * (scripts/project-filter.ts filters the list as they're toggled).
+ * by the FILTER button (FilterButton.astro). A dark grey box as wide as the column —
+ * at the bottom, centred horizontally on desktop / tablet, over SCROLL and FILTER on
+ * mobile: a "Filter"
+ * headline with Clear on the right, and along the bottom the category buttons in a row
+ * that scrolls sideways across the whole panel width (scripts/project-filter.ts filters
+ * the list as they're toggled). FILTER, Escape or a click outside close it.
  *
  * Closed it's hidden (and out of the tab order); open, it fades / slides in.
  */
-import Icon from './Icon.astro';
 import { projectCategories } from '../lib/project-categories';
 ---
 
 <div class="fpanel" id="project-filter" data-filter-panel>
   <div class="fpanel__head">
     <h2 class="fpanel__label" id="projects-categories">Filter</h2>
-    <button type="button" class="fpanel__close" aria-label="Close filter" data-filter-close>
-      <Icon name="close" size={26} />
-    </button>
-  </div>
-  <div class="fpanel__row">
-    <div class="pfilter" role="group" aria-labelledby="projects-categories" data-filter>
-      {
-        projectCategories.map((label) => (
-          <button type="button" class="pfilter__btn" data-filter-btn={label} aria-pressed="false">
-            {label}
-          </button>
-        ))
-      }
-    </div>
     <button type="button" class="pfilter__btn fpanel__clear" data-filter-clear disabled>Clear</button>
+  </div>
+  <div class="pfilter" role="group" aria-labelledby="projects-categories" data-filter>
+    {
+      projectCategories.map((label) => (
+        <button type="button" class="pfilter__btn" data-filter-btn={label} aria-pressed="false">
+          {label}
+        </button>
+      ))
+    }
   </div>
 </div>
 
 <style>
   /*
-   * At the bottom, the column's left edge and width (as Shell.astro): from SCROLL's bottom
-   * edge up to FILTER's top edge — exactly the two buttons' height — rising into place.
+   * As wide as the column (as Shell.astro), at the bottom: from SCROLL's bottom edge up,
+   * rising into place. Desktop / tablet: centred horizontally on the screen (below).
    */
   .fpanel {
     --box-pad: 20px;
@@ -47,13 +42,18 @@ import { projectCategories } from '../lib/project-categories';
     display: flex;
     flex-direction: column;
     bottom: var(--ctl-bottom);
-    height: calc(2 * var(--ctl-h) + 12px);
+    /* About three button heights plus the padding, at every size. */
+    height: calc(3 * var(--ctl-h) + 2 * var(--box-pad));
     left: calc((100vw - var(--content-w)) / 2);
     width: var(--content-w);
     /* Above the content and SCROLL (same level, later in the page), below the menu. */
     z-index: 6;
     padding: var(--box-pad);
-    background: var(--c-black);
+    /* Dark grey (as the Community "More links" tiles) under a gradient from transparent
+       at the top to black at the bottom, with a red line along the top edge (as thick as
+       the red bar at the top of the window). */
+    border-top: var(--top-bar) solid var(--c-red);
+    background: linear-gradient(to top, var(--c-black), rgba(0, 0, 0, 0)), var(--c-link-tile);
     opacity: 0;
     visibility: hidden;
     transform: translateY(8px);
@@ -74,67 +74,44 @@ import { projectCategories } from '../lib/project-categories';
       left var(--t-sidebar) var(--ease-out),
       width var(--t-sidebar) var(--ease-out);
   }
+  /* Desktop / tablet: centred horizontally on the screen (still at the bottom, as wide as
+     the column); rises into place. */
+  @media (min-width: 768px) {
+    .fpanel {
+      left: 50%;
+      transform: translate(-50%, 8px);
+    }
+    .fpanel[data-open] {
+      transform: translateX(-50%);
+    }
+  }
   @media (min-width: 1280px) {
     :global(html[data-sidebar='expanded']) .fpanel {
-      left: var(--col-left-expanded);
       width: var(--content-w-expanded);
     }
   }
 
-  /*
-   * Top: headline (as the category headlines on the page), × on the right. The row sits
-   * flush with the panel's top edge and × in its top-right corner, as tall as FILTER and
-   * level with it (where the column reaches the button, the same square).
-   */
+  /* Top (inside the padding): headline (as the category headlines on the page), Clear on
+     the right; the category buttons sit at the bottom. */
   .fpanel__head {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 18px;
-    margin: calc(-1 * var(--box-pad)) calc(-1 * var(--box-pad)) 0 0;
   }
   .fpanel__label {
-    flex: 1 1 auto;
     font-weight: 700;
     font-size: var(--title-size);
     line-height: 1;
     letter-spacing: -0.03em;
   }
-  /* White × centred in a borderless square as tall as EXPAND / SCROLL; red on hover. */
-  .fpanel__close {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: var(--ctl-h);
-    height: var(--ctl-h);
-    padding: 0;
-    border: 0;
-    background: none;
-    color: var(--c-white);
-    cursor: pointer;
-    transition: color var(--t-state) ease;
-  }
-  .fpanel__close:hover {
-    color: var(--c-red);
-  }
-  .fpanel__close:focus-visible {
-    outline: 2px solid var(--c-white);
-    outline-offset: 2px;
-  }
-
-  /* Bottom: the category buttons, then Clear on the right (same size and style), kept
-     clear of the scrolling buttons by a gap. Clear is dimmed (and inert) while nothing is
-     selected. */
-  .fpanel__row {
-    display: flex;
-    gap: 16px;
+  /* Clear: the category buttons' shape in white — 50% white border (as theirs) and white
+     label; hovered, the border gives way to a 25% white fill; dimmed (and inert) while
+     nothing is selected.
+     (Head-qualified to win over .pfilter__btn below.) */
+  .fpanel__head .fpanel__clear {
     height: var(--filter-h);
-    margin-top: auto;
-  }
-  /* Clear: the category buttons' shape in white — white border and label; hovered, the
-     border gives way to a 25% white fill. (Row-qualified to win over .pfilter__btn below.) */
-  .fpanel__row .fpanel__clear {
-    border-color: var(--c-white);
+    border-color: rgba(255, 255, 255, 0.5);
     background: rgba(255, 255, 255, 0);
     color: var(--c-white);
     transition:
@@ -143,27 +120,27 @@ import { projectCategories } from '../lib/project-categories';
       color var(--t-state) ease,
       opacity var(--t-fade);
   }
-  .fpanel__row .fpanel__clear:hover {
+  .fpanel__head .fpanel__clear:hover {
     border-color: rgba(255, 255, 255, 0);
     background: rgba(255, 255, 255, 0.25);
     color: var(--c-white);
   }
-  .fpanel__row .fpanel__clear:disabled {
+  .fpanel__head .fpanel__clear:disabled {
     opacity: 0.35;
     cursor: default;
   }
-  .fpanel__row .fpanel__clear:disabled:hover {
-    border-color: var(--c-white);
+  .fpanel__head .fpanel__clear:disabled:hover {
+    border-color: rgba(255, 255, 255, 0.5);
     background: rgba(255, 255, 255, 0);
   }
 
-  /* One row of buttons; scrolls sideways when it doesn't fit (no scrollbar). */
+  /* Bottom: one row of buttons scrolling sideways within the panel's padding; buttons are
+     cut off (masked) at the padding on either side (no scrollbar). */
   .pfilter {
-    flex: 1 1 auto;
-    min-width: 0;
     display: flex;
     gap: 10px;
     height: var(--filter-h);
+    margin-top: auto;
     overflow-x: auto;
     overflow-y: hidden;
     overscroll-behavior-x: contain;
@@ -172,15 +149,15 @@ import { projectCategories } from '../lib/project-categories';
   .pfilter::-webkit-scrollbar {
     display: none;
   }
-  /* Inactive: red border and label, no fill; hovered, the border gives way to a 25% red
-     fill. Selected: solid red fill, black label. */
+  /* Inactive: white label, 50% white border, no fill; hovered, a full white border and a
+     25% white fill. Selected: solid white fill, black label. */
   .pfilter__btn {
     flex-shrink: 0;
     height: 100%;
     padding: 0 22px;
-    border: 1.5px solid var(--c-red);
-    background: rgba(204, 24, 30, 0);
-    color: var(--c-red);
+    border: 1.5px solid rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0);
+    color: var(--c-white);
     font-family: var(--f-ui);
     font-weight: 600;
     font-size: 20px;
@@ -192,12 +169,12 @@ import { projectCategories } from '../lib/project-categories';
       color var(--t-state) ease;
   }
   .pfilter__btn:hover {
-    border-color: rgba(204, 24, 30, 0);
-    background: rgba(204, 24, 30, 0.25);
+    border-color: var(--c-white);
+    background: rgba(255, 255, 255, 0.25);
   }
   .pfilter__btn[aria-pressed='true'] {
-    border-color: var(--c-red);
-    background: var(--c-red);
+    border-color: var(--c-white);
+    background: var(--c-white);
     color: var(--c-black);
   }
   .pfilter__btn:focus-visible {
@@ -224,9 +201,6 @@ import { projectCategories } from '../lib/project-categories';
     }
     .pfilter {
       gap: 8px;
-    }
-    .fpanel__row {
-      gap: 12px;
     }
     .pfilter__btn {
       padding: 0 14px;

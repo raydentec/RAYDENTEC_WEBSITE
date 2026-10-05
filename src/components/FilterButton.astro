@@ -2,8 +2,8 @@
 /**
  * Projects FILTER control (pages/projects.astro) — a glass square like SCROLL (global
  * .ctl), right above it (as far apart as SCROLL is from what's below it). Pressing it
- * opens / closes the category filter panel (FilterPanel.astro); so do the panel's ×
- * button, Escape, and a click anywhere outside the panel.
+ * opens / closes the category filter panel (FilterPanel.astro); Escape and a click
+ * anywhere outside the panel close it too.
  *
  * Opening sideways works like SCROLL (scripts/scroll-control.ts): hover or keyboard focus
  * sets data-state="open", and it goes back to "idle" 2s after the pointer / focus leaves.
@@ -53,7 +53,6 @@ import Icon from './Icon.astro';
   document.addEventListener('click', (e) => {
     const target = e.target as Element;
     if (target.closest('[data-filter-toggle]')) return setOpen(!isOpen());
-    if (target.closest('[data-filter-close]')) return close();
     // A click anywhere outside the panel closes it.
     if (isOpen() && !target.closest('[data-filter-panel]')) setOpen(false);
   });
