@@ -267,6 +267,70 @@ dd {
 }
 
 /*
+ * The rail and the sidebar get layers of their own too, above the pages, so the new page
+ * never covers them. Normally they just stay as they are (like the nav). When a page
+ * change shows or hides them — Start has none on the hero, other pages open with the
+ * sidebar (tablet: the rail) — <html data-chrome-fade="<before>-<after>"> is set
+ * (scripts/page-transition.ts) and they cross-fade instead: the old one fading out as
+ * the new one fades in. A rail that goes away only fades out its old image; its own
+ * fade-out (Rail.astro) stays hidden, as the two together made it flicker.
+ */
+/* The rail's parts are positioned on their own (Rail.astro), so each gets a layer. */
+.rail__logo {
+  view-transition-name: rail-logo;
+}
+.rail__expand {
+  view-transition-name: rail-expand;
+}
+.rail__join {
+  view-transition-name: rail-join;
+}
+.sidebar {
+  view-transition-name: sidebar;
+}
+::view-transition-group(rail-logo),
+::view-transition-group(rail-expand),
+::view-transition-group(rail-join),
+::view-transition-group(sidebar) {
+  z-index: 10;
+  animation: none;
+}
+::view-transition-old(rail-logo),
+::view-transition-old(rail-expand),
+::view-transition-old(rail-join),
+::view-transition-old(sidebar) {
+  display: none;
+}
+::view-transition-new(rail-logo),
+::view-transition-new(rail-expand),
+::view-transition-new(rail-join),
+::view-transition-new(sidebar) {
+  animation: none;
+}
+html[data-chrome-fade]::view-transition-old(rail-logo),
+html[data-chrome-fade]::view-transition-old(rail-expand),
+html[data-chrome-fade]::view-transition-old(rail-join),
+html[data-chrome-fade]::view-transition-old(sidebar) {
+  display: block;
+  animation: page-fade-out 250ms ease both;
+}
+html[data-chrome-fade]::view-transition-new(sidebar) {
+  animation: page-fade-in 250ms ease both;
+}
+html[data-chrome-fade]::view-transition-new(rail-logo),
+html[data-chrome-fade]::view-transition-new(rail-expand),
+html[data-chrome-fade]::view-transition-new(rail-join) {
+  display: none;
+}
+/* …unless the rail is what the new page shows (tablet, leaving the Start hero). */
+html[data-chrome-fade$='-rail']::view-transition-new(rail-logo),
+html[data-chrome-fade$='-rail']::view-transition-new(rail-expand),
+html[data-chrome-fade$='-rail']::view-transition-new(rail-join) {
+  display: block;
+  animation: page-fade-in 250ms ease both;
+}
+
+/*
  * Changing pages: the column of the page you leave and the one you arrive at are separate
  * layers (view-transition-name page-<id>, Shell.astro), so the browser never morphs one
  * into the other. Both slide by --page-shift and cross-fade: further right in the menu →
