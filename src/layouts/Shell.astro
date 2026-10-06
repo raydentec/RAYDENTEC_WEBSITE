@@ -4,7 +4,7 @@
  * `transition:persist`-ed, so ClientRouter navigation only swaps the column:
  * the background video keeps looping and the sidebar/rail/nav/menus keep state.
  */
-import { ClientRouter, fade } from 'astro:transitions';
+import { ClientRouter } from 'astro:transitions';
 import '../styles/global.css';
 import Footer from '../components/Footer.astro';
 import MobileHeader from '../components/MobileHeader.astro';
@@ -76,8 +76,7 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
       aria-label={`${pageLabel} content`}
       data-page={page}
       data-snap="off"
-      transition:name={rows ? 'scroller-rows' : 'scroller'}
-      transition:animate={fade({ duration: '160ms' })}
+      style={`view-transition-name: page-${page}`}
     >
       {
         page !== 'start' && (
@@ -112,6 +111,7 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
       import '../scripts/game-rows';
       import '../scripts/project-filter';
       import '../scripts/start';
+      import '../scripts/page-transition';
     </script>
   </body>
 </html>
