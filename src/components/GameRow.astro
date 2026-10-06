@@ -78,9 +78,13 @@ const headingId = `games-${index}`;
     opacity: var(--o-inactive);
     transition: opacity var(--t-state) ease;
   }
-  /* Rows that aren't selected can't be clicked or hovered (wheel / touch input goes to the
-     column underneath, so scrolling to them still works). */
+  /* A row that isn't selected is one click target as a whole: clicking anywhere on it
+     scrolls it into place (snap.ts). Its games, buttons and sideways track stay out of reach
+     until then; wheel / touch input still scrolls the column. */
   .grow:not(.is-active) {
+    cursor: pointer;
+  }
+  .grow:not(.is-active) > * {
     pointer-events: none;
   }
   .grow.is-active .grow__title,
@@ -184,10 +188,14 @@ const headingId = `games-${index}`;
    * the box (see ContainerFrame) moves from the games to the row.
    */
   @media (max-width: 767px) {
+    /* The row reaches both screen edges (its contents stay put), so the peek of the next
+       game at the edge is part of the click target too. */
     .grow {
       --row-left: var(--gutter);
       --row-w: calc(100vw - 2 * var(--gutter));
       --game-w: calc(var(--row-w) * 0.85);
+      margin-inline: calc(-1 * var(--gutter));
+      padding-inline: var(--gutter);
       padding-bottom: calc(var(--menu-bar-bottom) - var(--footer-h) + var(--ctl-h) - 2px);
     }
     .grow:last-child {

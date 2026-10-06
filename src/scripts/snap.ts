@@ -98,12 +98,11 @@ function updateTail(scroller: HTMLElement) {
 }
 
 /**
- * Projects and Start: clicking a container that isn't selected (anywhere but its links /
- * buttons) scrolls it onto the snap line; once scrolling settles it becomes the selected
- * one. (Start's explore row takes such clicks as a whole while the hero is selected,
- * StartExplore.astro.)
+ * Projects, Games and Start: clicking a container that isn't selected (anywhere but its
+ * links / buttons) scrolls it onto the snap line; once scrolling settles it becomes the
+ * selected one. (A sideways row takes such clicks as a whole, GameRow.astro.)
  */
-const CLICK_TO_SELECT = ['projects', 'start'];
+const CLICK_TO_SELECT = ['projects', 'games', 'start'];
 document.addEventListener('click', (e) => {
   const scroller = getScroller();
   const target = e.target as Element | null;

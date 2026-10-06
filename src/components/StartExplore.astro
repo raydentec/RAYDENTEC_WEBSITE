@@ -43,26 +43,6 @@ const { title, items } = Astro.props;
     position: relative;
     z-index: 1;
   }
-  /*
-   * Not selected (peeking in under the hero): the section as a whole is one click target
-   * that scrolls it into place (snap.ts); its cards, buttons and sideways track stay out of
-   * reach until then, as on Games. Wheel / touch input still scrolls the page.
-   */
-  :global(.sx.sx:not(.is-active)) {
-    pointer-events: auto;
-    cursor: pointer;
-  }
-  :global(.sx:not(.is-active) > *) {
-    pointer-events: none;
-  }
-  /* Mobile: the section reaches both screen edges (its contents stay put), so the peek of
-     the next card at the edge is part of the click target too. */
-  @media (max-width: 767px) {
-    :global(.sx.sx) {
-      margin-inline: calc(-1 * var(--gutter));
-      padding-inline: var(--gutter);
-    }
-  }
   /* All cards as tall as the tallest one; their bodies fill that height (StartCard pins its
      button to the bottom). */
   :global(.sx .grow__list) {
