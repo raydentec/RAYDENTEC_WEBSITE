@@ -105,11 +105,11 @@ const { name, tagline, handle, bio, joinPrompt, ctas, class: className } = Astro
     letter-spacing: -0.055em;
     color: var(--c-grey);
   }
-  /* Lower-right corner, right-aligned. */
+  /* Lower-right corner; the prompt lines up with the buttons' left edge. */
   .lt__join {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: flex-start;
     gap: 14px;
     justify-self: end;
     align-self: end;
@@ -119,7 +119,6 @@ const { name, tagline, handle, bio, joinPrompt, ctas, class: className } = Astro
     font-size: 27px;
     line-height: 1;
     letter-spacing: -0.055em;
-    text-align: right;
   }
   /* CTAs as in the sidebar (Profile.astro). */
   .lt__ctas {
@@ -211,7 +210,6 @@ const { name, tagline, handle, bio, joinPrompt, ctas, class: className } = Astro
       font-size: 14px;
       line-height: 1.15;
       letter-spacing: 0;
-      text-align: left;
     }
     .lt__cta {
       width: 100%;

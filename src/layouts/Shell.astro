@@ -269,14 +269,14 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
    * ---------- Start (StartHero.astro, StartExplore.astro, scripts/start.ts) ----------
    * A row page whose hero runs full-bleed from the top of the window: on desktop/tablet
    * the scroller starts at the top edge (under the nav) and the explore row snaps at the
-   * usual content top. Whatever scrolls above that line fades out as the page leaves the
-   * hero (--hero-a, scripts/start.ts), so nothing shows behind the nav (mobile: the header).
+   * usual content top. Once the hero has faded out, whatever scrolls above that line is cut
+   * off (--top-a, scripts/start.ts), so nothing shows behind the nav (mobile: the header).
    */
   .scroller--start {
-    --hero-a: 1;
+    --top-a: 1;
     --mask-line: var(--content-top);
-    -webkit-mask-image: linear-gradient(180deg, rgb(0 0 0 / var(--hero-a)) calc(var(--mask-line) - 24px), #000 var(--mask-line));
-    mask-image: linear-gradient(180deg, rgb(0 0 0 / var(--hero-a)) calc(var(--mask-line) - 24px), #000 var(--mask-line));
+    -webkit-mask-image: linear-gradient(180deg, rgb(0 0 0 / var(--top-a)) var(--mask-line), #000 var(--mask-line));
+    mask-image: linear-gradient(180deg, rgb(0 0 0 / var(--top-a)) var(--mask-line), #000 var(--mask-line));
   }
   .scroller--start .column {
     gap: 0;
@@ -329,22 +329,22 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
     .column {
       padding-bottom: max(var(--tail, 0px), calc(var(--ctl-bottom) - var(--footer-h) + var(--ctl-h) + 16px));
     }
-    /* Start: the hero starts right under the top bar; content is masked from the header
-       line (once the hero has left) down to 12px above the menu bar. */
+    /* Start: the hero starts right under the top bar; content is masked down to 12px above
+       the menu bar, and from the header line once the hero has faded out. */
     .scroller--start {
       --mask-line: calc(var(--header-h) - var(--top-bar));
       --mask-bottom: calc(var(--menu-bar-bottom) - var(--footer-h) + var(--ctl-h) + 12px);
       padding-top: 0;
       -webkit-mask-image: linear-gradient(
         180deg,
-        rgb(0 0 0 / var(--hero-a)) calc(var(--mask-line) - 24px),
+        rgb(0 0 0 / var(--top-a)) var(--mask-line),
         #000 var(--mask-line),
         #000 calc(100% - var(--mask-bottom)),
         transparent calc(100% - var(--mask-bottom))
       );
       mask-image: linear-gradient(
         180deg,
-        rgb(0 0 0 / var(--hero-a)) calc(var(--mask-line) - 24px),
+        rgb(0 0 0 / var(--top-a)) var(--mask-line),
         #000 var(--mask-line),
         #000 calc(100% - var(--mask-bottom)),
         transparent calc(100% - var(--mask-bottom))

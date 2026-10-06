@@ -232,6 +232,15 @@ dd {
 .mheader {
   view-transition-name: mobile-header;
 }
+/* The top nav and red top bar too: Start's column reaches the top of the window (hero). */
+.topnav {
+  view-transition-name: top-nav;
+}
+.top-bar {
+  view-transition-name: top-bar;
+}
+::view-transition-group(top-nav),
+::view-transition-group(top-bar),
 ::view-transition-group(scroll-ctl),
 ::view-transition-group(scroll-track),
 ::view-transition-group(mobile-menu-bar),
@@ -240,12 +249,16 @@ dd {
   animation: none; /* no size/position morph between old and new state */
 }
 /* Show their new state straight away instead of cross-fading old and new labels. */
+::view-transition-old(top-nav),
+::view-transition-old(top-bar),
 ::view-transition-old(scroll-ctl),
 ::view-transition-old(scroll-track),
 ::view-transition-old(mobile-menu-bar),
 ::view-transition-old(mobile-header) {
   display: none;
 }
+::view-transition-new(top-nav),
+::view-transition-new(top-bar),
 ::view-transition-new(scroll-ctl),
 ::view-transition-new(scroll-track),
 ::view-transition-new(mobile-menu-bar),

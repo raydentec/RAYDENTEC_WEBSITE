@@ -7,11 +7,11 @@
  *   - the background video is hidden, and fades in once the hero scrolls out (global.css).
  * Scrolling back reverses it all; leaving the page drops it before the swap.
  *
- * Content scrolled above the header line (behind the nav / mobile header) fades out as
- * the page leaves the hero: --hero-a, the opacity the scroller's mask (Shell.astro) gives
- * that band — 1 at the top, 0 from halfway to the explore row on. The whole hero (image
- * and lower third) fades out over the whole way, and back in on the way up (--hero-art,
- * StartHero.astro).
+ * The whole hero (image and lower third) fades out on the way to the explore row and
+ * back in on the way up (--hero-art, StartHero.astro). Once it is gone, content above the
+ * header line (behind the nav / mobile header) is cut off as on other pages — the explore
+ * row when it is taller than the window and scrolled on (--top-a, the scroller's mask in
+ * Shell.astro: 1 shows that band, 0 hides it).
  */
 import { getScroller, isStartPage, mq, onPageLoad, onScrollerScroll, setRootState, snapOffset, snapTop } from './dom';
 
@@ -31,8 +31,9 @@ function updateFade(scroller: HTMLElement) {
   // scrollTop at which the explore row rests on the snap line.
   const end = scroller.scrollTop + snapTop(explore) - scroller.getBoundingClientRect().top - snapOffset(scroller);
   const p = end > 0 ? Math.min(1, scroller.scrollTop / end) : 1;
-  scroller.style.setProperty('--hero-a', String(Math.max(0, 1 - 2 * p)));
   scroller.style.setProperty('--hero-art', String(1 - p));
+  // 0.99: the snapped position can land a sub-pixel short of the end.
+  scroller.style.setProperty('--top-a', p >= 0.99 ? '0' : '1');
 }
 
 onScrollerScroll((scroller) => {
