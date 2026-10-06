@@ -2,7 +2,11 @@
   "page": "start",
   "_note": "Replaces content/start.json from handoff v2. Two snap sections: hero, then explore.",
   "hero": {
-    "image": "assets/placeholder-render.jpg",
+    "images": [
+      "assets/placeholder-render.jpg",
+      "assets/placeholder-render.jpg",
+      "assets/placeholder-render.jpg"
+    ],
     "imageAlt": "",
     "imagePosition": {
       "desktop": "center 35%",

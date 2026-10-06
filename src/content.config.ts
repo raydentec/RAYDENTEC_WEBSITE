@@ -50,7 +50,8 @@ const start = defineCollection({
   }),
   schema: z.object({
     hero: z.object({
-      image: assetPath,
+      /** Slider images (StartHero.astro), shown in this order. */
+      images: z.array(assetPath).min(1),
       imageAlt: z.string(),
       /** CSS object-position per layout. */
       imagePosition: z.object({ desktop: z.string(), tablet: z.string(), mobile: z.string() }),

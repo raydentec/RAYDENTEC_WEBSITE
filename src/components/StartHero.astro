@@ -1,9 +1,11 @@
 ---
 /**
  * Start · hero: the first of the page's two snap sections (container 0 for snap.ts).
- * A full-bleed image (overlaid for legibility) that fades out below the lower third via
- * a mask, revealing the page background, and the lower third ending 16px above the
- * explore headline.
+ * A full-bleed image slider (overlaid for legibility) that fades out below the lower third
+ * via a mask, revealing the page background, and the lower third ending 16px above the
+ * explore headline. The slides switch on a timer (scripts/hero-slider.ts); an indicator
+ * like the Games rows' (GameRow.astro) — current slide white — sits above the lower
+ * third's left edge, and clicking a line shows that slide.
  *
  * The hero is shorter than the scroll area, so the explore row (StartExplore.astro) peeks
  * in below it: its cards' top edge lines up with the top of the scroll control. Hero
@@ -14,7 +16,7 @@ import LowerThird from './LowerThird.astro';
 import { asset } from '../lib/content';
 
 interface Props {
-  image: string;
+  images: string[];
   imageAlt: string;
   imagePosition: { desktop: string; tablet: string; mobile: string };
   name: string;
@@ -25,15 +27,46 @@ interface Props {
   ctas: { label: string; href: string; variant: 'primary' | 'secondary' }[];
 }
 
-const { image, imageAlt, imagePosition, ...identity } = Astro.props;
+const { images, imageAlt, imagePosition, ...identity } = Astro.props;
 const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imagePosition.tablet}; --pos-mobile: ${imagePosition.mobile}`;
 ---
 
-<div class="hero is-active" data-cf data-hero style={positions}>
+<div class="hero is-active" data-cf data-hero data-slider style={positions}>
   <div class="hero__art" aria-hidden={imageAlt ? undefined : 'true'}>
-    <img class="hero__img" src={asset(image)} alt={imageAlt} width="1920" height="1080" decoding="async" fetchpriority="high" />
+    {
+      images.map((image, i) => (
+        <img
+          class:list={['hero__img', { 'is-current': i === 0 }]}
+          data-slide
+          src={asset(image)}
+          alt={imageAlt}
+          width="1920"
+          height="1080"
+          decoding="async"
+          loading={i === 0 ? 'eager' : 'lazy'}
+          fetchpriority={i === 0 ? 'high' : undefined}
+        />
+      ))
+    }
   </div>
-  <LowerThird {...identity} class="hero__lt" />
+  <div class="hero__front">
+    {
+      images.length > 1 && (
+        <div class="hero__dots" role="group" aria-label="Hero images">
+          {images.map((_, i) => (
+            <button
+              type="button"
+              class="hero__dot"
+              data-slide-dot
+              aria-label={`Show image ${i + 1} of ${images.length}`}
+              aria-current={i === 0 ? 'true' : undefined}
+            />
+          ))}
+        </div>
+      )
+    }
+    <LowerThird {...identity} />
+  </div>
 </div>
 
 <style>
@@ -63,6 +96,7 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
     right: 0;
     top: 0;
     height: calc(100dvh - var(--scroller-top));
+    overflow: hidden;
     pointer-events: none;
     -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 var(--fade-from), transparent var(--fade-to));
     mask-image: linear-gradient(180deg, #000 0%, #000 var(--fade-from), transparent var(--fade-to));
@@ -73,18 +107,66 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
     inset: 0;
     background: linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 22%, rgba(0, 0, 0, 0) 42%, rgba(0, 0, 0, 0.5) 70%);
   }
+  /* Slides stacked on each other; only the current one shows (the slider moves the one
+     coming in and the one going out). */
   .hero__img {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
     object-position: var(--pos-desktop);
+    visibility: hidden;
+  }
+  .hero__img.is-current,
+  .hero__img.is-leaving {
+    visibility: visible;
   }
 
-  .hero :global(.hero__lt) {
+  /* Indicator, then the lower third, 16px above the explore headline. */
+  .hero__front {
     position: absolute;
     left: var(--gutter);
     right: var(--gutter);
     bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* As the Games rows' indicator (GameRow.astro): one line per slide, as wide together as
+     half a game card, on the lower third's left edge; the current slide's line is white. */
+  .hero__dots {
+    display: flex;
+    gap: 8px;
+    width: calc(var(--row-w) / 3);
+  }
+  .hero__dot {
+    position: relative;
+    flex: 1 1 0;
+    height: 12px;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
+  .hero__dot::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 3px;
+    transform: translateY(-50%);
+    background: var(--c-white);
+    opacity: 0.35;
+    transition: opacity var(--t-state) ease;
+  }
+  .hero__dot:hover::before {
+    opacity: 0.7;
+  }
+  .hero__dot[aria-current='true']::before {
+    opacity: 1;
   }
 
   @media (max-width: 1279px) {
@@ -109,6 +191,10 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
     }
     .hero__img {
       object-position: var(--pos-mobile);
+    }
+    /* As wide as a game card on mobile (GameRow.astro). */
+    .hero__dots {
+      width: calc((100vw - 2 * var(--gutter)) * 0.85);
     }
   }
 </style>
