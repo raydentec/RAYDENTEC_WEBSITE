@@ -3,9 +3,12 @@
  * Start · hero: the first of the page's two snap sections (container 0 for snap.ts).
  * A full-bleed image slider (overlaid for legibility) that fades out below the lower third
  * via a mask, revealing the page background, and the lower third ending 16px above the
- * explore headline. The slides switch on a timer (scripts/hero-slider.ts); an indicator
- * like the Games rows' (GameRow.astro) — current slide white — sits above the lower
- * third's left edge, and clicking a line shows that slide.
+ * explore headline. The slides scroll and snap sideways (swipe / trackpad / Shift+wheel)
+ * and switch on a timer (scripts/hero-slider.ts); an indicator like the Games rows'
+ * (GameRow.astro) — current slide white — sits above the lower third's left edge, and
+ * clicking a line shows that slide. Copies of the last slide before the first and of the
+ * first after the last let the slider go round both ways instead of rewinding. With one
+ * image there is nothing to slide: no copies, indicator, scrolling or timer.
  *
  * The hero is shorter than the scroll area, so the explore row (StartExplore.astro) peeks
  * in below it: its cards' top edge lines up with the top of the scroll control. Hero
@@ -28,26 +31,38 @@ interface Props {
 }
 
 const { images, imageAlt, imagePosition, ...identity } = Astro.props;
+// Track: [copy of last] slides… [copy of first] — no copies for a single image.
+const looped = images.length > 1;
+const slides = [
+  ...(looped ? [{ image: images[images.length - 1], clone: true }] : []),
+  ...images.map((image) => ({ image, clone: false })),
+  ...(looped ? [{ image: images[0], clone: true }] : []),
+];
+const first = looped ? 1 : 0;
 const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imagePosition.tablet}; --pos-mobile: ${imagePosition.mobile}`;
 ---
 
 <div class="hero is-active" data-cf data-hero data-slider style={positions}>
   <div class="hero__art" aria-hidden={imageAlt ? undefined : 'true'}>
-    {
-      images.map((image, i) => (
-        <img
-          class:list={['hero__img', { 'is-current': i === 0 }]}
-          data-slide
-          src={asset(image)}
-          alt={imageAlt}
-          width="1920"
-          height="1080"
-          decoding="async"
-          loading={i === 0 ? 'eager' : 'lazy'}
-          fetchpriority={i === 0 ? 'high' : undefined}
-        />
-      ))
-    }
+    <div class:list={['hero__track', { 'hero__track--single': images.length < 2 }]} data-slide-track>
+      {
+        slides.map(({ image, clone }, i) => (
+          <img
+            class="hero__img"
+            data-slide={clone ? undefined : ''}
+            data-slide-clone={clone ? '' : undefined}
+            src={asset(image)}
+            alt={clone ? '' : imageAlt}
+            width="1920"
+            height="1080"
+            decoding="async"
+            draggable="false"
+            loading={i === first ? 'eager' : 'lazy'}
+            fetchpriority={i === first ? 'high' : undefined}
+          />
+        ))
+      }
+    </div>
   </div>
   <div class="hero__front">
     {
@@ -96,8 +111,6 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
     right: 0;
     top: 0;
     height: calc(100dvh - var(--scroller-top));
-    overflow: hidden;
-    pointer-events: none;
     -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 var(--fade-from), transparent var(--fade-to));
     mask-image: linear-gradient(180deg, #000 0%, #000 var(--fade-from), transparent var(--fade-to));
   }
@@ -106,21 +119,40 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
     position: absolute;
     inset: 0;
     background: linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 22%, rgba(0, 0, 0, 0) 42%, rgba(0, 0, 0, 0.5) 70%);
+    pointer-events: none;
   }
-  /* Slides stacked on each other; only the current one shows (the slider moves the one
-     coming in and the one going out). */
+  /* Slides side by side, one per screen width, snapping (as the Games rows' tracks); no
+     scrollbar — the indicator replaces it. Vertical wheel / swipes go on to the page. */
+  .hero__track {
+    display: flex;
+    height: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  .hero__track::-webkit-scrollbar {
+    display: none;
+  }
+  .hero__track--single {
+    overflow-x: hidden;
+  }
   .hero__img {
-    position: absolute;
-    inset: 0;
+    flex: 0 0 100%;
     width: 100%;
     height: 100%;
     object-fit: cover;
     object-position: var(--pos-desktop);
-    visibility: hidden;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    user-select: none;
   }
-  .hero__img.is-current,
-  .hero__img.is-leaving {
-    visibility: visible;
+  /* The copies only become snap points once the slider is set up (data-ready,
+     scripts/hero-slider.ts): until then the track settles on the first real slide, not
+     on the copy of the last one before it. */
+  .hero__track:not([data-ready]) .hero__img[data-slide-clone] {
+    scroll-snap-align: none;
   }
 
   /* Indicator, then the lower third, 16px above the explore headline. */
@@ -134,12 +166,15 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
     gap: 12px;
   }
 
-  /* As the Games rows' indicator (GameRow.astro): one line per slide, as wide together as
-     half a game card, on the lower third's left edge; the current slide's line is white. */
+  /* As the Games rows' indicator (GameRow.astro): one line per slide, lined up with the
+     lower third's content (inside its left padding, LowerThird.astro: 28px, tablet 24px,
+     mobile 18px both sides) and as wide as its CTA buttons (318px, tablet 306px, mobile the
+     full content width); the current slide's line is white. */
   .hero__dots {
     display: flex;
     gap: 8px;
-    width: calc(var(--row-w) / 3);
+    width: 318px;
+    margin-left: 28px;
   }
   .hero__dot {
     position: relative;
@@ -177,6 +212,10 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
     .hero__img {
       object-position: var(--pos-tablet);
     }
+    .hero__dots {
+      width: 306px;
+      margin-left: 24px;
+    }
   }
 
   /* Mobile: the scroller starts under the top bar; the hero reaches out over its gutters. */
@@ -192,9 +231,9 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
     .hero__img {
       object-position: var(--pos-mobile);
     }
-    /* As wide as a game card on mobile (GameRow.astro). */
     .hero__dots {
-      width: calc((100vw - 2 * var(--gutter)) * 0.85);
+      width: auto;
+      margin-inline: 18px;
     }
   }
 </style>
