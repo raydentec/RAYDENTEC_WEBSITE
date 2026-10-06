@@ -4,7 +4,8 @@
  * sideways row like the Games rows (GameRow.astro, scripts/game-rows.ts) — headline and
  * indicator lined up with the content column, cards running edge to edge — holding the
  * numbered explore cards, sized as the games are (GameRow: ⅔ of the column, 85% on
- * mobile; height from the content). It stays lit while it peeks in under the hero.
+ * mobile; height from the content). While it peeks in under the hero it isn't selected and
+ * is dimmed as the Games rows are (GameRow: --o-inactive).
  */
 import ContainerFrame from './ContainerFrame.astro';
 import GameRow from './GameRow.astro';
@@ -26,10 +27,10 @@ interface Props {
 const { title, items } = Astro.props;
 ---
 
-<GameRow title={title} titles={items.map((i) => i.title)} index={0} row={0} itemsLabel="Sections" lit class="sx">
+<GameRow title={title} titles={items.map((i) => i.title)} index={0} row={0} itemsLabel="Sections" class="sx">
   {
     items.map((item, i) => (
-      <ContainerFrame index={i} variant="start" number={item.number} active={i === 0} label={item.title}>
+      <ContainerFrame index={i} variant="start" number={item.number} label={item.title}>
         <StartCard {...item} />
       </ContainerFrame>
     ))
@@ -41,6 +42,26 @@ const { title, items } = Astro.props;
   :global(.sx) {
     position: relative;
     z-index: 1;
+  }
+  /*
+   * Not selected (peeking in under the hero): the section as a whole is one click target
+   * that scrolls it into place (snap.ts); its cards, buttons and sideways track stay out of
+   * reach until then, as on Games. Wheel / touch input still scrolls the page.
+   */
+  :global(.sx.sx:not(.is-active)) {
+    pointer-events: auto;
+    cursor: pointer;
+  }
+  :global(.sx:not(.is-active) > *) {
+    pointer-events: none;
+  }
+  /* Mobile: the section reaches both screen edges (its contents stay put), so the peek of
+     the next card at the edge is part of the click target too. */
+  @media (max-width: 767px) {
+    :global(.sx.sx) {
+      margin-inline: calc(-1 * var(--gutter));
+      padding-inline: var(--gutter);
+    }
   }
   /* All cards as tall as the tallest one; their bodies fill that height (StartCard pins its
      button to the bottom). */

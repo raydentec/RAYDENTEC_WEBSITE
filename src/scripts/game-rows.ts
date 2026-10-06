@@ -41,8 +41,7 @@ function currentIndex(row: HTMLElement) {
 function sync(row: HTMLElement) {
   targets.delete(row);
   const current = currentIndex(row);
-  // A lit row (Start) shows its current card as selected even while it isn't the active container.
-  const active = row.classList.contains('is-active') || row.hasAttribute('data-row-lit');
+  const active = row.classList.contains('is-active');
   games(row).forEach((game, i) => game.classList.toggle('is-active', active && i === current));
   dots(row).forEach((dot, i) => {
     if (i === current) dot.setAttribute('aria-current', 'true');

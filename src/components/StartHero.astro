@@ -48,6 +48,11 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
     flex-shrink: 0;
     scroll-snap-align: start;
   }
+  /* Not selected (the explore row is): no clicks or hovers, as rows on Games — wheel and
+     touch input go to the column underneath. */
+  .hero:not(.is-active) {
+    pointer-events: none;
+  }
 
   /* Viewport-tall, so it runs on under the explore row's peek; masked out below the lower third. */
   .hero__art {

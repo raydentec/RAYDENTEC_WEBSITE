@@ -13,8 +13,7 @@
  * Mobile: the same, with games 85% of the column wide so the next one peeks in. The red
  * bar spans the whole selected game there (ContainerFrame), and so does the indicator.
  *
- * Also the Start page's "What you can find here" row (StartExplore.astro), with its own
- * card widths (`class`) and `lit`.
+ * Also the Start page's "What you can find here" row (StartExplore.astro).
  */
 interface Props {
   /** Headline: the games' category. */
@@ -26,25 +25,19 @@ interface Props {
   /** Position of the row on the page (0-based): staggers its fade-in. */
   row: number;
   active?: boolean;
-  /**
-   * Headline, indicator and current card stay lit (and clickable) while the row isn't the
-   * selected container (Start: the row peeks in under the hero).
-   */
-  lit?: boolean;
   /** Item label for the indicator buttons ("Show …" / "… in"). */
   itemsLabel?: string;
   class?: string;
 }
 
-const { title, titles, index, row, active = false, lit = false, itemsLabel = 'Games', class: className } = Astro.props;
+const { title, titles, index, row, active = false, itemsLabel = 'Games', class: className } = Astro.props;
 const headingId = `games-${index}`;
 ---
 
 <section
-  class:list={['grow', className, { 'is-active': active, 'grow--lit': lit }]}
+  class:list={['grow', className, { 'is-active': active }]}
   data-cf
   data-row
-  data-row-lit={lit ? '' : undefined}
   aria-labelledby={headingId}
   style={`--row-i: ${row}`}
 >
@@ -87,12 +80,10 @@ const headingId = `games-${index}`;
   }
   /* Rows that aren't selected can't be clicked or hovered (wheel / touch input goes to the
      column underneath, so scrolling to them still works). */
-  .grow:not(.is-active, .grow--lit) {
+  .grow:not(.is-active) {
     pointer-events: none;
   }
-  .grow--lit .grow__title,
   .grow.is-active .grow__title,
-  .grow:hover .grow__title,
   .grow:focus-within .grow__title {
     opacity: 1;
   }
@@ -157,9 +148,7 @@ const headingId = `games-${index}`;
     background: var(--c-red);
     opacity: 1;
   }
-  .grow--lit .grow__dot,
   .grow.is-active .grow__dot,
-  .grow:hover .grow__dot,
   .grow:focus-within .grow__dot {
     opacity: 1;
   }

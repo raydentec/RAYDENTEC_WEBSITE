@@ -98,13 +98,16 @@ function updateTail(scroller: HTMLElement) {
 }
 
 /**
- * Projects: clicking a container that isn't selected (anywhere but its links / buttons)
- * scrolls it onto the snap line; once scrolling settles it becomes the selected one.
+ * Projects and Start: clicking a container that isn't selected (anywhere but its links /
+ * buttons) scrolls it onto the snap line; once scrolling settles it becomes the selected
+ * one. (Start's explore row takes such clicks as a whole while the hero is selected,
+ * StartExplore.astro.)
  */
+const CLICK_TO_SELECT = ['projects', 'start'];
 document.addEventListener('click', (e) => {
   const scroller = getScroller();
   const target = e.target as Element | null;
-  if (!scroller || !target || scroller.dataset.page !== 'projects' || target.closest('a, button')) return;
+  if (!scroller || !target || !CLICK_TO_SELECT.includes(scroller.dataset.page ?? '') || target.closest('a, button')) return;
   const cf = containers(scroller).find((c) => c.contains(target));
   if (!cf || cf.classList.contains('is-active')) return;
   scroller.scrollBy({ top: snapTop(cf) - snapLine(scroller), behavior: scrollBehavior() });
