@@ -4,7 +4,7 @@
  * one: its indicator line is lit and — while the row is the active container (snap.ts)
  * — it shows as selected (`.is-active`). Clicking an indicator line or a partly visible
  * game scrolls the row to that game. The ← / → keys step through the selected row's
- * games — no need to click or focus it first.
+ * games — no need to click or focus it first. Also drives the Start page's explore row.
  */
 import { ACTIVE_CHANGE, getRootState, getScroller, onPageLoad, scrollBehavior } from './dom';
 
@@ -41,7 +41,8 @@ function currentIndex(row: HTMLElement) {
 function sync(row: HTMLElement) {
   targets.delete(row);
   const current = currentIndex(row);
-  const active = row.classList.contains('is-active');
+  // A lit row (Start) shows its current card as selected even while it isn't the active container.
+  const active = row.classList.contains('is-active') || row.hasAttribute('data-row-lit');
   games(row).forEach((game, i) => game.classList.toggle('is-active', active && i === current));
   dots(row).forEach((dot, i) => {
     if (i === current) dot.setAttribute('aria-current', 'true');

@@ -211,4 +211,18 @@ const [videos, socials] = site.ctas;
       display: none;
     }
   }
+
+  /* Start: no rail at all while the hero is in view (scripts/start.ts); it fades back in
+     part by part once the explore row is (as when the sidebar collapses). Last, so it
+     wins over the tablet rule above. */
+  :global(html[data-hero-active]) .rail {
+    visibility: hidden;
+    transition: visibility 0s linear var(--t-fade);
+  }
+  :global(html[data-hero-active]) .rail__logo,
+  :global(html[data-hero-active]) .rail__expand,
+  :global(html[data-hero-active]) .rail__join {
+    --rail-fade: opacity var(--t-fade) ease;
+    opacity: 0;
+  }
 </style>

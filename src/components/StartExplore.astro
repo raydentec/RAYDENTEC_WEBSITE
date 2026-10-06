@@ -1,134 +1,63 @@
 ---
-/** Start · Explore container body: heading + 3-column grid (Games / Projects / Community). */
-import Icon from './Icon.astro';
+/**
+ * Start · "What you can find here": the page's second snap section (container 1). A
+ * sideways row like the Games rows (GameRow.astro, scripts/game-rows.ts) — headline and
+ * indicator lined up with the content column, cards running edge to edge — holding the
+ * numbered explore cards, sized as the games are (GameRow: ⅔ of the column, 85% on
+ * mobile; height from the content). It stays lit while it peeks in under the hero.
+ */
+import ContainerFrame from './ContainerFrame.astro';
+import GameRow from './GameRow.astro';
+import StartCard from './StartCard.astro';
 
 interface Props {
-  eyebrow: string;
   title: string;
-  columns: { icon: string; title: string; description: string; href: string; linkLabel: string }[];
+  items: {
+    number: number;
+    icon: string;
+    title: string;
+    description: string;
+    image: string;
+    href: string;
+    linkLabel: string;
+  }[];
 }
 
-const { eyebrow, title, columns } = Astro.props;
+const { title, items } = Astro.props;
 ---
 
-<div class="explore">
-  <div class="explore__head">
-    <span class="eyebrow">{eyebrow}</span>
-    <h2 class="explore__title">{title}</h2>
-  </div>
-  <ul class="explore__grid">
-    {
-      columns.map((c) => (
-        <li class="explore__col">
-          <Icon name={c.icon} size={30} />
-          <h3 class="explore__col-title">{c.title}</h3>
-          <p class="explore__col-desc">{c.description}</p>
-          <a class="explore__link" href={c.href}>
-            {c.linkLabel}
-            <Icon name="arrowRight" size={18} />
-          </a>
-        </li>
-      ))
-    }
-  </ul>
-</div>
+<GameRow title={title} titles={items.map((i) => i.title)} index={0} row={0} itemsLabel="Sections" lit class="sx">
+  {
+    items.map((item, i) => (
+      <ContainerFrame index={i} variant="start" number={item.number} active={i === 0} label={item.title}>
+        <StartCard {...item} />
+      </ContainerFrame>
+    ))
+  }
+</GameRow>
 
 <style>
-  .explore {
+  /* Paints over the hero image's masked-out lower part. */
+  :global(.sx) {
+    position: relative;
+    z-index: 1;
+  }
+  /* All cards as tall as the tallest one; their bodies fill that height (StartCard pins its
+     button to the bottom). */
+  :global(.sx .grow__list) {
+    align-items: stretch;
+  }
+  :global(.sx .grow__list > .cf) {
     display: flex;
     flex-direction: column;
-    gap: 22px;
-    height: 100%;
-    padding: 28px; /* equal left/right so the red rule ends the same distance from both borders */
   }
-  .explore__head {
+  :global(.sx .grow__list > .cf > .cf__body) {
+    flex: 1 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 6px;
   }
-  .explore__title {
-    font-weight: 600;
-    font-size: 30px;
-  }
-  /* One red rule across the whole grid (not one per column). */
-  .explore__grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 32px;
-    margin: 0;
-    padding: 18px 0 0;
-    border-top: 2px solid var(--c-red);
-    list-style: none;
-  }
-  .explore__col {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-  .explore__col-title {
-    font-weight: 600;
-    font-size: 26px;
-  }
-  .explore__col-desc {
-    font-weight: 500;
-    font-size: 20px;
-    line-height: 1.1;
-    letter-spacing: -0.04em;
-    color: var(--c-grey);
-  }
-  .explore__link {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    min-height: 24px;
-    font-family: var(--f-ui);
-    font-weight: 600;
-    font-size: 16px;
-    color: var(--c-red);
-    white-space: nowrap;
-    transition: color var(--t-fade);
-  }
-  .explore__link:hover {
-    color: var(--c-white);
-  }
-
-  @media (max-width: 1279px) {
-    .explore {
-      padding: 24px;
-    }
-    .explore__grid {
-      gap: 22px;
-    }
-    .explore__title {
-      font-size: 27px;
-    }
-    .explore__col-title {
-      font-size: 23px;
-    }
-    .explore__col-desc {
-      font-size: 18px;
-    }
-    .explore__link {
-      font-size: 15px;
-    }
-  }
-
-  @media (max-width: 767px) {
-    .explore {
-      padding: 0;
-      gap: 18px;
-    }
-    .explore__grid {
-      grid-template-columns: 1fr;
-      gap: 20px;
-      padding-top: 14px;
-    }
-    .explore__col {
-      gap: 10px;
-    }
-    .explore__link {
-      min-height: 44px;
-    }
+  :global(.sx .grow__list > .cf .cf__content) {
+    flex: 1 0 auto;
+    height: auto;
   }
 </style>

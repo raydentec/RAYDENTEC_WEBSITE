@@ -15,6 +15,12 @@ export const mq = {
 
 export const getScroller = () => document.getElementById('scroller');
 
+/**
+ * Start page: container 0 is the hero (StartHero.astro), container 1 the explore row —
+ * the first one with the usual container chrome (scripts/start.ts).
+ */
+export const isStartPage = (doc: Document = document) => doc.getElementById('scroller')?.dataset.page === 'start';
+
 export const scrollBehavior = (): ScrollBehavior => (mq.reducedMotion.matches ? 'auto' : 'smooth');
 
 /**

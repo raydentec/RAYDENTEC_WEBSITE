@@ -1,0 +1,109 @@
+---
+/**
+ * Start · hero: the first of the page's two snap sections (container 0 for snap.ts).
+ * A full-bleed image (overlaid for legibility) that fades out below the lower third via
+ * a mask, revealing the page background, and the lower third ending 16px above the
+ * explore headline.
+ *
+ * The hero is shorter than the scroll area, so the explore row (StartExplore.astro) peeks
+ * in below it: its cards' top edge lines up with the top of the scroll control. Hero
+ * height = viewport − scroller top − (scroll control's top edge from the viewport bottom)
+ * − the explore row's headline + indicator (--row-head, GameRow.astro).
+ */
+import LowerThird from './LowerThird.astro';
+import { asset } from '../lib/content';
+
+interface Props {
+  image: string;
+  imageAlt: string;
+  imagePosition: { desktop: string; tablet: string; mobile: string };
+  name: string;
+  tagline: string;
+  handle: string;
+  bio: string;
+  joinPrompt: string;
+  ctas: { label: string; href: string; variant: 'primary' | 'secondary' }[];
+}
+
+const { image, imageAlt, imagePosition, ...identity } = Astro.props;
+const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imagePosition.tablet}; --pos-mobile: ${imagePosition.mobile}`;
+---
+
+<div class="hero is-active" data-cf data-hero style={positions}>
+  <div class="hero__art" aria-hidden={imageAlt ? undefined : 'true'}>
+    <img class="hero__img" src={asset(image)} alt={imageAlt} width="1920" height="1080" decoding="async" fetchpriority="high" />
+  </div>
+  <LowerThird {...identity} class="hero__lt" />
+</div>
+
+<style>
+  .hero {
+    /* Scroller top edge in the viewport (Shell.astro: 0 on desktop/tablet). */
+    --scroller-top: 0px;
+    position: relative;
+    /* The whole hero fades out on the way to the explore row and back in on the way up
+       (--hero-art, scripts/start.ts). */
+    opacity: var(--hero-art, 1);
+    height: calc(100dvh - var(--scroller-top) - var(--ctl-bottom) - var(--ctl-h) - var(--row-head));
+    flex-shrink: 0;
+    scroll-snap-align: start;
+  }
+
+  /* Viewport-tall, so it runs on under the explore row's peek; masked out below the lower third. */
+  .hero__art {
+    --fade-from: 64%;
+    --fade-to: 84%;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: calc(100dvh - var(--scroller-top));
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 var(--fade-from), transparent var(--fade-to));
+    mask-image: linear-gradient(180deg, #000 0%, #000 var(--fade-from), transparent var(--fade-to));
+  }
+  .hero__art::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 22%, rgba(0, 0, 0, 0) 42%, rgba(0, 0, 0, 0.5) 70%);
+  }
+  .hero__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: var(--pos-desktop);
+  }
+
+  .hero :global(.hero__lt) {
+    position: absolute;
+    left: var(--gutter);
+    right: var(--gutter);
+    bottom: 16px;
+  }
+
+  @media (max-width: 1279px) {
+    .hero__art {
+      --fade-from: 65%;
+      --fade-to: 85%;
+    }
+    .hero__img {
+      object-position: var(--pos-tablet);
+    }
+  }
+
+  /* Mobile: the scroller starts under the top bar; the hero reaches out over its gutters. */
+  @media (max-width: 767px) {
+    .hero {
+      --scroller-top: var(--top-bar);
+      margin: 0 calc(-1 * var(--gutter));
+    }
+    .hero__art {
+      --fade-from: 62%;
+      --fade-to: 82%;
+    }
+    .hero__img {
+      object-position: var(--pos-mobile);
+    }
+  }
+</style>

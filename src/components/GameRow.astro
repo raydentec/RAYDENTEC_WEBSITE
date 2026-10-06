@@ -12,6 +12,9 @@
  *
  * Mobile: the same, with games 85% of the column wide so the next one peeks in. The red
  * bar spans the whole selected game there (ContainerFrame), and so does the indicator.
+ *
+ * Also the Start page's "What you can find here" row (StartExplore.astro), with its own
+ * card widths (`class`) and `lit`.
  */
 interface Props {
   /** Headline: the games' category. */
@@ -23,15 +26,30 @@ interface Props {
   /** Position of the row on the page (0-based): staggers its fade-in. */
   row: number;
   active?: boolean;
+  /**
+   * Headline, indicator and current card stay lit (and clickable) while the row isn't the
+   * selected container (Start: the row peeks in under the hero).
+   */
+  lit?: boolean;
+  /** Item label for the indicator buttons ("Show …" / "… in"). */
+  itemsLabel?: string;
+  class?: string;
 }
 
-const { title, titles, index, row, active = false } = Astro.props;
+const { title, titles, index, row, active = false, lit = false, itemsLabel = 'Games', class: className } = Astro.props;
 const headingId = `games-${index}`;
 ---
 
-<section class:list={['grow', { 'is-active': active }]} data-cf data-row aria-labelledby={headingId} style={`--row-i: ${row}`}>
+<section
+  class:list={['grow', className, { 'is-active': active, 'grow--lit': lit }]}
+  data-cf
+  data-row
+  data-row-lit={lit ? '' : undefined}
+  aria-labelledby={headingId}
+  style={`--row-i: ${row}`}
+>
   <h2 class="grow__title" id={headingId}>{title}</h2>
-  <div class="grow__dots" role="group" aria-label={`Games in ${title}`}>
+  <div class="grow__dots" role="group" aria-label={`${itemsLabel} in ${title}`}>
     {
       titles.map((game, i) => (
         <button type="button" class="grow__dot" data-row-dot tabindex="-1" aria-label={`Show ${game}`} aria-current={i === 0 ? 'true' : undefined} />
@@ -61,7 +79,7 @@ const headingId = `games-${index}`;
     margin-left: var(--row-left);
     padding-right: var(--gutter);
     font-weight: 700;
-    font-size: 30px;
+    font-size: var(--row-title);
     line-height: 1;
     letter-spacing: -0.03em;
     opacity: var(--o-inactive);
@@ -69,9 +87,10 @@ const headingId = `games-${index}`;
   }
   /* Rows that aren't selected can't be clicked or hovered (wheel / touch input goes to the
      column underneath, so scrolling to them still works). */
-  .grow:not(.is-active) {
+  .grow:not(.is-active, .grow--lit) {
     pointer-events: none;
   }
+  .grow--lit .grow__title,
   .grow.is-active .grow__title,
   .grow:hover .grow__title,
   .grow:focus-within .grow__title {
@@ -138,6 +157,7 @@ const headingId = `games-${index}`;
     background: var(--c-red);
     opacity: 1;
   }
+  .grow--lit .grow__dot,
   .grow.is-active .grow__dot,
   .grow:hover .grow__dot,
   .grow:focus-within .grow__dot {
@@ -169,12 +189,6 @@ const headingId = `games-${index}`;
     flex: 0 0 var(--game-w);
   }
 
-  @media (max-width: 1279px) {
-    .grow__title {
-      font-size: 26px;
-    }
-  }
-
   /*
    * Mobile: the column is padded by the gutter, so headline and indicator line up by
    * themselves; the track reaches out to both screen edges. The transparent space below
@@ -193,7 +207,6 @@ const headingId = `games-${index}`;
     .grow__title {
       margin-left: 0;
       padding-right: 0;
-      font-size: 24px;
     }
     .grow__dots {
       width: var(--game-w);

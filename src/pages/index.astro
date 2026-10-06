@@ -1,24 +1,18 @@
 ---
-import ContainerFrame from '../components/ContainerFrame.astro';
-import StartExplore from '../components/StartExplore.astro';
-import StartIntro from '../components/StartIntro.astro';
+/**
+ * Start (HANDOFF-2-START): two snap sections — the hero, then "What you can find here".
+ * Start-only shell rules (no rail / mobile header / video on the hero) live in
+ * scripts/start.ts.
+ */
 import Shell from '../layouts/Shell.astro';
-import { getItems } from '../lib/content';
+import StartExplore from '../components/StartExplore.astro';
+import StartHero from '../components/StartHero.astro';
+import { getStart } from '../lib/content';
 
-// Start containers are unnumbered (HANDOFF §5).
-const items = await getItems('start');
-// Desktop / tablet container heights (mobile sizes to content). The intro holds the
-// banner, title, subheadline, a 4–6 line paragraph and the buttons.
-const HEIGHTS = { intro: 645, explore: 330 } as const;
-const TABLET_HEIGHTS = { intro: 655, explore: 330 } as const;
+const { hero, explore } = await getStart();
 ---
 
-<Shell page="start" srHeading={!items.some(({ data }) => data.type === 'intro')}>
-  {
-    items.map(({ data }, i) => (
-      <ContainerFrame index={i} variant="start" active={i === 0} height={HEIGHTS[data.type]} tabletHeight={TABLET_HEIGHTS[data.type]} label={data.title}>
-        {data.type === 'intro' ? <StartIntro {...data} /> : <StartExplore {...data} />}
-      </ContainerFrame>
-    ))
-  }
+<Shell page="start" srHeading={false} rows>
+  <StartHero {...hero} />
+  <StartExplore {...explore} />
 </Shell>

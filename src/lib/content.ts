@@ -10,7 +10,7 @@ export const ROUTES: Record<PageId, string> = {
 };
 
 /** Items of a page collection in JSON array order. */
-export async function getItems<C extends Exclude<CollectionKey, 'site'>>(collection: C) {
+export async function getItems<C extends Exclude<CollectionKey, 'site' | 'start'>>(collection: C) {
   const entries = await getCollection(collection);
   return entries.sort((a, b) => a.data.order - b.data.order);
 }
@@ -18,6 +18,12 @@ export async function getItems<C extends Exclude<CollectionKey, 'site'>>(collect
 export async function getSite() {
   const entry = await getEntry('site', 'site');
   if (!entry) throw new Error('src/content/site.json is missing');
+  return entry.data;
+}
+
+export async function getStart() {
+  const entry = await getEntry('start', 'start');
+  if (!entry) throw new Error('src/content/start.json is missing');
   return entry.data;
 }
 

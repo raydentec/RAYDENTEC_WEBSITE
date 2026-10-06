@@ -9,11 +9,15 @@
  * Tablet (768–1279, HANDOFF §8) — <html data-overlay="open">:
  *   - EXPAND opens the panel over the content with a dimmer;
  *   - closes on ←, dimmer click, Esc, or any content scroll; focus moves in/out.
+ * Start page (scripts/start.ts): the hero (container 0) shows no sidebar or rail at all,
+ *   so the sidebar starts collapsed and never auto-expands; the explore row (container 1)
+ *   is treated as the first container. Scrolling back to the hero collapses it.
  */
 import {
   ACTIVE_CHANGE,
   activeIndex,
   getRootState,
+  isStartPage,
   mq,
   onPageLoad,
   onScrollerScroll,
@@ -52,6 +56,8 @@ void document.fonts?.ready.then(updateSidebarTrack); // content height settles o
 const expandBtn = () => document.querySelector<HTMLButtonElement>('[data-sidebar-expand]');
 const collapseBtn = () => document.querySelector<HTMLButtonElement>('[data-sidebar-collapse]');
 const isTablet = () => !mq.desktop.matches && !mq.mobile.matches;
+/** Index of the first container with the usual chrome (Start: after the hero). */
+const firstIndex = () => (isStartPage() ? 1 : 0);
 
 function setExpanded(expanded: boolean) {
   if (mq.desktop.matches) {
@@ -187,7 +193,7 @@ onScrollerScroll((scroller) => {
     closeOverlay(false);
     return;
   }
-  if (mq.desktop.matches && scroller.scrollTop <= 0) {
+  if (mq.desktop.matches && scroller.scrollTop <= 0 && !isStartPage()) {
     pinnedAt = null;
     if (getRootState('sidebar') === 'collapsed') setExpanded(true);
   }
@@ -197,7 +203,7 @@ onScrollerScroll((scroller) => {
 document.addEventListener(ACTIVE_CHANGE, (e) => {
   const { index } = (e as ActiveChangeEvent).detail;
   const wasFirst = firstActive;
-  firstActive = index === 0;
+  firstActive = index <= firstIndex();
   if (firstActive) {
     // Container 1 selected: cancel any running countdown, so an expanded EXPAND stays so.
     window.clearTimeout(expandCollapseTimer);
@@ -208,7 +214,14 @@ document.addEventListener(ACTIVE_CHANGE, (e) => {
   if (wasFirst && !firstActive && getRootState('expandOpen') !== null && !expandBtn()?.matches(':hover, :focus-visible')) {
     closeExpandButtonSoon();
   }
-  if (!mq.desktop.matches || index <= 0 || getRootState('sidebar') === 'collapsed') return;
+  if (!mq.desktop.matches || getRootState('sidebar') === 'collapsed') return;
+  // Start: back on the hero, which shows no sidebar.
+  if (isStartPage() && index === 0) {
+    pinnedAt = null;
+    setExpanded(false);
+    return;
+  }
+  if (index <= 0) return;
   if (pinnedAt !== null && index === pinnedAt) return;
   pinnedAt = null;
   setExpanded(false);
@@ -218,12 +231,12 @@ document.addEventListener(ACTIVE_CHANGE, (e) => {
 const onBreakpoint = () => {
   closeOverlay(false);
   pinnedAt = null;
-  setExpanded(activeIndex() <= 0);
+  setExpanded(activeIndex() <= 0 && !isStartPage());
   if (!mq.desktop.matches) expandBtn()?.setAttribute('aria-expanded', 'false');
   // Entering tablet size: EXPAND starts as it would on page load — expanded while
   // container 1 is selected (no countdown), collapsed otherwise.
   if (isTablet()) {
-    firstActive = activeIndex() <= 0;
+    firstActive = activeIndex() <= firstIndex();
     if (firstActive) openExpandButton();
     else collapseExpandButton();
   }
@@ -233,12 +246,20 @@ mq.mobile.addEventListener('change', onBreakpoint);
 
 /* ---------- Every navigation: the new column starts at scrollTop 0 ---------- */
 
+// Desktop, navigating to / from Start: switch the sidebar before the new page is shown, so
+// its column doesn't open beside the sidebar first and then glide over (page-load is later).
+document.addEventListener('astro:before-swap', (e) => {
+  if (!mq.desktop.matches) return;
+  const toStart = isStartPage(e.newDocument);
+  if (toStart !== isStartPage()) setRootState('sidebar', toStart ? 'collapsed' : 'expanded');
+});
+
 onPageLoad(() => {
   updateSidebarTrack();
-  firstActive = activeIndex() <= 0;
+  firstActive = activeIndex() <= firstIndex();
   closeOverlay(false);
   pinnedAt = null;
-  setExpanded(true);
+  setExpanded(!isStartPage());
   if (!mq.desktop.matches) expandBtn()?.setAttribute('aria-expanded', 'false');
   // Container 1 selected on load: expand EXPAND (animated) — unless the desktop sidebar
   // is open, which keeps it collapsed (the rail is hidden then anyway).

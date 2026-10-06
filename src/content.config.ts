@@ -41,39 +41,43 @@ const site = defineCollection({
   }),
 });
 
-const action = z.object({ label: z.string(), href, variant: z.enum(['primary', 'secondary']) });
+const cta = z.object({ label: z.string(), href, variant: z.enum(['primary', 'secondary']) });
 
+/** Start page (pages/index.astro): one entry — the hero, then the explore row. */
 const start = defineCollection({
-  loader: file('src/content/start.json', { parser: itemsParser }),
-  schema: z.discriminatedUnion('type', [
-    z.object({
-      order: z.number(),
-      type: z.literal('intro'),
-      eyebrow: z.string(),
-      title: z.string(),
-      description: z.string(),
-      /** Optional paragraph under the description. */
-      body: z.string().optional(),
-      media: assetPath,
-      mediaNote: z.string().optional(),
-      actions: z.array(action),
+  loader: file('src/content/start.json', {
+    parser: (text) => [{ id: 'start', ...(JSON.parse(text) as Record<string, unknown>) }],
+  }),
+  schema: z.object({
+    hero: z.object({
+      image: assetPath,
+      imageAlt: z.string(),
+      /** CSS object-position per layout. */
+      imagePosition: z.object({ desktop: z.string(), tablet: z.string(), mobile: z.string() }),
+      name: z.string(),
+      tagline: z.string(),
+      handle: z.string(),
+      bio: z.string(),
+      joinPrompt: z.string(),
+      ctas: z.array(cta).length(2),
     }),
-    z.object({
-      order: z.number(),
-      type: z.literal('explore'),
-      eyebrow: z.string(),
+    explore: z.object({
       title: z.string(),
-      columns: z.array(
-        z.object({
-          icon: z.string(),
-          title: z.string(),
-          description: z.string(),
-          href,
-          linkLabel: z.string(),
-        }),
-      ),
+      items: z
+        .array(
+          z.object({
+            number: z.number().int().positive(),
+            icon: z.string(),
+            title: z.string(),
+            description: z.string(),
+            image: assetPath,
+            href,
+            linkLabel: z.string(),
+          }),
+        )
+        .min(1),
     }),
-  ]),
+  }),
 });
 
 const games = defineCollection({

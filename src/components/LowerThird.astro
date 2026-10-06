@@ -1,0 +1,223 @@
+---
+/**
+ * Start · hero lower third: a translucent bar with the identity row (logo as tall as name
+ * + tagline), the bio in the sidebar's style, and "Join me on this journey:" with both
+ * sidebar CTAs in the lower-right corner (stacked under the text on mobile). RAYDEN is
+ * the page's <h1>. Positioned by StartHero.astro.
+ */
+import Icon from './Icon.astro';
+import { linkAttrs } from '../lib/content';
+
+interface Props {
+  name: string;
+  tagline: string;
+  handle: string;
+  bio: string;
+  joinPrompt: string;
+  ctas: { label: string; href: string; variant: 'primary' | 'secondary' }[];
+  class?: string;
+}
+
+const { name, tagline, handle, bio, joinPrompt, ctas, class: className } = Astro.props;
+---
+
+<section class:list={['lt', className]} aria-label="Introduction">
+  <div class="lt__main">
+    <div class="lt__id">
+      <img class="lt__logo" src="/assets/logo.png" alt="RAYDENTEC logo" width="94" height="94" />
+      <div class="lt__names">
+        <h1 class="lt__name">{name}</h1>
+        <p class="lt__tagline">{tagline} <span class="lt__handle">{handle}</span></p>
+      </div>
+    </div>
+    <p class="lt__bio">{bio}</p>
+  </div>
+  <div class="lt__join">
+    <p class="lt__prompt">{joinPrompt}</p>
+    <div class="lt__ctas">
+      {
+        ctas.map((cta) => (
+          <a class:list={['btn', 'lt__cta', cta.variant === 'primary' ? 'btn--primary' : 'btn--outline']} {...linkAttrs(cta.href)}>
+            <span>{cta.label}</span>
+            <Icon name="arrowUR" size={26} />
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .lt {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 32px;
+    padding: 24px 32px 24px 28px;
+    background: rgba(0, 0, 0, 0.5);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
+  .lt__main {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+  }
+  .lt__id {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+  }
+  /* As tall as the name block beside it. */
+  .lt__logo {
+    width: 94px;
+    height: 94px;
+    flex-shrink: 0;
+  }
+  .lt__names {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+  .lt__name {
+    font-family: var(--f-name);
+    font-weight: 400;
+    font-size: 56px;
+    line-height: 1;
+  }
+  .lt__tagline {
+    font-weight: 600;
+    font-size: 26px;
+    line-height: 30px;
+    letter-spacing: -0.03em;
+  }
+  .lt__handle {
+    color: var(--c-red);
+    font-weight: 700;
+  }
+  /* Bio as in the sidebar (Profile.astro). */
+  .lt__bio {
+    font-weight: 500;
+    font-size: 29px;
+    line-height: 0.98;
+    letter-spacing: -0.055em;
+    color: var(--c-grey);
+  }
+  /* Lower-right corner, right-aligned. */
+  .lt__join {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 14px;
+    justify-self: end;
+    align-self: end;
+  }
+  .lt__prompt {
+    font-weight: 600;
+    font-size: 27px;
+    line-height: 1;
+    letter-spacing: -0.055em;
+    text-align: right;
+  }
+  /* CTAs as in the sidebar (Profile.astro). */
+  .lt__ctas {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .lt__cta {
+    width: 318px;
+    --btn-font: 18px;
+  }
+
+  @media (max-width: 1279px) {
+    .lt {
+      column-gap: 24px;
+      padding: 22px 26px 22px 24px;
+    }
+    .lt__main,
+    .lt__join {
+      gap: 12px;
+    }
+    .lt__id {
+      gap: 16px;
+    }
+    .lt__logo {
+      width: 82px;
+      height: 82px;
+    }
+    .lt__name {
+      font-size: 48px;
+    }
+    .lt__tagline {
+      font-size: 22px;
+      line-height: 26px;
+    }
+    .lt__prompt {
+      font-size: 24px;
+    }
+    .lt__cta {
+      width: 306px;
+      --btn-h: 54px;
+      padding: 0 19px 0 27px;
+    }
+  }
+
+  /* Mobile: one column; the identity row is the fixed mobile header's (MobileHeader.astro). */
+  @media (max-width: 767px) {
+    .lt {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 10px;
+      padding: 18px;
+    }
+    .lt__main {
+      gap: 10px;
+    }
+    .lt__id {
+      gap: 14px;
+    }
+    .lt__logo {
+      width: 72px;
+      height: 72px;
+    }
+    .lt__names {
+      gap: 3px;
+      padding-top: 2px;
+    }
+    .lt__name {
+      font-size: 28px;
+    }
+    .lt__tagline {
+      font-size: 14px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+    /* Handle on its own line. */
+    .lt__handle {
+      display: block;
+    }
+    .lt__bio {
+      font-size: 27px;
+    }
+    .lt__join {
+      align-items: stretch;
+      gap: 8px;
+      justify-self: stretch;
+      margin-top: 8px;
+    }
+    .lt__prompt {
+      font-size: 14px;
+      line-height: 1.15;
+      letter-spacing: 0;
+      text-align: left;
+    }
+    .lt__cta {
+      width: 100%;
+      --btn-h: 52px;
+      --btn-font: 17px;
+      padding: 0 18px 0 26px;
+    }
+  }
+</style>

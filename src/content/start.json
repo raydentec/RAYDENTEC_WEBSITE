@@ -1,55 +1,62 @@
 {
   "page": "start",
-  "containerVariant": "start",
-  "numbered": false,
-  "items": [
-    {
-      "type": "intro",
-      "eyebrow": "Introduction",
-      "title": "Creator of Virtual Worlds",
-      "description": "On a creative path to spark new worlds into existence using art, design and code.",
-      "body": "Exploring who I am through the process of creation. Using every available technology to shape reality of these alternate universes. Reflecting on ways to improve the world in our base reality from what I discover. Bring together all agents of consciousness in human form or another to experience new worlds.",
-      "media": "assets/placeholder-render.jpg",
-      "actions": [
-        {
-          "label": "EXPLORE GAMES",
-          "href": "/games",
-          "variant": "primary"
-        },
-        {
-          "label": "SEE PROJECTS",
-          "href": "/projects",
-          "variant": "secondary"
-        }
-      ]
+  "_note": "Replaces content/start.json from handoff v2. Two snap sections: hero, then explore.",
+  "hero": {
+    "image": "assets/placeholder-render.jpg",
+    "imageAlt": "",
+    "imagePosition": {
+      "desktop": "center 35%",
+      "tablet": "center 35%",
+      "mobile": "62% center"
     },
-    {
-      "type": "explore",
-      "eyebrow": "Explore",
-      "title": "What you'll find here:",
-      "columns": [
-        {
-          "icon": "gamepad",
-          "title": "Games",
-          "description": "Worlds you can play, from first prototype to release.",
-          "href": "/games",
-          "linkLabel": "GO TO GAMES"
-        },
-        {
-          "icon": "cube",
-          "title": "Projects",
-          "description": "Tools, tech and experiments beyond games.",
-          "href": "/projects",
-          "linkLabel": "GO TO PROJECTS"
-        },
-        {
-          "icon": "users",
-          "title": "Community",
-          "description": "Videos, streams and every place to follow along.",
-          "href": "/community",
-          "linkLabel": "GO TO COMMUNITY"
-        }
-      ]
-    }
-  ]
+    "name": "RAYDEN",
+    "tagline": "Creator of Virtual Worlds",
+    "handle": "@RAYDENTEC",
+    "bio": "On a creative path to spark new worlds into existence using art, design and code.",
+    "joinPrompt": "Join me on this journey:",
+    "ctas": [
+      {
+        "label": "WATCH MY VIDEOS",
+        "href": "https://www.youtube.com/@raydentec",
+        "variant": "primary"
+      },
+      {
+        "label": "CONNECT ON SOCIALS",
+        "href": "/community",
+        "variant": "secondary"
+      }
+    ]
+  },
+  "explore": {
+    "title": "What you can find here",
+    "items": [
+      {
+        "number": 1,
+        "icon": "gamepad",
+        "title": "Games",
+        "description": "Worlds you can play, from first prototype to release.",
+        "image": "assets/placeholder-render.jpg",
+        "href": "/games",
+        "linkLabel": "GO TO GAMES"
+      },
+      {
+        "number": 2,
+        "icon": "cube",
+        "title": "Projects",
+        "description": "Tools, tech and experiments beyond games.",
+        "image": "assets/placeholder-render.jpg",
+        "href": "/projects",
+        "linkLabel": "GO TO PROJECTS"
+      },
+      {
+        "number": 3,
+        "icon": "users",
+        "title": "Community",
+        "description": "Videos, streams and every place to follow along.",
+        "image": "assets/placeholder-render.jpg",
+        "href": "/community",
+        "linkLabel": "GO TO COMMUNITY"
+      }
+    ]
+  }
 }

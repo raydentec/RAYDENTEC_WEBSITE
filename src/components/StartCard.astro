@@ -1,0 +1,130 @@
+---
+/**
+ * Start · explore card body (inside the numbered ContainerFrame): 16:9 art, icon +
+ * title, description and a GO TO … button — styled as the game cards' button
+ * (GameCard.astro), but as wide as its label and arrow need (at least the games' width).
+ */
+import Icon from './Icon.astro';
+import LinkButton from './LinkButton.astro';
+import { asset } from '../lib/content';
+
+interface Props {
+  icon: string;
+  title: string;
+  description: string;
+  image: string;
+  href: string;
+  linkLabel: string;
+}
+
+const { icon, title, description, image, href, linkLabel } = Astro.props;
+---
+
+<div class="scard">
+  <img class="scard__media" src={asset(image)} alt="" width="1280" height="720" loading="lazy" decoding="async" />
+  <div class="scard__head">
+    <Icon name={icon} size={26} class="scard__icon" />
+    <h3 class="scard__title">{title}</h3>
+  </div>
+  <p class="scard__desc">{description}</p>
+  <LinkButton href={href} label={linkLabel} class="scard__btn" />
+</div>
+
+<style>
+  .scard {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    height: 100%;
+    padding: 20px;
+  }
+  .scard__media {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+  }
+  .scard__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .scard__head :global(.scard__icon) {
+    flex-shrink: 0;
+  }
+  .scard__title {
+    font-weight: 600;
+    font-size: 24px;
+    line-height: 1.1;
+  }
+  /*
+   * Room for --desc-lines lines whatever the text (fewer on the wider desktop / tablet cards,
+   * so they still fit above the footer), so a longer description doesn't change the card's size (the explore row also gives all cards the tallest one's height,
+   * StartExplore.astro). The button sits at the bottom of the card.
+   */
+  .scard__desc {
+    --desc-lines: 2;
+    min-height: calc(var(--desc-lines) * 1.12em);
+    font-weight: 500;
+    font-size: 19px;
+    line-height: 1.12;
+    letter-spacing: -0.04em;
+    color: var(--c-grey);
+  }
+  /* As the game cards' button (GameCard.astro), but wide enough for the whole label. */
+  .scard :global(.scard__btn) {
+    flex-shrink: 0;
+    margin-top: auto;
+    width: auto;
+    min-width: 210px;
+    gap: 20px;
+  }
+
+  @media (max-width: 1279px) {
+    .scard {
+      padding: 16px;
+    }
+    .scard__head :global(.scard__icon) {
+      width: 22px;
+      height: 22px;
+    }
+    .scard__title {
+      font-size: 20px;
+    }
+    .scard__desc {
+      --desc-lines: 3;
+      font-size: 16px;
+    }
+    .scard :global(.scard__btn) {
+      min-width: 200px;
+      --btn-h: 52px;
+      --btn-font: 20px;
+      padding: 0 18px 0 26px;
+    }
+  }
+
+  /* Mobile: the frame's body pads the content (ContainerFrame). */
+  @media (max-width: 767px) {
+    .scard {
+      padding: 0;
+      container-type: inline-size;
+    }
+    .scard__desc {
+      --desc-lines: 4;
+    }
+    /* Full width, ↗ right after the label (as the game cards). The card can't grow here, so
+       the label shrinks from the games' 22px with the card's width until the longest one
+       (GO TO COMMUNITY) fits. */
+    .scard :global(.scard__btn) {
+      align-self: stretch;
+      width: 100%;
+      min-width: 0;
+      justify-content: flex-start;
+      gap: 14px;
+      --btn-h: 52px;
+      --btn-font: min(22px, 6.8cqi);
+      padding: 0 18px 0 24px;
+    }
+  }
+</style>

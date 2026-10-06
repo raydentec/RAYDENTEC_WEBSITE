@@ -2,10 +2,10 @@
  * Mobile (<768, HANDOFF §9):
  *   - bottom page menu — <html data-mmenu="open">; closes on select, ×, dimmer tap, Esc;
  *   - fixed header — <html data-mheader="on"> once the in-flow profile block's bottom
- *     passes the header line.
+ *     passes the header line (Start: once the hero scrolls out, scripts/start.ts).
  * Also keeps aria-current in sync on the persisted top nav and menu after navigation.
  */
-import { getRootState, getScroller, mq, onPageLoad, onScrollerScroll, setRootState, snapOffset } from './dom';
+import { getRootState, getScroller, isStartPage, mq, onPageLoad, onScrollerScroll, setRootState, snapOffset } from './dom';
 
 const toggle = () => document.querySelector<HTMLButtonElement>('[data-mmenu-toggle]');
 
@@ -17,6 +17,7 @@ function setMenu(open: boolean) {
 }
 
 function updateHeader(scroller: HTMLElement) {
+  if (isStartPage()) return; // the hero observer sets it there (scripts/start.ts)
   const profile = scroller.querySelector<HTMLElement>('[data-mprofile]');
   if (!mq.mobile.matches || !profile) {
     setRootState('mheader', null);

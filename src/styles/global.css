@@ -25,6 +25,10 @@
   --content-w-expanded: min(var(--content-w), calc(100vw - var(--col-left-expanded) - 30px));
   --t-fade: 160ms;
   --t-ctl: 200ms;
+  /* Sideways rows (GameRow.astro): headline size, and headline + indicator above the cards
+     (headline, 8px, 12px indicator, 8px) — the Start hero leaves room for it (StartHero.astro). */
+  --row-title: 30px;
+  --row-head: calc(var(--row-title) + 28px);
   color-scheme: dark;
 }
 @media (min-width: 768px) and (max-width: 1279px) {
@@ -38,6 +42,7 @@
     --ctl-w: 306px;
     --ctl-font: 18px;
     --expand-h: 287px;
+    --row-title: 26px;
   }
 }
 @media (max-width: 767px) {
@@ -49,6 +54,7 @@
     --ctl-font: 18px;
     --track-right: 7px;
     --track-w: 5px;
+    --row-title: 24px;
   }
 }
 
@@ -245,6 +251,16 @@ dd {
 ::view-transition-new(mobile-menu-bar),
 ::view-transition-new(mobile-header) {
   animation: none;
+}
+
+/* ---------- Start page (scripts/start.ts) ---------- */
+/* The background video is hidden while the hero is in view and fades in once it scrolls
+   out (and when leaving the page). It keeps playing meanwhile. */
+.bg-video {
+  transition: opacity 600ms ease;
+}
+html[data-hero-active] .bg-video {
+  opacity: 0;
 }
 
 /* ---------- Reduced motion ---------- */

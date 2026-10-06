@@ -11,7 +11,7 @@
  * Mobile: the number moves into a 38px tab above the body (full-width red bar when
  * active, 86px notch when inactive).
  *
- * `number` is omitted for the Start page (same frame, unnumbered).
+ * `number` is omitted for unnumbered containers (Community Shortcuts).
  * The active state is toggled at runtime by scripts/snap.ts (`.is-active`); for games in
  * sideways rows by scripts/game-rows.ts.
  */
@@ -19,7 +19,7 @@ interface Props {
   variant: 'community' | 'game' | 'project' | 'start';
   number?: number;
   active?: boolean;
-  /** Desktop/tablet height override (Start intro, explore). */
+  /** Desktop/tablet height override (Start explore cards). */
   height?: number;
   /** Tablet-only height override (defaults to `height`). */
   tabletHeight?: number;
@@ -215,20 +215,23 @@ const heightVars = [height && `--cf-h: ${height}px`, tabletHeight && `--cf-h-tab
   }
 
   /*
-   * Games (desktop/tablet, horizontal row): the number sits in a bar along the TOP-LEFT —
+   * Games and Start cards (desktop/tablet, horizontal rows): the number sits in a bar along the TOP-LEFT —
    * a red bar across the left half of the top edge when selected, a notch tab otherwise.
    */
   @media (min-width: 768px) {
     /* Height comes from the content (16:9 art + text + buttons), not a fixed size. */
-    .cf--game {
+    .cf--game,
+    .cf--start {
       height: auto;
     }
-    .cf--game .cf__body {
+    .cf--game .cf__body,
+    .cf--start .cf__body {
       position: relative;
       inset: auto;
       margin-top: var(--num-col);
     }
-    .cf--game .cf__tab {
+    .cf--game .cf__tab,
+    .cf--start .cf__tab {
       width: var(--notch-h);
       height: calc(var(--num-col) + 2px);
       justify-content: flex-start;
@@ -241,7 +244,8 @@ const heightVars = [height && `--cf-h: ${height}px`, tabletHeight && `--cf-h-tab
         background-color var(--t-state) ease,
         border-color var(--t-state) ease;
     }
-    .cf--game.is-active .cf__tab {
+    .cf--game.is-active .cf__tab,
+    .cf--start.is-active .cf__tab {
       width: 50%;
       height: calc(var(--num-col) + 2px);
       padding: 0 0 0 16px;
