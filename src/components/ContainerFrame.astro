@@ -28,19 +28,47 @@ interface Props {
    * (Community pairs). The number tab / red column stay as usual.
    */
   bare?: boolean;
+  /** Height from the content instead of a fixed size (desktop/tablet; mobile always is). */
+  fit?: boolean;
+  /**
+   * No number tab / red column (Community Shortcuts). The body keeps its place right of
+   * where the column would be, lined up with the other containers.
+   */
+  noTab?: boolean;
   /** Position on the page (0-based): staggers the fade-in when the page opens. */
   index?: number;
   label?: string;
 }
 
-const { variant, number, active = false, height, tabletHeight, bare = false, index = 0, label } = Astro.props;
+const {
+  variant,
+  number,
+  active = false,
+  height,
+  tabletHeight,
+  bare = false,
+  fit = false,
+  noTab = false,
+  index = 0,
+  label,
+} = Astro.props;
 const heightVars = [height && `--cf-h: ${height}px`, tabletHeight && `--cf-h-tablet: ${tabletHeight}px`, `--cf-i: ${index}`]
   .filter(Boolean)
   .join('; ');
 ---
 
 <article
-  class:list={['cf', `cf--${variant}`, { 'is-active': active, 'cf--unnumbered': number === undefined, 'cf--bare': bare }]}
+  class:list={[
+    'cf',
+    `cf--${variant}`,
+    {
+      'is-active': active,
+      'cf--unnumbered': number === undefined,
+      'cf--bare': bare,
+      'cf--fit': fit,
+      'cf--notab': noTab,
+    },
+  ]}
   data-cf
   aria-label={label}
   style={heightVars || undefined}
@@ -165,6 +193,25 @@ const heightVars = [height && `--cf-h: ${height}px`, tabletHeight && `--cf-h-tab
   }
   .cf--bare .cf__content {
     opacity: 1;
+  }
+
+  .cf--notab .cf__tab {
+    display: none;
+  }
+
+  /* Fit: the body sits in the flow (right of the red column), so the content sets the height. */
+  @media (min-width: 768px) {
+    .cf--fit {
+      height: auto;
+    }
+    .cf--fit .cf__body {
+      position: relative;
+      inset: auto;
+      margin-left: var(--num-col);
+    }
+    .cf--fit .cf__content {
+      height: auto;
+    }
   }
 
   /*

@@ -2,6 +2,7 @@
 import CommunityCard from '../components/CommunityCard.astro';
 import ContainerFrame from '../components/ContainerFrame.astro';
 import LinkGrid from '../components/LinkGrid.astro';
+import ShortcutGrid from '../components/ShortcutGrid.astro';
 import Shell from '../layouts/Shell.astro';
 import { getItems } from '../lib/content';
 
@@ -23,20 +24,27 @@ for (const item of items) {
   if (last?.kind === 'pair' && last.links.length < 2) last.links.push(item);
   else containers.push({ kind: 'pair', links: [item] });
 }
+
+// Shortcuts: the first ten link items (JSON order) as tiles, in a container of their own
+// at the top, headed "Shortcuts" (as the Projects category headlines).
+const shortcuts = items.filter((i): i is Link => i.type !== 'linkGrid').slice(0, 10);
 ---
 
 <Shell page="community">
+  <h2 class="ctitle" id="community-shortcuts">Shortcuts</h2>
+  <ContainerFrame index={0} variant="community" active fit bare noTab label="Shortcuts">
+    <ShortcutGrid links={shortcuts} />
+  </ContainerFrame>
   {
     containers.map((c, i) =>
       c.kind === 'grid' ? (
-        <ContainerFrame index={i} variant="community" active={i === 0} label={c.item.title}>
+        <ContainerFrame index={i + 1} variant="community" label={c.item.title}>
           <LinkGrid {...c.item} />
         </ContainerFrame>
       ) : (
         <ContainerFrame
-          index={i}
+          index={i + 1}
           variant="community"
-          active={i === 0}
           bare
           label={c.links.map((l) => l.title).join(' and ')}
         >
@@ -52,6 +60,58 @@ for (const item of items) {
 </Shell>
 
 <style>
+  /*
+   * "Shortcuts" headline: as the Projects category headlines — it rides along with the
+   * container below it (that container's scroll-margin-top reaches up to it, so it snaps
+   * with it on top) and is dimmed while that container isn't selected.
+   */
+  .ctitle {
+    --title-size: 30px;
+    --title-gap: 12px;
+    margin-bottom: calc(var(--title-gap) - var(--card-gap));
+    font-weight: 700;
+    font-size: var(--title-size);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    opacity: var(--o-inactive);
+    transition: opacity var(--t-state) ease;
+    animation: c-fade-in 600ms var(--ease-out) 180ms both;
+  }
+  .ctitle:has(+ :global(.cf.is-active)),
+  .ctitle:has(+ :global(.cf:hover)),
+  .ctitle:has(+ :global(.cf:focus-within)) {
+    opacity: 1;
+  }
+  .ctitle + :global(.cf) {
+    scroll-margin-top: calc(30px + 12px);
+  }
+  @keyframes c-fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ctitle {
+      animation: none;
+    }
+  }
+  @media (max-width: 1279px) {
+    .ctitle {
+      --title-size: 26px;
+    }
+    .ctitle + :global(.cf) {
+      scroll-margin-top: calc(26px + 12px);
+    }
+  }
+  @media (max-width: 767px) {
+    .ctitle {
+      --title-size: 24px;
+    }
+    .ctitle + :global(.cf) {
+      scroll-margin-top: calc(24px + 12px);
+    }
+  }
+
   /* Two framed sections with a transparent gap between them. */
   .pair {
     display: flex;

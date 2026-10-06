@@ -1,0 +1,135 @@
+---
+/**
+ * Community · Shortcuts container body: a grid of square brand tiles (5 × 2) as large as
+ * the columns allow, each with its name underneath, linking straight to the platform.
+ * Tiles are grey (as the "More links" tiles) and show the brand colour on hover / focus.
+ * The container draws no box (ContainerFrame bare): the grid sits straight on the page,
+ * dimmed while the container isn't selected (as the Community link sections). The
+ * container takes its height from the grid (ContainerFrame fit). Tiles as on the Community link
+ * sections (CommunityCard.astro). An unpublished link (null / "[PLACEHOLDER]") is shown
+ * but not clickable.
+ */
+import Icon from './Icon.astro';
+import { isPlaceholder, linkAttrs } from '../lib/content';
+
+interface Props {
+  links: { platform: string; icon: string; color: string; title: string; href: string | null }[];
+}
+
+const { links } = Astro.props;
+---
+
+<ul class="sc" aria-label="Shortcuts">
+  {
+    links.map((l) => {
+      // As CommunityCard: YouTube uses the filled play glyph; X and GitHub get a light edge.
+      const icon = l.platform === 'youtube' ? 'play-filled' : l.icon;
+      const edge = l.platform === 'x' || l.platform === 'github';
+      const inner = (
+        <>
+          <span class:list={['sc__tile', { 'sc__tile--edge': edge }]} style={`--brand: ${l.color}`}>
+            <Icon name={icon} size={30} />
+          </span>
+          <span class="sc__name">{l.title}</span>
+        </>
+      );
+      return (
+        <li>
+          {isPlaceholder(l.href) ? (
+            <span class="sc__link" role="link" aria-disabled="true">
+              {inner}
+            </span>
+          ) : (
+            <a class="sc__link" {...linkAttrs(l.href)}>
+              {inner}
+            </a>
+          )}
+        </li>
+      );
+    })
+  }
+</ul>
+
+<style>
+  /* Five equal columns; each tile is a square filling its column, icon scaled with it. */
+  .sc {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 22px 16px;
+    padding: 0;
+    list-style: none;
+    opacity: var(--o-inactive);
+    transition: opacity var(--t-state) ease;
+  }
+  :global(.cf.is-active) .sc,
+  :global(.cf:hover) .sc,
+  :global(.cf:focus-within) .sc {
+    opacity: 1;
+  }
+  .sc__link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    color: var(--c-white);
+  }
+  .sc__tile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    aspect-ratio: 1;
+    background: var(--c-link-tile);
+    color: var(--c-white);
+    transition: background-color var(--t-state) ease;
+  }
+  a.sc__link:hover .sc__tile,
+  a.sc__link:focus-visible .sc__tile {
+    background: var(--brand);
+  }
+  .sc__tile :global(svg) {
+    width: 40%;
+    height: 40%;
+  }
+  .sc__tile--edge {
+    border: 1px solid rgba(255, 255, 255, 0.35);
+  }
+  .sc__name {
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 1.1;
+    text-align: center;
+    white-space: nowrap;
+  }
+  a.sc__link:focus-visible {
+    outline: 2px solid var(--c-white);
+    outline-offset: 3px;
+  }
+  .sc__link[aria-disabled='true'] {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  @media (max-width: 1279px) {
+    .sc {
+      gap: 18px 12px;
+    }
+    .sc__name {
+      font-size: 14px;
+    }
+  }
+  /* Mobile: tighter gaps. */
+  @media (max-width: 767px) {
+    .sc {
+      gap: 16px 4px;
+    }
+    .sc__link {
+      gap: 7px;
+    }
+    /* Names on one line, scaled to fit a fifth of the row ("ArtStation" ≈ 5.2em wide). */
+    .sc__name {
+      font-size: min(12px, calc((100vw - 2 * var(--gutter) - 16px) / 5 / 5.4));
+      letter-spacing: -0.02em;
+    }
+  }
+</style>
