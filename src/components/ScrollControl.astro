@@ -90,6 +90,11 @@ import Icon from './Icon.astro';
       right: 22px;
     }
   }
+  /* Window being resized (scripts/scroll-control.ts): follow its size at once, so the
+     full-width control stays lined up with the mobile menu bar. */
+  .scroll-ctl[data-resizing] {
+    transition: none;
+  }
   @media (max-width: 767px) {
     .scroll-ctl {
       width: calc(100vw - 2 * var(--gutter));

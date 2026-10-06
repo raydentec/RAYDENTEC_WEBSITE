@@ -138,9 +138,19 @@ document.addEventListener('click', (e) => {
   if (next) scroller.scrollBy({ top: snapTop(next) - line, behavior: scrollBehavior() });
 });
 
+/** While the window is being resized the control follows its size at once (no width
+    animation), so it stays lined up with the mobile menu bar (data-resizing, ScrollControl.astro). */
+const RESIZE_REST_MS = 150;
+let resizeTimer = 0;
+
 window.addEventListener('resize', () => {
   const scroller = getScroller();
   if (scroller) updateTrack(scroller);
+  const btn = control();
+  if (!btn) return;
+  btn.dataset.resizing = '';
+  window.clearTimeout(resizeTimer);
+  resizeTimer = window.setTimeout(() => delete btn.dataset.resizing, RESIZE_REST_MS);
 });
 
 /** A new page starts at the top (SCROLL) — or, on mobile, at container 1 (snap.ts). */
