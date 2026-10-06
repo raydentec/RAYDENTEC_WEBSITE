@@ -224,9 +224,13 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
       --scroller-top: var(--top-bar);
       margin: 0 calc(-1 * var(--gutter));
     }
+    /* Only as tall as the hero (down to the explore row's top); the image fades out across
+       the lower third, from its top edge to its bottom edge (--lt-h: its height, measured
+       by scripts/start.ts; it sits 16px above the hero's bottom). */
     .hero__art {
-      --fade-from: 62%;
-      --fade-to: 82%;
+      --fade-from: calc(100% - 16px - var(--lt-h, 380px));
+      --fade-to: calc(100% - 16px);
+      height: 100%;
     }
     .hero__img {
       object-position: var(--pos-mobile);

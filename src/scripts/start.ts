@@ -16,6 +16,8 @@
 import { getScroller, isStartPage, mq, onPageLoad, onScrollerScroll, setRootState, snapOffset, snapTop } from './dom';
 
 let observer: IntersectionObserver | null = null;
+/** Hero lower third's height → --lt-h on the hero (its mobile image fade, StartHero.astro). */
+let ltObserver: ResizeObserver | null = null;
 /** Hero in view (at least half of it). */
 let heroActive = false;
 
@@ -54,6 +56,8 @@ mq.mobile.addEventListener('change', () => {
 document.addEventListener('astro:before-swap', (e) => {
   observer?.disconnect();
   observer = null;
+  ltObserver?.disconnect();
+  ltObserver = null;
   const toStart = isStartPage(e.newDocument);
   heroActive = toStart;
   setRootState('heroActive', toStart ? '' : null);
@@ -63,6 +67,8 @@ document.addEventListener('astro:before-swap', (e) => {
 onPageLoad(() => {
   observer?.disconnect();
   observer = null;
+  ltObserver?.disconnect();
+  ltObserver = null;
   const scroller = getScroller();
   const hero = scroller?.querySelector<HTMLElement>('[data-hero]');
   if (!scroller || !hero) {
@@ -77,4 +83,9 @@ onPageLoad(() => {
     threshold: 0.5,
   });
   observer.observe(hero);
+  const lt = hero.querySelector<HTMLElement>('.lt');
+  if (lt) {
+    ltObserver = new ResizeObserver(() => hero.style.setProperty('--lt-h', `${lt.offsetHeight}px`));
+    ltObserver.observe(lt);
+  }
 });
