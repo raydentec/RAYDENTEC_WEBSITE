@@ -10,6 +10,8 @@
  *   hovered/focused → "scroll" full width (like the rail's EXPAND button); collapses
  *                              2s after the pointer leaves
  *   last container  → "scroll" full width BACK TO TOP, kept open
+ * Back-to-top-only pages (Shell backToTopOnly, #scroller[data-back-only]): hidden at the
+ * top, BACK TO TOP (kept open) as soon as the page is scrolled.
  * Disabled while the page can't scroll at all (one container that fits, e.g. the 404 page
  * on desktop / tablet; mobile always scrolls between the profile and the containers):
  * re-checked on every page, on resize and whenever the content's size changes.
@@ -56,7 +58,8 @@ function updateMode() {
   const scroller = getScroller();
   if (!btn || !scroller) return;
   const last = containers(scroller).length - 1;
-  const mode = last >= 0 && activeIndex() === last && scroller.scrollTop > 0 ? 'up' : 'down';
+  const backOnly = scroller.hasAttribute('data-back-only');
+  const mode = backOnly || (last >= 0 && activeIndex() === last && scroller.scrollTop > 0) ? 'up' : 'down';
   if (btn.dataset.mode === mode) return;
   btn.dataset.mode = mode;
   btn.setAttribute('aria-label', mode === 'up' ? 'Back to top' : 'Scroll to next item');
@@ -87,6 +90,7 @@ function updateTrack(scroller: HTMLElement) {
 
 onScrollerScroll((scroller) => {
   updateTrack(scroller);
+  if (scroller.hasAttribute('data-back-only')) updateEnabled();
   if (scroller.scrollTop <= 0) {
     window.clearTimeout(idleTimer);
     setState('top');
@@ -166,7 +170,9 @@ function updateEnabled() {
   const scroller = getScroller();
   if (!btn || !scroller) return;
   const canScroll = scroller.scrollHeight - scroller.clientHeight > 1;
-  btn.disabled = !canScroll;
+  // Back-to-top-only pages: nothing to go back to while at the top.
+  const atTopOfBackOnly = scroller.hasAttribute('data-back-only') && scroller.scrollTop <= 1;
+  btn.disabled = !canScroll || atTopOfBackOnly;
 }
 
 let contentObserver: ResizeObserver | null = null;

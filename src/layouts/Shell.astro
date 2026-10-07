@@ -26,9 +26,14 @@ interface Props {
   srHeading?: boolean;
   /** The containers are sideways-scrolling rows of games on desktop/tablet (Games). */
   rows?: boolean;
+  /**
+   * The scroll control only ever takes you back to the top: hidden at the top of the page,
+   * BACK TO TOP once scrolled (a page of one long container: the Legal documents).
+   */
+  backToTopOnly?: boolean;
 }
 
-const { page, label, srHeading = true, rows = false } = Astro.props;
+const { page, label, srHeading = true, rows = false, backToTopOnly = false } = Astro.props;
 const site = await getSite();
 const menuPage = page === 'not-found' || page === 'legal' ? undefined : page;
 const pageLabel = site.pages.find((p) => p.id === page)?.label ?? label ?? '';
@@ -82,6 +87,7 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
       data-page={page}
       data-page-label={pageLabel}
       data-snap="off"
+      data-back-only={backToTopOnly ? '' : undefined}
       data-vt-name={`page-${page}`}
     >
       {

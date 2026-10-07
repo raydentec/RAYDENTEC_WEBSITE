@@ -1,8 +1,8 @@
 ---
 /**
- * One legal document (src/content/legal/<slug>.md): the usual shell with one long container
- * (top tab as wide as a game card's) — ← BACK TO LEGAL at the top, the title with what it applies to, the
- * last-updated date, then the document's text (LegalProse).
+ * One legal document (src/content/legal/<slug>.md): ← BACK TO LEGAL above one long
+ * container, as wide as its top tab (a game card's tab width), then in the container the
+ * title with what it applies to, the last-updated date and the document's text (LegalProse).
  */
 import { getCollection, render } from 'astro:content';
 import BackButton from '../../components/BackButton.astro';
@@ -20,10 +20,10 @@ const { Content } = await render(doc);
 const name = `${doc.data.title} (${doc.data.subject})`;
 ---
 
-<Shell page="legal" label={name} srHeading={false}>
+<Shell page="legal" label={name} srHeading={false} backToTopOnly>
+  <BackButton href="/legal" label="BACK TO LEGAL" class="ldoc__back" />
   <ContainerFrame index={0} variant="start" active label={name}>
     <article class="ldoc">
-      <BackButton href="/legal" label="BACK TO LEGAL" class="ldoc__back" />
       <header class="ldoc__head">
         <h1 class="ldoc__title">
           {doc.data.title} <span class="ldoc__subject">({doc.data.subject})</span>
@@ -81,6 +81,32 @@ const name = `${doc.data.title} (${doc.data.subject})`;
       padding-bottom: var(--card-gap);
     }
   }
+  /*
+   * ← BACK TO LEGAL sits above the container's tab (as the headlines on the Legal page),
+   * --back-gap above it, and as wide as the tab: ⅓ of the column (mobile: the tab spans the
+   * container, so does the button). It rides along when the container snaps.
+   */
+  :global(.column > .back-btn.ldoc__back) {
+    --back-gap: 12px;
+    flex-shrink: 0;
+    width: calc(100% / 3);
+    min-width: 0;
+    margin-bottom: calc(var(--back-gap) - var(--card-gap));
+  }
+  :global(.column > .back-btn.ldoc__back + .cf) {
+    scroll-margin-top: calc(56px + 12px);
+  }
+  @media (max-width: 1279px) {
+    :global(.column > .back-btn.ldoc__back + .cf) {
+      scroll-margin-top: calc(52px + 12px);
+    }
+  }
+  @media (max-width: 767px) {
+    :global(.column > .back-btn.ldoc__back) {
+      width: 100%;
+    }
+  }
+
   .ldoc {
     display: flex;
     flex-direction: column;

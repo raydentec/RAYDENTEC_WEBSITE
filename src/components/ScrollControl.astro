@@ -87,6 +87,20 @@ import Icon from './Icon.astro';
      page can scroll. */
   .scroll-ctl:disabled {
     visibility: hidden;
+    opacity: 0;
+  }
+  /* Appearing / disappearing fades (with the width change already animated above). */
+  .scroll-ctl {
+    transition:
+      width var(--t-ctl) var(--ease-out),
+      opacity var(--t-fade) ease,
+      visibility 0s;
+  }
+  .scroll-ctl:disabled {
+    transition:
+      width var(--t-ctl) var(--ease-out),
+      opacity var(--t-fade) ease,
+      visibility 0s linear var(--t-fade);
   }
 
   @media (max-width: 1279px) {

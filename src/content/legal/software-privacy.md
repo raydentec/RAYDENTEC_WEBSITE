@@ -39,8 +39,7 @@ Want to learn more about what we do with any information we collect? [Review the
 
 1. [WHAT INFORMATION DO WE COLLECT?](#infocollect)
 2. [HOW DO WE PROCESS YOUR INFORMATION?](#infouse)
-[3. WHAT LEGAL BASES DO WE RELY ON TO PROCESS YOUR PERSONAL INFORMATION?](#legalbases)
-
+3. [WHAT LEGAL BASES DO WE RELY ON TO PROCESS YOUR PERSONAL INFORMATION?](#legalbases)
 4. [WHEN AND WITH WHOM DO WE SHARE YOUR PERSONAL INFORMATION?](#whoshare)
 5. [DO WE USE COOKIES AND OTHER TRACKING TECHNOLOGIES?](#cookies)
 6. [HOW DO WE HANDLE YOUR SOCIAL LOGINS?](#sociallogins)
@@ -54,6 +53,7 @@ Want to learn more about what we do with any information we collect? [Review the
 14. [DO WE MAKE UPDATES TO THIS NOTICE?](#policyupdates)
 15. [HOW CAN YOU CONTACT US ABOUT THIS NOTICE?](#contact)
 16. [HOW CAN YOU REVIEW, UPDATE, OR DELETE THE DATA WE COLLECT FROM YOU?](#request)
+
 <h2 id="infocollect">1. WHAT INFORMATION DO WE COLLECT?</h2>
 
 ### Personal information you disclose to us

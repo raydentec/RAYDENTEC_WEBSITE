@@ -83,20 +83,25 @@
   .prose :global(li::marker) {
     color: var(--c-red);
   }
-  /* Table of contents: a compact two-column list of section links. */
+  /* Table of contents: a two-column list of section links in the body text style (grey),
+     numbered in white; a link lights up white on hover. */
   .prose :global(#toc + ol) {
     columns: 2;
     column-gap: 32px;
-    font-family: var(--f-ui);
-    font-weight: 500;
-    font-size: 15px;
-    letter-spacing: 0.02em;
   }
   .prose :global(#toc + ol li) {
     break-inside: avoid;
   }
+  .prose :global(#toc + ol li::marker) {
+    color: var(--c-white);
+  }
   .prose :global(#toc + ol a) {
+    color: var(--c-grey);
     text-decoration: none;
+  }
+  .prose :global(#toc + ol a:hover),
+  .prose :global(#toc + ol a:focus-visible) {
+    color: var(--c-white);
   }
 
   /* Wide tables scroll sideways inside the text column. */
