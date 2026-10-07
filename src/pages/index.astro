@@ -1,18 +1,21 @@
 ---
 /**
- * Start (HANDOFF-2-START): two snap sections — the hero, then "What you can find here".
+ * Start (HANDOFF-2-START, HANDOFF-3-ABOUT): three snap sections — the hero, "What you can
+ * find here", then "About me".
  * Start-only shell rules (no rail / mobile header / video on the hero) live in
  * scripts/start.ts.
  */
 import Shell from '../layouts/Shell.astro';
+import StartAbout from '../components/StartAbout.astro';
 import StartExplore from '../components/StartExplore.astro';
 import StartHero from '../components/StartHero.astro';
 import { getStart } from '../lib/content';
 
-const { hero, explore } = await getStart();
+const { hero, explore, about } = await getStart();
 ---
 
 <Shell page="start" srHeading={false} rows>
   <StartHero {...hero} />
   <StartExplore {...explore} />
+  <StartAbout {...about} />
 </Shell>

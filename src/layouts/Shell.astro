@@ -330,26 +330,12 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
     .column {
       padding-bottom: max(var(--tail, 0px), calc(var(--ctl-bottom) - var(--footer-h) + var(--ctl-h) + 16px));
     }
-    /* Start: the hero starts right under the top bar; content is masked down to 12px above
-       the menu bar, and from the header line once the hero has faded out. */
+    /* Start: the hero starts right under the top bar; content is masked from the header
+       line once the hero has faded out, and runs down to the footer (where the column
+       ends) like on the other pages. */
     .scroller--start {
       --mask-line: calc(var(--header-h) - var(--top-bar));
-      --mask-bottom: calc(var(--menu-bar-bottom) - var(--footer-h) + var(--ctl-h) + 12px);
       padding-top: 0;
-      -webkit-mask-image: linear-gradient(
-        180deg,
-        rgb(0 0 0 / var(--top-a)) var(--mask-line),
-        #000 var(--mask-line),
-        #000 calc(100% - var(--mask-bottom)),
-        transparent calc(100% - var(--mask-bottom))
-      );
-      mask-image: linear-gradient(
-        180deg,
-        rgb(0 0 0 / var(--top-a)) var(--mask-line),
-        #000 var(--mask-line),
-        #000 calc(100% - var(--mask-bottom)),
-        transparent calc(100% - var(--mask-bottom))
-      );
     }
     :global(html[data-mheader='on']) .scroller--start {
       clip-path: none;

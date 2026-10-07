@@ -62,6 +62,23 @@ const groups = projectCategories
   .pgroup:not([hidden]) {
     display: contents;
   }
+  /*
+   * Desktop / tablet: the last shown container (in the last group the filter shows) keeps a
+   * container gap from the footer when scrolled to the end on a short window, as the last
+   * Games row (GameRow.astro). The gap is part of the container (below its box), so the
+   * column can snap / scroll to it.
+   */
+  @media (min-width: 768px) {
+    .pgroup:nth-last-child(1 of .pgroup:not([hidden])) > :global(.cf:last-child) {
+      height: calc(var(--card-h) + var(--card-gap));
+    }
+    .pgroup:nth-last-child(1 of .pgroup:not([hidden])) > :global(.cf:last-child > .cf__body) {
+      bottom: var(--card-gap);
+    }
+    .pgroup:nth-last-child(1 of .pgroup:not([hidden])) > :global(.cf.is-active:last-child > .cf__tab) {
+      height: calc(100% - var(--card-gap));
+    }
+  }
   /* A container that isn't selected can be clicked to scroll to it (scripts/snap.ts). */
   .pgroup :global(.cf:not(.is-active)) {
     cursor: pointer;

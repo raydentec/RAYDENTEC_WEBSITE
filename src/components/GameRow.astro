@@ -100,6 +100,14 @@ const headingId = `games-${index}`;
     margin-left: var(--row-left);
   }
 
+  /* Desktop / tablet: the last row keeps a container gap (--card-gap, as between the
+     Projects containers) from the footer when scrolled to the end on a short window. */
+  @media (min-width: 768px) {
+    .grow:last-child {
+      padding-bottom: var(--card-gap);
+    }
+  }
+
   /* Page open: whole rows fade in one 180ms step apart, the first one step in too (as
      ContainerFrame does for containers); the games inside don't animate on their own. */
   .grow {

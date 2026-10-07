@@ -1,0 +1,209 @@
+---
+/**
+ * Start · "About me": the page's third snap section (container 2 for snap.ts), after the
+ * explore row. The headline sits above a container frame like the explore cards'
+ * (ContainerFrame, top tab — here without a number, twice as wide): a 16:9 image cropped
+ * to half its height, a lead paragraph in the
+ * sidebar bio's style and three sub-headed blocks (columns on desktop/tablet, stacked on
+ * mobile). Boxed to the content column like the explore row's headline (--row-left /
+ * --row-w, Shell.astro).
+ *
+ * Selected (at least half of it — or half the screen — in view, scripts/start.ts sets
+ * data-active here and .is-active on the frame): red tab and border, full headline and
+ * content. Otherwise — peeking in under the explore cards — dimmed like the other
+ * containers (--o-inactive).
+ */
+import ContainerFrame from './ContainerFrame.astro';
+import { asset } from '../lib/content';
+
+interface Props {
+  title: string;
+  image: string;
+  imageAlt: string;
+  lead: string;
+  blocks: { title: string; text: string }[];
+}
+
+const { title, image, imageAlt, lead, blocks } = Astro.props;
+---
+
+<section class="about" data-cf data-about aria-labelledby="about-title">
+  <h2 class="about__title" id="about-title">{title}</h2>
+  <ContainerFrame variant="start" snap={false} index={3} label={title}>
+    <div class="about__content">
+      <img class="about__media" src={asset(image)} alt={imageAlt} width="1920" height="1080" loading="lazy" decoding="async" />
+      <p class="about__lead">{lead}</p>
+      <div class="about__blocks">
+        {
+          blocks.map((b) => (
+            <div class="about__block">
+              <h3 class="about__block-title">{b.title}</h3>
+              <p class="about__block-text">{b.text}</p>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </ContainerFrame>
+</section>
+
+<style>
+  .about {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: var(--row-w);
+    margin: 48px 0 0 var(--row-left);
+    /* Blank space after the frame, so scrolled to the end it rests a container gap
+       (--card-gap, as between the Projects containers) above the footer, where the column
+       ends. Mobile: see below. */
+    padding-bottom: var(--card-gap);
+    scroll-snap-align: start;
+  }
+  /* The frame inside isn't a snap point of its own (the section is): otherwise the column
+     snapped back to it from the blank space below. */
+  .about :global(.cf) {
+    scroll-snap-align: none;
+  }
+  /* Not selected: clicking anywhere on it scrolls it into place (snap.ts). */
+  .about:not([data-active]) {
+    cursor: pointer;
+  }
+
+  /* Headline: as the explore row's (GameRow.astro), dimmed while not selected. */
+  .about__title {
+    font-weight: 700;
+    font-size: var(--row-title);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    opacity: var(--o-inactive);
+    transition: opacity var(--t-state) ease;
+  }
+  .about[data-active] .about__title {
+    opacity: 1;
+  }
+
+  /* Inside the frame's body (dimmed / lit by ContainerFrame). */
+  .about__content {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    padding: 28px 36px 28px 28px;
+  }
+  /* The 16:9 image cropped to half its height, centred. */
+  .about__media {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 32 / 9;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  /*
+   * Frame tab (ContainerFrame): twice the usual notch width while not selected; selected,
+   * as wide as a selected game card's tab (half a game card: ⅓ of the column). Mobile:
+   * the selected tab spans the whole width, as on every container there.
+   */
+  @media (min-width: 768px) {
+    .about :global(.cf.cf--start .cf__tab) {
+      width: calc(2 * var(--notch-h));
+    }
+    .about :global(.cf.cf--start.is-active .cf__tab) {
+      width: calc(var(--row-w) / 3);
+    }
+  }
+
+  /* Lead: as the sidebar bio (Profile.astro). */
+  .about__lead {
+    font-weight: 500;
+    font-size: 29px;
+    line-height: 0.98;
+    letter-spacing: -0.055em;
+    color: var(--c-grey);
+  }
+  /* One red rule across all three blocks (not one per block). */
+  .about__blocks {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 32px;
+    padding-top: 14px;
+    border-top: 2px solid var(--c-red);
+  }
+  .about__block {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+  }
+  .about__block-title {
+    font-weight: 600;
+    font-size: 22px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+  .about__block-text {
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 1.3;
+    letter-spacing: -0.03em;
+    color: var(--c-grey);
+  }
+
+  @media (max-width: 1279px) {
+    .about {
+      gap: 20px;
+      margin-top: 40px;
+    }
+    .about__content {
+      gap: 24px;
+      padding: 24px 26px 24px 24px;
+    }
+    .about__blocks {
+      column-gap: 24px;
+    }
+    .about__block-title {
+      font-size: 20px;
+    }
+    .about__block-text {
+      font-size: 16px;
+    }
+  }
+
+  /* Mobile: in the padded column, blocks stacked; taller than the screen, it scrolls under
+     the header. The frame pads its body by 14px and, as the page's last container, leaves
+     room below down to the BACK TO TOP control (ContainerFrame.astro). */
+  @media (max-width: 767px) {
+    /* No extra space: the frame, as the last container, already leaves room down to the
+       BACK TO TOP control, so its box ends at the control's top edge (as the last Games
+       row, GameRow.astro). Above it: the explore row's room down to the menu bar plus the
+       usual container gap, as between two Games rows (GameRow.astro). */
+    .about {
+      gap: 14px;
+      width: auto;
+      margin: var(--card-gap) 0 0;
+      padding-bottom: 0;
+    }
+    .about__content {
+      gap: 22px;
+      padding: 4px 2px 8px;
+    }
+    .about__lead {
+      font-size: 27px;
+    }
+    .about__blocks {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 22px;
+    }
+    .about__block-title {
+      font-size: 19px;
+    }
+    .about :global(.cf.cf--start .cf__tab) {
+      width: calc(2 * 86px);
+    }
+    .about :global(.cf.cf--start.is-active .cf__tab) {
+      width: 100%;
+    }
+  }
+</style>

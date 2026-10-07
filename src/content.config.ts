@@ -78,6 +78,15 @@ const start = defineCollection({
         )
         .min(1),
     }),
+    /** "About me" section (StartAbout.astro): image, lead paragraph and three sub-headed blocks. */
+    about: z.object({
+      title: z.string(),
+      /** 16:9 image at the top of the panel. */
+      image: assetPath,
+      imageAlt: z.string(),
+      lead: z.string(),
+      blocks: z.array(z.object({ title: z.string(), text: z.string() })).length(3),
+    }),
   }),
 });
 

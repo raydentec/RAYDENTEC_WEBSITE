@@ -7,6 +7,10 @@
  *   - the background video is hidden, and fades in once the hero scrolls out (global.css).
  * Scrolling back reverses it all; leaving the page drops it before the swap.
  *
+ * A second observer marks the About section selected (data-active, and .is-active on its
+ * frame) while at least half of it — or half the column, as it can be taller — is in view
+ * (StartAbout.astro); the shell stays as with the explore row.
+ *
  * The whole hero (image and lower third) fades out on the way to the explore row and
  * back in on the way up (--hero-art, StartHero.astro). Once it is gone, content above the
  * header line (behind the nav / mobile header) is cut off as on other pages — the explore
@@ -16,6 +20,7 @@
 import { getScroller, isStartPage, mq, onPageLoad, onScrollerScroll, setRootState, snapOffset, snapTop } from './dom';
 
 let observer: IntersectionObserver | null = null;
+let aboutObserver: IntersectionObserver | null = null;
 /** Hero lower third's height → --lt-h on the hero (its mobile image fade, StartHero.astro). */
 let ltObserver: ResizeObserver | null = null;
 /** Hero in view (at least half of it). */
@@ -56,6 +61,8 @@ mq.mobile.addEventListener('change', () => {
 document.addEventListener('astro:before-swap', (e) => {
   observer?.disconnect();
   observer = null;
+  aboutObserver?.disconnect();
+  aboutObserver = null;
   ltObserver?.disconnect();
   ltObserver = null;
   const toStart = isStartPage(e.newDocument);
@@ -67,6 +74,8 @@ document.addEventListener('astro:before-swap', (e) => {
 onPageLoad(() => {
   observer?.disconnect();
   observer = null;
+  aboutObserver?.disconnect();
+  aboutObserver = null;
   ltObserver?.disconnect();
   ltObserver = null;
   const scroller = getScroller();
@@ -83,6 +92,21 @@ onPageLoad(() => {
     threshold: 0.5,
   });
   observer.observe(hero);
+  const about = scroller.querySelector<HTMLElement>('[data-about]');
+  if (about) {
+    const frame = about.querySelector<HTMLElement>('.cf');
+    aboutObserver = new IntersectionObserver(
+      ([entry]) => {
+        // Half of it in view — or, when it is taller than the column, half the column.
+        const half = Math.min(entry.boundingClientRect.height, entry.rootBounds?.height ?? Infinity) / 2;
+        const active = entry.intersectionRect.height >= half;
+        about.toggleAttribute('data-active', active);
+        frame?.classList.toggle('is-active', active);
+      },
+      { root: scroller, threshold: Array.from({ length: 21 }, (_, i) => i / 20) },
+    );
+    aboutObserver.observe(about);
+  }
   const lt = hero.querySelector<HTMLElement>('.lt');
   if (lt) {
     ltObserver = new ResizeObserver(() => hero.style.setProperty('--lt-h', `${lt.offsetHeight}px`));
