@@ -15,6 +15,7 @@
  * height = viewport − scroller top − (scroll control's top edge from the viewport bottom)
  * − the explore row's headline + indicator (--row-head, GameRow.astro).
  */
+import BgToggle from './BgToggle.astro';
 import LowerThird from './LowerThird.astro';
 import { asset } from '../lib/content';
 
@@ -82,6 +83,7 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
     }
     <LowerThird {...identity} />
   </div>
+  <BgToggle class="hero__bg" />
 </div>
 
 <style>
@@ -95,6 +97,17 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
     height: calc(100dvh - var(--scroller-top) - var(--ctl-bottom) - var(--ctl-h) - var(--row-head));
     flex-shrink: 0;
     scroll-snap-align: start;
+  }
+  /* Background switch, on every screen: top right of the hero, placed as the fixed one
+     on other pages (Shell.astro) — top on the nav row, right edge in line with the scroll
+     control's. It scrolls away with the hero. */
+  .hero :global(.bg-toggle.hero__bg) {
+    position: absolute;
+    top: calc(var(--nav-top) - var(--scroller-top));
+    right: var(--ctl-right);
+    width: calc(var(--ctl-h) / 2);
+    height: calc(var(--ctl-h) / 2);
+    z-index: 2;
   }
   /* Not selected (the explore row is): no clicks or hovers, as rows on Games — wheel and
      touch input go to the column underneath. */

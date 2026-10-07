@@ -111,7 +111,7 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
       <div class="track__thumb" data-track-thumb></div>
     </div>
     <ScrollControl />
-    <BgToggle class="bg-corner" />
+    {page !== 'start' && <BgToggle class="bg-corner" />}
     <!-- Page overlays outside the column (Projects filter panel): above SCROLL, below the menu. -->
     <slot name="overlay" />
     <MobileMenu current={menuPage} />
@@ -190,7 +190,8 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
   /*
    * Background switch, tablet and up: top right of the window, top on the logo's top
    * edge (the nav row), right edge in line with the scroll control's. Mobile has its own
-   * at the top right of the profile (Profile.astro).
+   * at the top right of the profile (Profile.astro); Start has its own in the hero
+   * (StartHero.astro), on every screen.
    */
   :global(.bg-toggle.bg-corner) {
     position: fixed;
