@@ -222,6 +222,9 @@ dd {
 .scroll-ctl {
   view-transition-name: scroll-ctl;
 }
+.bg-corner {
+  view-transition-name: bg-corner;
+}
 /* The scroll track too: Games' column spans the whole window, under the track. */
 .track {
   view-transition-name: scroll-track;
@@ -242,6 +245,7 @@ dd {
 ::view-transition-group(top-nav),
 ::view-transition-group(top-bar),
 ::view-transition-group(scroll-ctl),
+::view-transition-group(bg-corner),
 ::view-transition-group(scroll-track),
 ::view-transition-group(mobile-menu-bar),
 ::view-transition-group(mobile-header) {
@@ -252,6 +256,7 @@ dd {
 ::view-transition-old(top-nav),
 ::view-transition-old(top-bar),
 ::view-transition-old(scroll-ctl),
+::view-transition-old(bg-corner),
 ::view-transition-old(scroll-track),
 ::view-transition-old(mobile-menu-bar),
 ::view-transition-old(mobile-header) {
@@ -260,6 +265,7 @@ dd {
 ::view-transition-new(top-nav),
 ::view-transition-new(top-bar),
 ::view-transition-new(scroll-ctl),
+::view-transition-new(bg-corner),
 ::view-transition-new(scroll-track),
 ::view-transition-new(mobile-menu-bar),
 ::view-transition-new(mobile-header) {
@@ -393,6 +399,39 @@ html[data-chrome-fade$='-rail']::view-transition-new(rail-join) {
 }
 html[data-hero-active] .bg-video {
   opacity: 0;
+}
+
+/*
+ * Background switched to the still glow (BgToggle.astro, scripts/bg-video.ts): the video
+ * fades out and a blue glow fades in, as the lightning video lights the screen at its
+ * brightest — dark at the top, a blue haze rising from the bottom edge. Same 600ms fade;
+ * hidden on the Start hero too, as the video.
+ */
+.bg-glow {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  mix-blend-mode: screen;
+  background:
+    radial-gradient(120% 22.5% at 50% 100%, rgba(30, 90, 150, 0.55) 0%, rgba(30, 90, 150, 0) 70%),
+    linear-gradient(180deg, rgba(1, 9, 16, 0) 62.5%, rgb(2, 12, 22) 79.4%, rgb(8, 32, 56) 92.5%, rgb(22, 64, 104) 100%);
+  opacity: 0;
+  transition: opacity 600ms ease;
+}
+html[data-bg='glow'] .bg-video {
+  opacity: 0;
+}
+html[data-bg='glow'] .bg-glow {
+  opacity: 0.9;
+}
+html[data-bg='glow'][data-hero-active] .bg-glow {
+  opacity: 0;
+}
+/* Restoring a remembered choice on load: no fade. */
+html.bg-instant .bg-video,
+html.bg-instant .bg-glow {
+  transition: none;
 }
 
 /* ---------- Reduced motion ---------- */

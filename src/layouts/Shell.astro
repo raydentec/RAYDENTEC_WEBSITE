@@ -13,6 +13,7 @@ import Nav from '../components/Nav.astro';
 import Profile from '../components/Profile.astro';
 import Rail from '../components/Rail.astro';
 import ScrollControl from '../components/ScrollControl.astro';
+import BgToggle from '../components/BgToggle.astro';
 import Sidebar from '../components/Sidebar.astro';
 import { getSite, type PageId } from '../lib/content';
 
@@ -73,6 +74,8 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
       aria-hidden="true"
       poster="/assets/video/lightning-mobile-poster.jpg"
       transition:persist="bg-video"></video>
+    <!-- Still blue glow shown instead of the video when it's switched off (BgToggle.astro). -->
+    <div class="bg-glow" aria-hidden="true" transition:persist="bg-glow"></div>
     <div class="top-bar" aria-hidden="true"></div>
 
     <Nav current={menuPage} />
@@ -108,6 +111,7 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
       <div class="track__thumb" data-track-thumb></div>
     </div>
     <ScrollControl />
+    <BgToggle class="bg-corner" />
     <!-- Page overlays outside the column (Projects filter panel): above SCROLL, below the menu. -->
     <slot name="overlay" />
     <MobileMenu current={menuPage} />
@@ -181,6 +185,25 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
 
   .mprofile {
     display: none;
+  }
+
+  /*
+   * Background switch, tablet and up: top right of the window, top on the logo's top
+   * edge (the nav row), right edge in line with the scroll control's. Mobile has its own
+   * at the top right of the profile (Profile.astro).
+   */
+  :global(.bg-toggle.bg-corner) {
+    position: fixed;
+    top: var(--nav-top);
+    right: var(--ctl-right);
+    width: calc(var(--ctl-h) / 2);
+    height: calc(var(--ctl-h) / 2);
+    z-index: 6;
+  }
+  @media (max-width: 767px) {
+    :global(.bg-toggle.bg-corner) {
+      display: none;
+    }
   }
 
   /* ---------- Scroll track ---------- */

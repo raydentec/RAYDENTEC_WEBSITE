@@ -4,6 +4,7 @@
  * Rendered in the desktop sidebar / tablet overlay and as the first block of
  * the mobile scroll flow; sizes follow the breakpoint (HANDOFF §4, §8, §9).
  */
+import BgToggle from './BgToggle.astro';
 import Icon from './Icon.astro';
 import SocialLinks from './SocialLinks.astro';
 import { getSite, linkAttrs } from '../lib/content';
@@ -12,6 +13,7 @@ const site = await getSite();
 ---
 
 <div class="profile">
+  <BgToggle class="profile__bg" />
   <img class="profile__logo" src="/assets/logo.png" alt="RAYDENTEC logo" width="170" height="170" />
   <p class="profile__name">{site.name}</p>
   <p class="profile__tagline">
@@ -34,6 +36,7 @@ const site = await getSite();
 
 <style>
   .profile {
+    position: relative;
     display: flex;
     flex-direction: column;
     width: 320px;
@@ -81,6 +84,10 @@ const site = await getSite();
     flex-direction: column;
     gap: 8px;
     margin-top: 20px;
+  }
+  /* Background switch: mobile only (Shell.astro has the fixed one from tablet up). */
+  .profile :global(.profile__bg) {
+    display: none;
   }
   .profile__cta {
     width: 318px;
@@ -147,6 +154,16 @@ const site = await getSite();
     .profile__ctas {
       gap: 8px;
       margin-top: 16px;
+    }
+    /* Top right of the profile: top on the logo's top edge, right edge in line with
+       the scroll control's (both at the gutter). */
+    .profile :global(.profile__bg) {
+      display: flex;
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: calc(var(--ctl-h) / 2);
+      height: calc(var(--ctl-h) / 2);
     }
     .profile__cta {
       width: min(307px, 100%);
