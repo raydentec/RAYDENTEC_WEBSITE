@@ -38,9 +38,11 @@ function syncCurrentPage() {
     if (a.dataset.page === page) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');
   });
+  // The menu bar shows the page's name — also for a page outside the menu (404), whose
+  // name the scroller carries (Shell.astro), so the persisted bar doesn't keep the last one.
   const current = document.querySelector(`.mmenu__row[data-page="${page}"] span`);
   const label = document.querySelector('[data-mmenu-current]');
-  if (current && label) label.textContent = current.textContent;
+  if (label) label.textContent = current?.textContent ?? getScroller()?.dataset.pageLabel ?? '';
 }
 
 document.addEventListener('click', (e) => {

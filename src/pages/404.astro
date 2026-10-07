@@ -1,0 +1,120 @@
+---
+/**
+ * 404: the usual shell with one container (unnumbered top tab, as wide as the container) saying the page doesn't exist, with a
+ * button back to Start (← before the label). No entry in the top / mobile menu.
+ */
+import ContainerFrame from '../components/ContainerFrame.astro';
+import Icon from '../components/Icon.astro';
+import Shell from '../layouts/Shell.astro';
+import { ROUTES } from '../lib/content';
+---
+
+<Shell page="not-found" label="Page not found" srHeading={false}>
+  <ContainerFrame index={0} variant="start" active label="Page not found">
+    <div class="nf">
+      <p class="nf__code" aria-hidden="true">404</p>
+      <h1 class="nf__title">Page not found</h1>
+      <p class="nf__text">This page doesn’t exist or has moved. Head back to the start to find your way around.</p>
+      <a class="btn btn--outline nf__btn" href={ROUTES.start}>
+        <Icon name="arrowLeft" size={26} />
+        <span>BACK TO START</span>
+      </a>
+    </div>
+  </ContainerFrame>
+</Shell>
+
+<style>
+  /* Content as the game cards (GameCard.astro): title, grey description, button. */
+  .nf {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 28px;
+  }
+  .nf__code {
+    font-family: var(--f-ui);
+    font-weight: 700;
+    font-size: 120px;
+    line-height: 0.9;
+    color: var(--c-red);
+  }
+  .nf__title {
+    font-weight: 700;
+    font-size: 32px;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+  .nf__text {
+    max-width: 640px;
+    font-weight: 500;
+    font-size: 23px;
+    line-height: 1.04;
+    letter-spacing: -0.05em;
+    color: var(--c-grey);
+  }
+  /* The site's outline button (global.css), arrow first: padding mirrored from the usual
+     label-then-↗ button. */
+  .nf__btn {
+    margin-top: 10px;
+    min-width: 210px;
+    justify-content: flex-start;
+    gap: 16px;
+    padding: 0 28px 0 20px;
+  }
+
+  /* The tab spans the container (mobile tabs do already). */
+  @media (min-width: 768px) {
+    :global(#scroller .cf.cf--start.is-active .cf__tab) {
+      width: 100%;
+    }
+  }
+
+  @media (max-width: 1279px) {
+    .nf {
+      padding: 24px;
+    }
+    .nf__code {
+      font-size: 100px;
+    }
+    .nf__title {
+      font-size: 27px;
+    }
+    .nf__text {
+      font-size: 20px;
+    }
+    .nf__btn {
+      min-width: 200px;
+      --btn-h: 52px;
+      --btn-font: 20px;
+      padding: 0 26px 0 18px;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .nf {
+      gap: 12px;
+      padding: 4px 2px 8px;
+    }
+    .nf__code {
+      font-size: 84px;
+    }
+    .nf__title {
+      font-size: 26px;
+    }
+    .nf__text {
+      font-size: 21px;
+      line-height: 1.25;
+      letter-spacing: -0.045em;
+    }
+    /* Full width, as the other buttons on mobile. */
+    .nf__btn {
+      align-self: stretch;
+      min-width: 0;
+      gap: 14px;
+      --btn-h: 52px;
+      --btn-font: 22px;
+      padding: 0 24px 0 18px;
+    }
+  }
+</style>

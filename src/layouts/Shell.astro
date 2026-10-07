@@ -17,16 +17,20 @@ import Sidebar from '../components/Sidebar.astro';
 import { getSite, type PageId } from '../lib/content';
 
 interface Props {
-  page: PageId;
+  /** A menu page, or 'not-found' (404.astro: no menu entry; its label comes from `label`). */
+  page: PageId | 'not-found';
+  /** Page name for pages outside the menu (title, content label, mobile menu bar). */
+  label?: string;
   /** Render a visually hidden <h1> (pages whose first container has no h1). */
   srHeading?: boolean;
   /** The containers are sideways-scrolling rows of games on desktop/tablet (Games). */
   rows?: boolean;
 }
 
-const { page, srHeading = true, rows = false } = Astro.props;
+const { page, label, srHeading = true, rows = false } = Astro.props;
 const site = await getSite();
-const pageLabel = site.pages.find((p) => p.id === page)?.label ?? '';
+const menuPage = page === 'not-found' ? undefined : page;
+const pageLabel = site.pages.find((p) => p.id === page)?.label ?? label ?? '';
 const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabel} · ${site.name}`;
 ---
 
@@ -65,7 +69,7 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
       transition:persist="bg-video"></video>
     <div class="top-bar" aria-hidden="true"></div>
 
-    <Nav current={page} />
+    <Nav current={menuPage} />
     <Rail />
     <Sidebar />
     <MobileHeader />
@@ -75,6 +79,7 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
       class:list={['scroller', { 'scroller--rows': rows, 'scroller--start': page === 'start' }]}
       aria-label={`${pageLabel} content`}
       data-page={page}
+      data-page-label={pageLabel}
       data-snap="off"
       data-vt-name={`page-${page}`}
     >
@@ -98,7 +103,7 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
     <ScrollControl />
     <!-- Page overlays outside the column (Projects filter panel): above SCROLL, below the menu. -->
     <slot name="overlay" />
-    <MobileMenu current={page} />
+    <MobileMenu current={menuPage} />
     <Footer />
 
     <script>

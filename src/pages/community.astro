@@ -175,9 +175,7 @@ const shortcuts = links.slice(0, 10);
   }
   /*
    * Its box: translucent black with a blur, as Social Accounts (and the Start lower third),
-   * at least as tall as the Projects filter panel (FilterPanel.astro: three control heights
-   * plus its 20px / 16px / 12px padding). The tiles start at the top, padded inside it as
-   * the Social Accounts tiles (28px / 24px / 14px).
+   * as tall as its tiles, padded inside it as the Social Accounts tiles (28px / 24px / 14px).
    */
   .ctitle--more.ctitle--more + :global(.cf .cf__body) {
     background: rgba(0, 0, 0, 0.5);
@@ -185,20 +183,16 @@ const shortcuts = links.slice(0, 10);
     backdrop-filter: blur(6px);
   }
   .ctitle--more + :global(.cf .lg) {
-    --panel-pad: 20px;
     justify-content: flex-start;
-    min-height: calc(3 * var(--ctl-h) + 2 * var(--panel-pad));
     padding: 28px;
   }
   @media (max-width: 1279px) {
     .ctitle--more + :global(.cf .lg) {
-      --panel-pad: 16px;
       padding: 24px;
     }
   }
   @media (max-width: 767px) {
     .ctitle--more + :global(.cf .lg) {
-      --panel-pad: 12px;
       padding: 14px;
     }
   }

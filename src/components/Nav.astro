@@ -3,7 +3,8 @@
 import { getSite, ROUTES, type PageId } from '../lib/content';
 
 interface Props {
-  current: PageId;
+  /** None on pages outside the menu (404). */
+  current?: PageId;
 }
 
 const { current } = Astro.props;

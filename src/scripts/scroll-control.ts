@@ -10,6 +10,9 @@
  *   hovered/focused → "scroll" full width (like the rail's EXPAND button); collapses
  *                              2s after the pointer leaves
  *   last container  → "scroll" full width BACK TO TOP, kept open
+ * Disabled while the page can't scroll at all (one container that fits, e.g. the 404 page
+ * on desktop / tablet; mobile always scrolls between the profile and the containers):
+ * re-checked on every page, on resize and whenever the content's size changes.
  */
 import {
   ACTIVE_CHANGE,
@@ -90,6 +93,9 @@ onScrollerScroll((scroller) => {
     updateMode();
     return;
   }
+  // The mode can change without the selected container changing (a page whose only
+  // container is selected from the start: mobile 404, scrolled down from the profile).
+  updateMode();
   // Leaving the top collapses it (unless hovered); scrolling never expands it. A pending
   // 2s collapse after hover keeps running.
   const state = control()?.dataset.state;
@@ -151,6 +157,32 @@ window.addEventListener('resize', () => {
   btn.dataset.resizing = '';
   window.clearTimeout(resizeTimer);
   resizeTimer = window.setTimeout(() => delete btn.dataset.resizing, RESIZE_REST_MS);
+});
+
+/* ---------- Nothing to scroll: disabled ---------- */
+
+function updateEnabled() {
+  const btn = control();
+  const scroller = getScroller();
+  if (!btn || !scroller) return;
+  const canScroll = scroller.scrollHeight - scroller.clientHeight > 1;
+  btn.disabled = !canScroll;
+}
+
+let contentObserver: ResizeObserver | null = null;
+function watchContent() {
+  contentObserver?.disconnect();
+  const scroller = getScroller();
+  const column = scroller?.querySelector('[data-column]');
+  if (!scroller || !column) return;
+  contentObserver = new ResizeObserver(updateEnabled);
+  contentObserver.observe(scroller);
+  contentObserver.observe(column);
+}
+window.addEventListener('resize', updateEnabled);
+onPageLoad(() => {
+  watchContent();
+  updateEnabled();
 });
 
 /** A new page starts at the top (SCROLL) — or, on mobile, at container 1 (snap.ts). */

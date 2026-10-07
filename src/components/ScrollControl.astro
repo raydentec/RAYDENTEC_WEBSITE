@@ -8,6 +8,7 @@
  *   "top" (scrollTop 0) / "scroll" (hovered or focused) → full width with label
  *   "idle" (scrolled; 2s after hover)                  → arrow-only square
  * Mobile: full width at the top and on the last container, arrow-only otherwise.
+ * Disabled and hidden while the page can't scroll at all.
  */
 import Icon from './Icon.astro';
 ---
@@ -80,6 +81,12 @@ import Icon from './Icon.astro';
   [data-state='idle'] .scroll-ctl__label {
     opacity: 0;
     transition: none;
+  }
+
+  /* Nothing to scroll (scripts/scroll-control.ts): hidden; it comes back as soon as the
+     page can scroll. */
+  .scroll-ctl:disabled {
+    visibility: hidden;
   }
 
   @media (max-width: 1279px) {
