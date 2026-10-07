@@ -140,6 +140,10 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
   .scroller::-webkit-scrollbar {
     display: none;
   }
+  /* Window being resized (scripts/dom.ts): the column takes its new size at once. */
+  :global(html[data-resizing]) .scroller {
+    transition: none !important;
+  }
   /* Snapping paused while wheel input from outside the column is forwarded (scripts/wheel.ts). */
   :global(.scroller[data-wheel]) {
     scroll-snap-type: none !important;

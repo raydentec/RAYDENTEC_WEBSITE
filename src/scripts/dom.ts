@@ -43,6 +43,19 @@ export const getRootState = (key: string) => rootState.get(key) ?? document.docu
 
 document.addEventListener('astro:after-swap', () => rootState.forEach((v, k) => applyRootState(k, v)));
 
+/**
+ * While the window is being resized: <html data-resizing> (cleared 150ms after the last
+ * resize event). The content column then follows the new size at once instead of animating
+ * its width (Shell.astro) — animating across a breakpoint passed through layouts of neither
+ * size (the Community tiles jumped between column counts).
+ */
+let resizeTimer = 0;
+window.addEventListener('resize', () => {
+  document.documentElement.setAttribute('data-resizing', '');
+  window.clearTimeout(resizeTimer);
+  resizeTimer = window.setTimeout(() => document.documentElement.removeAttribute('data-resizing'), 150);
+});
+
 /** Scroll events don't bubble; one capturing listener fans out scroller scrolls. */
 type ScrollHandler = (scroller: HTMLElement) => void;
 const scrollHandlers: ScrollHandler[] = [];

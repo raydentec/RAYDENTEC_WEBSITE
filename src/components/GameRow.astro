@@ -213,6 +213,11 @@ const headingId = `games-${index}`;
       margin-left: 0;
       padding-right: 0;
     }
+    /* Not selected: the cards' numbers dim with the rest of the row (mobile notch numbers
+       are full red otherwise — ContainerFrame), as on desktop (60% red). */
+    .grow:not(.is-active) :global(.cf__num) {
+      color: rgba(204, 24, 30, 0.6);
+    }
     .grow__dots {
       width: var(--game-w);
       margin-left: 0;

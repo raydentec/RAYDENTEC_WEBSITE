@@ -12,9 +12,10 @@ const items = (await getItems('community')).map(({ data }) => data);
 type Item = (typeof items)[number];
 type Link = Exclude<Item, { type: 'linkGrid' }>;
 
-// Main links: every link item (JSON order) as its own numbered card in a sideways row, as the
-// Games rows (GameRow.astro); the "More links" grid keeps a container of its own below,
-// headed like Shortcuts (as the Projects category headlines).
+// Links: every link item (JSON order) as its own numbered card in a sideways row, as the
+// Games rows (GameRow.astro), at the end of the page; the "More ways to connect" grid keeps a
+// container of its own above it, headed like Social Accounts (as the Projects category
+// headlines).
 const links = items.filter((i): i is Link => i.type !== 'linkGrid');
 const grids = items.filter((i): i is Extract<Item, { type: 'linkGrid' }> => i.type === 'linkGrid');
 
@@ -28,23 +29,23 @@ const shortcuts = links.slice(0, 10);
   <ContainerFrame index={0} variant="community" active fit bare noTab label="Social Accounts">
     <ShortcutGrid links={shortcuts} />
   </ContainerFrame>
-  <GameRow title="Links" titles={links.map((l) => l.title)} index={1} row={1} itemsLabel="Links" class="crow">
+  {
+    grids.map((g, i) => [
+      <h2 class="ctitle ctitle--more" id={`community-more-${i}`} data-cf-head>{g.title}</h2>,
+      <ContainerFrame index={i + 1} variant="community" fit noTab bare label={g.title}>
+        <LinkGrid links={g.links} />
+      </ContainerFrame>,
+    ])
+  }
+  <GameRow title="Links" titles={links.map((l) => l.title)} index={1} row={grids.length + 1} itemsLabel="Links" class="crow">
     {
       links.map((l, i) => (
-        <ContainerFrame index={i + 1} variant="game" number={i + 1} label={l.title}>
+        <ContainerFrame index={grids.length + i + 1} variant="game" number={i + 1} label={l.title}>
           <CommunityCard {...l} framed />
         </ContainerFrame>
       ))
     }
   </GameRow>
-  {
-    grids.map((g, i) => [
-      <h2 class="ctitle ctitle--more" id={`community-more-${i}`} data-cf-head>{g.title}</h2>,
-      <ContainerFrame index={links.length + i + 1} variant="community" fit noTab bare label={g.title}>
-        <LinkGrid links={g.links} />
-      </ContainerFrame>,
-    ])
-  }
 </Shell>
 
 <style>
@@ -128,11 +129,17 @@ const shortcuts = links.slice(0, 10);
   }
 
   /* Social accounts: a translucent black background behind the tiles, as the Start hero's
-     lower third (LowerThird.astro; no border), the grid padded inside it (ShortcutGrid.astro). */
+     lower third (LowerThird.astro), with a thick red line along its top only — full red while
+     selected, 50% otherwise (6px either way, so nothing shifts) — the grid padded inside it
+     (ShortcutGrid.astro). */
   #community-shortcuts + :global(.cf .cf__body) {
+    border-top: 6px solid var(--c-red-dim);
     background: rgba(0, 0, 0, 0.5);
     -webkit-backdrop-filter: blur(6px);
     backdrop-filter: blur(6px);
+  }
+  #community-shortcuts + :global(.cf.is-active .cf__body) {
+    border-top-color: var(--c-red);
   }
   #community-shortcuts + :global(.cf .sc) {
     padding: 28px;
@@ -165,6 +172,35 @@ const shortcuts = links.slice(0, 10);
   }
   .ctitle--more + :global(.cf:not(.is-active) .lg) {
     opacity: var(--o-inactive);
+  }
+  /*
+   * Its box: translucent black with a blur, as Social Accounts (and the Start lower third),
+   * at least as tall as the Projects filter panel (FilterPanel.astro: three control heights
+   * plus its 20px / 16px / 12px padding). The tiles start at the top, padded inside it as
+   * the Social Accounts tiles (28px / 24px / 14px).
+   */
+  .ctitle--more.ctitle--more + :global(.cf .cf__body) {
+    background: rgba(0, 0, 0, 0.5);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
+  .ctitle--more + :global(.cf .lg) {
+    --panel-pad: 20px;
+    justify-content: flex-start;
+    min-height: calc(3 * var(--ctl-h) + 2 * var(--panel-pad));
+    padding: 28px;
+  }
+  @media (max-width: 1279px) {
+    .ctitle--more + :global(.cf .lg) {
+      --panel-pad: 16px;
+      padding: 24px;
+    }
+  }
+  @media (max-width: 767px) {
+    .ctitle--more + :global(.cf .lg) {
+      --panel-pad: 12px;
+      padding: 14px;
+    }
   }
 
   /* Main links: all cards as tall as the tallest; the card fills its frame's body so its
