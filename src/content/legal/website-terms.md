@@ -10,8 +10,6 @@ We are Sense-A Limited (‘**Company**‘, ‘**we**‘, ‘**us**‘, or ‘**o
 
 We operate the RAYDENTEC website [https://www.raydentec.com](https://www.raydentec.com/) (the ‘**Site**‘), as well as any other related products and services that refer or link to these legal terms (the ‘**Legal Terms**‘) (collectively, the ‘**Services**‘).
 
-We offer a service that provides a print & delivery of a printed map with unique product code to access digital content. You can only purchase the Interactive Maps service from RAYDENTEC Online Store on this website.
-
 You can contact us by email at info@sense-a.com or by mail to Sense-A Limited, Unit 2A, 17/F, Glenealy Tower, No.1 Glenealy, Central, 999077, Hong Kong, Hong Kong SAR, China.
 
 These Legal Terms constitute a legally binding agreement made between you, whether personally or on behalf of an entity (‘**you**‘), and Sense-A Limited, concerning your access to and use of the Services. You agree that by accessing the Services, you have read, understood, and agreed to be bound by all of these Legal Terms. IF YOU DO NOT AGREE WITH ALL OF THESE LEGAL TERMS, THEN YOU ARE EXPRESSLY PROHIBITED FROM USING THE SERVICES AND YOU MUST DISCONTINUE USE IMMEDIATELY.

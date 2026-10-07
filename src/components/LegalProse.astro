@@ -12,6 +12,9 @@
 
 <style>
   .prose {
+    /* Never wider than the container (a wide table scrolls inside it instead). */
+    width: 100%;
+    min-width: 0;
     max-width: 760px;
     font-weight: 500;
     font-size: 18px;
@@ -80,6 +83,11 @@
   .prose :global(li + li) {
     margin-top: 0.45em;
   }
+  /* Nested list (e.g. purposes under a legal basis): indented, a little tighter. */
+  .prose :global(li > ul),
+  .prose :global(li > ol) {
+    margin-top: 0.45em;
+  }
   .prose :global(li::marker) {
     color: var(--c-red);
   }
@@ -116,6 +124,8 @@
   .prose :global(th),
   .prose :global(td) {
     min-width: 120px;
+    /* Whole words only (the text column breaks long words; cells scroll sideways instead). */
+    overflow-wrap: normal;
     padding: 10px 12px;
     border: 1px solid #2c2c2c;
     text-align: left;
@@ -125,6 +135,17 @@
     color: var(--c-white);
     font-weight: 600;
     background: var(--c-link-tile);
+  }
+  /* Categories table (privacy policies): the Yes / No column stays narrow, and a "Yes"
+     reads white (collected) next to the grey "No". */
+  .prose :global(th:last-child),
+  .prose :global(td:last-child) {
+    min-width: 0;
+    white-space: nowrap;
+    text-align: center;
+  }
+  .prose :global(td:first-child) {
+    color: var(--c-white);
   }
 
   @media (max-width: 1279px) {
@@ -147,6 +168,13 @@
     }
     .prose :global(#toc + ol) {
       columns: 1;
+    }
+    /* The table scrolls sideways: its text columns keep a readable width. */
+    .prose :global(td:nth-child(2)) {
+      min-width: 220px;
+    }
+    .prose :global(td:first-child) {
+      min-width: 150px;
     }
   }
 </style>

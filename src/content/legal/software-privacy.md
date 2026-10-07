@@ -127,23 +127,20 @@ The information we collect includes:
 
 _**In Short:** We only process your personal information when we believe it is necessary and we have a valid legal reason (i.e. legal basis) to do so under applicable law, like with your consent, to comply with laws, to provide you with services to enter into or fulfil our contractual obligations, to protect your rights, or to fulfil our legitimate business interests._
 
-_**If you are located in the EU or UK, this section applies to you.**_
+### _If you are located in the EU or UK, this section applies to you._
 
 The General Data Protection Regulation (GDPR) and UK GDPR require us to explain the valid legal bases we rely on in order to process your personal information. As such, we may rely on the following legal bases to process your personal information:
 
-- - **Consent.** We may process your information if you have given us permission (i.e. consent) to use your personal information for a specific purpose. You can withdraw your consent at any time. Learn more about withdrawing your consent.
-    - **Performance of a Contract.** We may process your personal information when we believe it is necessary to fulfil our contractual obligations to you, including providing our Services or at your request prior to entering into a contract with you.
-    - **Legitimate Interests.** We may process your information when we believe it is reasonably necessary to achieve our legitimate business interests and those interests do not outweigh your interests and fundamental rights and freedoms. For example, we may process your personal information for some of the purposes described in order to:
-
-- - - Send users information about special offers and discounts on our products and services
-        - Develop and display personalised and relevant advertising content for our users
-        - Analyse how our Services are used so we can improve them to engage and retain users
-        - Support our marketing activities
-        - Diagnose problems and/or prevent fraudulent activities
-        - Understand how our users use our products and services so we can improve user experience
-
-- **Legal Obligations.** We may process your information where we believe it is necessary for compliance with our legal obligations, such as to cooperate with a law enforcement body or regulatory agency, exercise or defend our legal rights, or disclose your information as evidence in litigation in which we are involved.  
-    
+- **Consent.** We may process your information if you have given us permission (i.e. consent) to use your personal information for a specific purpose. You can withdraw your consent at any time. Learn more about withdrawing your consent.
+- **Performance of a Contract.** We may process your personal information when we believe it is necessary to fulfil our contractual obligations to you, including providing our Services or at your request prior to entering into a contract with you.
+- **Legitimate Interests.** We may process your information when we believe it is reasonably necessary to achieve our legitimate business interests and those interests do not outweigh your interests and fundamental rights and freedoms. For example, we may process your personal information for some of the purposes described in order to:
+    - Send users information about special offers and discounts on our products and services
+    - Develop and display personalised and relevant advertising content for our users
+    - Analyse how our Services are used so we can improve them to engage and retain users
+    - Support our marketing activities
+    - Diagnose problems and/or prevent fraudulent activities
+    - Understand how our users use our products and services so we can improve user experience
+- **Legal Obligations.** We may process your information where we believe it is necessary for compliance with our legal obligations, such as to cooperate with a law enforcement body or regulatory agency, exercise or defend our legal rights, or disclose your information as evidence in litigation in which we are involved.
 - **Vital Interests.** We may process your information where we believe it is necessary to protect your vital interests or the vital interests of a third party, such as situations involving potential threats to the safety of any person.
 
 ### _If you are located in Canada, this section applies to you._
@@ -253,155 +250,20 @@ Most web browsers and some mobile operating systems and mobile applications incl
 
 We have collected the following categories of personal information in the past twelve (12) months:
 
-| **Category** | **Examples** | **Collected** |
+| Category | Examples | Collected |
 | --- | --- | --- |
-| 
-A. Identifiers
-
- | 
-
-Contact details, such as real name, alias, postal address, telephone or mobile contact number, unique personal identifier, online identifier, Internet Protocol address, email address, and account name
-
- | 
-
-YES
-
- |
-| 
-
-B. Personal information as defined in the California Customer Records statute
-
- | 
-
-Name, contact information, education, employment, employment history, and financial information
-
- | 
-
-YES
-
- |
-| 
-
-C. Protected classification characteristics under state or federal law
-
- | 
-
-Gender and date of birth
-
- | 
-
-NO
-
- |
-| 
-
-D. Commercial information
-
- | 
-
-Transaction information, purchase history, financial details, and payment information
-
- | 
-
-YES
-
- |
-| 
-
-E. Biometric information
-
- | 
-
-Fingerprints and voiceprints
-
- | 
-
-NO
-
- |
-| 
-
-F. Internet or other similar network activity
-
- | 
-
-Browsing history, search history, online behaviour, interest data, and interactions with our and other websites, applications, systems, and advertisements
-
- | 
-
-NO
-
- |
-| 
-
-G. Geolocation data
-
- | 
-
-Device location
-
- | 
-
-NO
-
- |
-| 
-
-H. Audio, electronic, visual, thermal, olfactory, or similar information
-
- | 
-
-Images and audio, video or call recordings created in connection with our business activities
-
- | 
-
-NO
-
- |
-| 
-
-I. Professional or employment-related information
-
- | 
-
-Business contact details in order to provide you our Services at a business level or job title, work history, and professional qualifications if you apply for a job with us
-
- | 
-
-NO
-
- |
-| 
-
-J. Education Information
-
- | 
-
-Student records and directory information
-
- | 
-
-NO
-
- |
-| 
-
-K. Inferences drawn from collected personal information
-
- | 
-
-Inferences drawn from any of the collected personal information listed above to create a profile or summary about, for example, an individual’s preferences and characteristics
-
- | 
-
-NO
-
- |
-| L. Sensitive personal Information | | 
-
-NO
-
- |
+| A. Identifiers | Contact details, such as real name, alias, postal address, telephone or mobile contact number, unique personal identifier, online identifier, Internet Protocol address, email address, and account name | Yes |
+| B. Personal information as defined in the California Customer Records statute | Name, contact information, education, employment, employment history, and financial information | Yes |
+| C. Protected classification characteristics under state or federal law | Gender and date of birth | No |
+| D. Commercial information | Transaction information, purchase history, financial details, and payment information | Yes |
+| E. Biometric information | Fingerprints and voiceprints | No |
+| F. Internet or other similar network activity | Browsing history, search history, online behaviour, interest data, and interactions with our and other websites, applications, systems, and advertisements | No |
+| G. Geolocation data | Device location | No |
+| H. Audio, electronic, visual, thermal, olfactory, or similar information | Images and audio, video or call recordings created in connection with our business activities | No |
+| I. Professional or employment-related information | Business contact details in order to provide you our Services at a business level or job title, work history, and professional qualifications if you apply for a job with us | No |
+| J. Education Information | Student records and directory information | No |
+| K. Inferences drawn from collected personal information | Inferences drawn from any of the collected personal information listed above to create a profile or summary about, for example, an individual’s preferences and characteristics | No |
+| L. Sensitive personal Information | — | No |
 
 We will use and retain the collected personal information as needed to provide the Services or for:
 
