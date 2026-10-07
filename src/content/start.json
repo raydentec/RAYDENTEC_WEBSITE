@@ -67,20 +67,9 @@
     "title": "About me",
     "image": "assets/raydentec-image-1.jpg",
     "imageAlt": "RAYDEN at a multi-monitor workstation, building a game world",
-    "lead": "I’m RAYDEN — a creator of virtual worlds. I make games, characters and the tech behind them, and share the whole process along the way.",
-    "blocks": [
-      {
-        "title": "Art, design and code",
-        "text": "I work across the full pipeline: shaping characters and environments, designing how worlds play, and writing the code that brings them to life."
-      },
-      {
-        "title": "Built in the open",
-        "text": "Starting from nothing, every project grows in public. Videos and live streams show the real process — experiments, dead ends and breakthroughs."
-      },
-      {
-        "title": "Join the journey",
-        "text": "Follow along on YouTube and Twitch, browse the work on ArtStation and GitHub, or get in touch at info@raydentec.com."
-      }
-    ]
+    "lead": "RAYDEN — Creator of Virtual Worlds\nI create worlds, games, characters, stories and experiences from a blank canvas on the screen, starting in an empty universe and shaping every element with purpose.\nImmersed in the process, I lean on the support of a community of players and other creators. Together we experience the worlds as they evolve in a never ending cycle.\nThe road IS the destination.",
+    "body": "Follow the story and learn\nmore on my socials",
+    "href": "/community",
+    "linkLabel": "GO TO LINKS"
   }
 }

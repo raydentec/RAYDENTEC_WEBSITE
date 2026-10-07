@@ -23,7 +23,7 @@ const { icon, title, description, image, href, linkLabel } = Astro.props;
 <div class="scard">
   <img class="scard__media" src={asset(image)} alt="" width="1280" height="720" loading="lazy" decoding="async" />
   <div class="scard__head">
-    <Icon name={icon} size={26} class="scard__icon" />
+    <Icon name={icon} size={30} class="scard__icon" />
     <h3 class="scard__title">{title}</h3>
   </div>
   <p class="scard__desc">{description}</p>
@@ -53,10 +53,12 @@ const { icon, title, description, image, href, linkLabel } = Astro.props;
   .scard__head :global(.scard__icon) {
     flex-shrink: 0;
   }
+  /* Title and description sized as the game cards' (GameCard.astro). */
   .scard__title {
-    font-weight: 600;
-    font-size: 24px;
-    line-height: 1.1;
+    font-weight: 700;
+    font-size: 32px;
+    line-height: 1;
+    letter-spacing: -0.03em;
   }
   /*
    * Room for --desc-lines lines whatever the text (fewer on the wider desktop / tablet cards,
@@ -65,11 +67,12 @@ const { icon, title, description, image, href, linkLabel } = Astro.props;
    */
   .scard__desc {
     --desc-lines: 2;
-    min-height: calc(var(--desc-lines) * 1.12em);
+    --desc-lh: 1.04;
+    min-height: calc(var(--desc-lines) * var(--desc-lh) * 1em);
     font-weight: 500;
-    font-size: 19px;
-    line-height: 1.12;
-    letter-spacing: -0.04em;
+    font-size: 23px;
+    line-height: var(--desc-lh);
+    letter-spacing: -0.05em;
     color: var(--c-grey);
   }
   /* As the game cards' button (GameCard.astro), but wide enough for the whole label. */
@@ -86,15 +89,15 @@ const { icon, title, description, image, href, linkLabel } = Astro.props;
       padding: 16px;
     }
     .scard__head :global(.scard__icon) {
-      width: 22px;
-      height: 22px;
+      width: 26px;
+      height: 26px;
     }
     .scard__title {
-      font-size: 20px;
+      font-size: 27px;
     }
     .scard__desc {
       --desc-lines: 3;
-      font-size: 16px;
+      font-size: 20px;
     }
     .scard :global(.scard__btn) {
       min-width: 200px;
@@ -110,8 +113,14 @@ const { icon, title, description, image, href, linkLabel } = Astro.props;
       padding: 0;
       container-type: inline-size;
     }
+    .scard__title {
+      font-size: 26px;
+    }
     .scard__desc {
       --desc-lines: 4;
+      --desc-lh: 1.25;
+      font-size: 21px;
+      letter-spacing: -0.045em;
     }
     /* Full width, ↗ right after the label (as the game cards). The card can't grow here, so
        the label shrinks from the games' 22px with the card's width until the longest one

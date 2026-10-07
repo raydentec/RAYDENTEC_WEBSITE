@@ -78,14 +78,18 @@ const start = defineCollection({
         )
         .min(1),
     }),
-    /** "About me" section (StartAbout.astro): image, lead paragraph and three sub-headed blocks. */
+    /** "About me" section (StartAbout.astro): image, headline, lead paragraphs, body and link. */
     about: z.object({
       title: z.string(),
       /** 16:9 image at the top of the panel. */
       image: assetPath,
       imageAlt: z.string(),
+      /** First line: the container's headline; each further line ("\n") a lead paragraph. */
       lead: z.string(),
-      blocks: z.array(z.object({ title: z.string(), text: z.string() })).length(3),
+      /** Button to the links (Community page) with a short caption beside it ("\n": line break). */
+      body: z.string(),
+      href,
+      linkLabel: z.string(),
     }),
   }),
 });

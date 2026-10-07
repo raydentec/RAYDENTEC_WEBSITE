@@ -35,12 +35,6 @@ interface Props {
    * where the column would be, lined up with the other containers.
    */
   noTab?: boolean;
-  /**
-   * A container the column snaps between (data-cf, scripts/snap.ts) — the default. Off for a
-   * frame inside a section that snaps itself (Start "About me"), whose selected state its
-   * section sets (scripts/start.ts).
-   */
-  snap?: boolean;
   /** Position on the page (0-based): staggers the fade-in when the page opens. */
   index?: number;
   label?: string;
@@ -55,7 +49,6 @@ const {
   bare = false,
   fit = false,
   noTab = false,
-  snap = true,
   index = 0,
   label,
 } = Astro.props;
@@ -76,7 +69,7 @@ const heightVars = [height && `--cf-h: ${height}px`, tabletHeight && `--cf-h-tab
       'cf--notab': noTab,
     },
   ]}
-  data-cf={snap ? '' : undefined}
+  data-cf
   aria-label={label}
   style={heightVars || undefined}
 >
