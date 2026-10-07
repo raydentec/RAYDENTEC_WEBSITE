@@ -17,8 +17,9 @@ import Sidebar from '../components/Sidebar.astro';
 import { getSite, type PageId } from '../lib/content';
 
 interface Props {
-  /** A menu page, or 'not-found' (404.astro: no menu entry; its label comes from `label`). */
-  page: PageId | 'not-found';
+  /** A menu page, or one outside the menu ('not-found': 404.astro, 'legal': pages/legal) —
+      those take their name from `label`. */
+  page: PageId | 'not-found' | 'legal';
   /** Page name for pages outside the menu (title, content label, mobile menu bar). */
   label?: string;
   /** Render a visually hidden <h1> (pages whose first container has no h1). */
@@ -29,7 +30,7 @@ interface Props {
 
 const { page, label, srHeading = true, rows = false } = Astro.props;
 const site = await getSite();
-const menuPage = page === 'not-found' ? undefined : page;
+const menuPage = page === 'not-found' || page === 'legal' ? undefined : page;
 const pageLabel = site.pages.find((p) => p.id === page)?.label ?? label ?? '';
 const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabel} · ${site.name}`;
 ---

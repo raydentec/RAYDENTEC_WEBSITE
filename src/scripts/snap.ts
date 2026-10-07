@@ -104,7 +104,7 @@ function updateTail(scroller: HTMLElement) {
  * marked data-cf-head belongs to the container right after it (Start "About me") and
  * takes such clicks too, as a row's headline does.
  */
-const CLICK_TO_SELECT = ['projects', 'games', 'start', 'community'];
+const CLICK_TO_SELECT = ['projects', 'games', 'start', 'community', 'legal'];
 document.addEventListener('click', (e) => {
   const scroller = getScroller();
   const target = e.target as Element | null;
@@ -208,8 +208,11 @@ onPageLoad(() => {
   if (!scroller) return;
   returningToTop = false;
   if (!positionedOnSwap) {
-    home = null;
     scroller.scrollTop = 0;
+    // The page opens resting in its first container (desktop / tablet; on mobile the profile
+    // comes first). Without this, the first scroll inside a container taller than the screen
+    // (a Legal document) was "re-aligned" back to that container's top.
+    home = mq.mobile.matches ? null : (containerAtSnapLine(scroller) ?? null);
   }
   positionedOnSwap = false;
   updateTail(scroller);

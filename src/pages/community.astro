@@ -129,17 +129,11 @@ const shortcuts = links.slice(0, 10);
   }
 
   /* Social accounts: a translucent black background behind the tiles, as the Start hero's
-     lower third (LowerThird.astro), with a thick red line along its top only — full red while
-     selected, 50% otherwise (6px either way, so nothing shifts) — the grid padded inside it
-     (ShortcutGrid.astro). */
+     lower third (LowerThird.astro; no border), the grid padded inside it (ShortcutGrid.astro). */
   #community-shortcuts + :global(.cf .cf__body) {
-    border-top: 6px solid var(--c-red-dim);
     background: rgba(0, 0, 0, 0.5);
     -webkit-backdrop-filter: blur(6px);
     backdrop-filter: blur(6px);
-  }
-  #community-shortcuts + :global(.cf.is-active .cf__body) {
-    border-top-color: var(--c-red);
   }
   #community-shortcuts + :global(.cf .sc) {
     padding: 28px;

@@ -10,7 +10,7 @@ export const ROUTES: Record<PageId, string> = {
 };
 
 /** Items of a page collection in JSON array order. */
-export async function getItems<C extends Exclude<CollectionKey, 'site' | 'start'>>(collection: C) {
+export async function getItems<C extends Exclude<CollectionKey, 'site' | 'start' | 'legal'>>(collection: C) {
   const entries = await getCollection(collection);
   return entries.sort((a, b) => a.data.order - b.data.order);
 }

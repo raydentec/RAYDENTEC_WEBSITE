@@ -4,21 +4,18 @@
  * button back to Start (← before the label). No entry in the top / mobile menu.
  */
 import ContainerFrame from '../components/ContainerFrame.astro';
-import Icon from '../components/Icon.astro';
+import BackButton from '../components/BackButton.astro';
 import Shell from '../layouts/Shell.astro';
 import { ROUTES } from '../lib/content';
 ---
 
 <Shell page="not-found" label="Page not found" srHeading={false}>
-  <ContainerFrame index={0} variant="start" active label="Page not found">
+  <ContainerFrame index={0} variant="start" fullTab active label="Page not found">
     <div class="nf">
       <p class="nf__code" aria-hidden="true">404</p>
       <h1 class="nf__title">Page not found</h1>
       <p class="nf__text">This page doesn’t exist or has moved. Head back to the start to find your way around.</p>
-      <a class="btn btn--outline nf__btn" href={ROUTES.start}>
-        <Icon name="arrowLeft" size={26} />
-        <span>BACK TO START</span>
-      </a>
+      <BackButton href={ROUTES.start} label="BACK TO START" class="nf__btn" />
     </div>
   </ContainerFrame>
 </Shell>
@@ -53,21 +50,8 @@ import { ROUTES } from '../lib/content';
     letter-spacing: -0.05em;
     color: var(--c-grey);
   }
-  /* The site's outline button (global.css), arrow first: padding mirrored from the usual
-     label-then-↗ button. */
-  .nf__btn {
+  .nf :global(.nf__btn) {
     margin-top: 10px;
-    min-width: 210px;
-    justify-content: flex-start;
-    gap: 16px;
-    padding: 0 28px 0 20px;
-  }
-
-  /* The tab spans the container (mobile tabs do already). */
-  @media (min-width: 768px) {
-    :global(#scroller .cf.cf--start.is-active .cf__tab) {
-      width: 100%;
-    }
   }
 
   @media (max-width: 1279px) {
@@ -82,12 +66,6 @@ import { ROUTES } from '../lib/content';
     }
     .nf__text {
       font-size: 20px;
-    }
-    .nf__btn {
-      min-width: 200px;
-      --btn-h: 52px;
-      --btn-font: 20px;
-      padding: 0 26px 0 18px;
     }
   }
 
@@ -106,15 +84,6 @@ import { ROUTES } from '../lib/content';
       font-size: 21px;
       line-height: 1.25;
       letter-spacing: -0.045em;
-    }
-    /* Full width, as the other buttons on mobile. */
-    .nf__btn {
-      align-self: stretch;
-      min-width: 0;
-      gap: 14px;
-      --btn-h: 52px;
-      --btn-font: 22px;
-      padding: 0 24px 0 18px;
     }
   }
 </style>

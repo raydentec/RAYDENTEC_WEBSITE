@@ -1,5 +1,5 @@
 import { defineCollection } from 'astro:content';
-import { file } from 'astro/loaders';
+import { file, glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 import { projectCategoryNames } from './lib/project-categories';
 
@@ -161,4 +161,22 @@ const community = defineCollection({
   ]),
 });
 
-export const collections = { site, start, games, projects, community };
+/**
+ * Legal documents (pages/legal): one Markdown file each in src/content/legal, listed on the
+ * Legal page by group and order and shown on /legal/<file name>. Section headings carry ids
+ * for the table of contents.
+ */
+const legal = defineCollection({
+  loader: glob({ pattern: '*.md', base: './src/content/legal' }),
+  schema: z.object({
+    title: z.string(),
+    /** What it applies to, shown in brackets after the title: "Terms of Use (Website)". */
+    subject: z.string(),
+    group: z.enum(['agreements', 'policies']),
+    order: z.number(),
+    /** As written in the document, e.g. "July 24, 2026". */
+    updated: z.string(),
+  }),
+});
+
+export const collections = { site, start, games, projects, community, legal };

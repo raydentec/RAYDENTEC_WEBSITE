@@ -34,6 +34,8 @@ interface Props {
    * No number tab / red column (Community Shortcuts); the body spans the full width.
    */
   noTab?: boolean;
+  /** The top tab spans the whole container, selected or not (404, Legal pages). */
+  fullTab?: boolean;
   /** Position on the page (0-based): staggers the fade-in when the page opens. */
   index?: number;
   label?: string;
@@ -48,6 +50,7 @@ const {
   bare = false,
   fit = false,
   noTab = false,
+  fullTab = false,
   index = 0,
   label,
 } = Astro.props;
@@ -66,6 +69,7 @@ const heightVars = [height && `--cf-h: ${height}px`, tabletHeight && `--cf-h-tab
       'cf--bare': bare,
       'cf--fit': fit,
       'cf--notab': noTab,
+      'cf--fulltab': fullTab,
     },
   ]}
   data-cf
@@ -258,6 +262,12 @@ const heightVars = [height && `--cf-h: ${height}px`, tabletHeight && `--cf-h-tab
       background: var(--c-red);
       border-color: var(--c-red);
     }
+  }
+
+  /* Full-width top tab (Start-style frames): spans the container in either state. */
+  .cf--fulltab.cf--start .cf__tab,
+  .cf--fulltab.cf--start.is-active .cf__tab {
+    width: 100%;
   }
 
   /* Mobile: number tab above the body. */

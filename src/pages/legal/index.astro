@@ -1,0 +1,330 @@
+---
+/**
+ * Legal: company information and copyright, then the agreements and policies (src/content/
+ * legal), each opening its own page (legal/[slug].astro), and other notes. Containers with a top tab as wide
+ * as a game card's; not in the top / mobile menu (linked from the footer).
+ */
+import { getCollection } from 'astro:content';
+import ContainerFrame from '../../components/ContainerFrame.astro';
+import Icon from '../../components/Icon.astro';
+import Shell from '../../layouts/Shell.astro';
+
+const docs = (await getCollection('legal')).sort((a, b) => a.data.order - b.data.order);
+const groups = [
+  {
+    id: 'agreements',
+    title: 'Agreements',
+    intro: 'The following legal terms and agreements govern your use of the RAYDENTEC website, software, products and services:',
+    docs: docs.filter((d) => d.data.group === 'agreements'),
+  },
+  {
+    id: 'policies',
+    title: 'Policies',
+    intro:
+      'The following policies describe how and why we might collect, store, use, share and/or process information given to our company when you use the RAYDENTEC website, software, products and services:',
+    docs: docs.filter((d) => d.data.group === 'policies'),
+  },
+];
+---
+
+<Shell page="legal" label="Legal">
+  <h2 class="ltitle" data-cf-head>Company information</h2>
+  <ContainerFrame index={0} variant="start" active label="Company information">
+    <section class="lsec">
+      <p class="lsec__text">RAYDENTEC is a brand, not a legal entity. RAYDENTEC website, software, products and services are operated by:</p>
+      <dl class="lsec__company">
+        <dt>Name</dt>
+        <dd>Sense-A Limited</dd>
+        <dt>Address</dt>
+        <dd>
+          Unit 2A, 17/F, Glenealy Tower<br />No.1 Glenealy, Central<br />Hong Kong<br />Hong Kong SAR, China
+        </dd>
+      </dl>
+      <p class="lsec__text">
+        To contact our company for legal or business purposes, email{' '}
+        <a href="mailto:info@sense-a.com">info@sense-a.com</a> or visit{' '}
+        <a href="https://www.sense-a.com" target="_blank" rel="noopener">www.sense-a.com</a>.
+      </p>
+    </section>
+  </ContainerFrame>
+
+  <h2 class="ltitle" data-cf-head>Copyright</h2>
+  <ContainerFrame index={1} variant="start" label="Copyright">
+    <section class="lsec">
+      <p class="lsec__text">RAYDEN, RAYDENTEC and the RAYDENTEC logo are trademarks of Sense-A Limited.</p>
+      <p class="lsec__text">
+        Content published on this website and associated web pages under the domain raydentec.com, with the exception of
+        licensed content, are property of Sense-A Limited and are subject to and protected by Hong Kong and International
+        copyright laws.
+      </p>
+      <p class="lsec__text">
+        All rights to use the Content are reserved. Any use of the Content requires a written permission from Sense-A
+        Limited.
+      </p>
+    </section>
+  </ContainerFrame>
+
+  {
+    groups.map((g, i) => [
+      <h2 class="ltitle" data-cf-head>
+        {g.title}
+      </h2>,
+      <ContainerFrame index={i + 2} variant="start" label={g.title}>
+        <section class="lsec" data-legal-box={g.id}>
+          <p class="lsec__text">{g.intro}</p>
+          <ul class="ldocs">
+            {g.docs.map((d) => (
+              <li>
+                <a class="ldocs__link" href={`/legal/${d.id}`}>
+                  <span class="ldocs__name">
+                    {d.data.title} <span class="ldocs__subject">({d.data.subject})</span>
+                  </span>
+                  <span class="ldocs__updated">Last updated {d.data.updated}</span>
+                  <Icon name="arrowRight" size={26} class="ldocs__arrow" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </ContainerFrame>,
+    ])
+  }
+
+  <h2 class="ltitle" data-cf-head>Other</h2>
+  <ContainerFrame index={groups.length + 2} variant="start" label="Other">
+    <section class="lsec" data-legal-box="other">
+      <p class="lsec__text">
+        Terms, conditions, as well as products, services, their features and pricing are subject to change without notice.
+      </p>
+    </section>
+  </ContainerFrame>
+</Shell>
+
+<script>
+  /**
+   * The Other box is at least as tall as the Agreements box (their text differs, and both
+   * change with the screen size), kept in step whenever Agreements resizes.
+   */
+  let observer: ResizeObserver | null = null;
+
+  document.addEventListener('astro:page-load', () => {
+    observer?.disconnect();
+    observer = null;
+    const source = document.querySelector<HTMLElement>('[data-legal-box="agreements"]');
+    const target = document.querySelector<HTMLElement>('[data-legal-box="other"]');
+    if (!source || !target) return;
+    observer = new ResizeObserver(() => {
+      target.style.minHeight = `${source.offsetHeight}px`;
+    });
+    observer.observe(source);
+  });
+  document.addEventListener('astro:before-swap', () => {
+    observer?.disconnect();
+    observer = null;
+  });
+</script>
+
+<style>
+  /*
+   * Top tab as wide as a game card's (GameCard rows: half a game, ⅓ of the column) while
+   * selected; the usual notch otherwise. Mobile: full width when selected, as everywhere.
+   */
+  @media (min-width: 768px) {
+    :global(#scroller .cf.cf--start.is-active .cf__tab) {
+      width: calc(100% / 3);
+    }
+  }
+  /*
+   * Desktop / tablet: the last container ends a container gap (--card-gap, as between the
+   * Projects containers) above the footer when scrolled to the end; the space is part of
+   * the container, so the column can scroll into it. Mobile: the frame, as the page's last
+   * container, already ends at the top of the BACK TO TOP control (ContainerFrame.astro).
+   */
+  @media (min-width: 768px) {
+    :global(#scroller .cf:last-child) {
+      padding-bottom: var(--card-gap);
+    }
+  }
+  .lsec {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 28px;
+  }
+  /*
+   * Headlines above the containers, as on Community / Projects: --title-gap above the
+   * container's tab, extra room (--title-top) after the container before it, riding along
+   * when the container snaps (its scroll-margin-top reaches up to the headline), dimmed while
+   * that container isn't selected and, as part of it, clicking it scrolls to it (snap.ts).
+   */
+  .ltitle {
+    --title-size: 30px;
+    --title-gap: 12px;
+    --title-top: 20px;
+    margin: var(--title-top) 0 calc(var(--title-gap) - var(--card-gap));
+    font-weight: 700;
+    font-size: var(--title-size);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    opacity: var(--o-inactive);
+    transition: opacity var(--t-state) ease;
+  }
+  .ltitle:first-child {
+    margin-top: 0;
+  }
+  .ltitle:has(+ :global(.cf.is-active)),
+  .ltitle:has(+ :global(.cf:hover)),
+  .ltitle:has(+ :global(.cf:focus-within)) {
+    opacity: 1;
+  }
+  .ltitle:has(+ :global(.cf:not(.is-active))) {
+    cursor: pointer;
+  }
+  /* Headline size + gap (the container doesn't see the headline's variables). */
+  .ltitle + :global(.cf) {
+    scroll-margin-top: calc(30px + 12px);
+  }
+  @media (max-width: 1279px) {
+    .ltitle + :global(.cf) {
+      scroll-margin-top: calc(26px + 12px);
+    }
+  }
+  @media (max-width: 767px) {
+    .ltitle + :global(.cf) {
+      scroll-margin-top: calc(24px + 12px);
+    }
+  }
+  .ltitle + :global(.cf:not(.is-active)) {
+    cursor: pointer;
+  }
+  .lsec__text {
+    max-width: 760px;
+    font-weight: 500;
+    font-size: 20px;
+    line-height: 1.3;
+    letter-spacing: -0.03em;
+    color: var(--c-grey);
+  }
+  .lsec__text a {
+    color: var(--c-red);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+    transition: color var(--t-fade);
+  }
+  .lsec__text a:hover {
+    color: var(--c-white);
+  }
+
+  /* Company details: label column (mono) and value. */
+  .lsec__company {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 8px 24px;
+    margin: 0;
+    font-size: 20px;
+    line-height: 1.3;
+  }
+  .lsec__company dt {
+    padding-top: 4px;
+    font-family: var(--f-mono);
+    font-size: 14px;
+    color: var(--c-grey);
+    text-transform: uppercase;
+  }
+  .lsec__company dd {
+    margin: 0;
+    font-weight: 600;
+  }
+
+  /* Documents: flat dark rows (as the "More ways to connect" tiles), arrow on the right. */
+  .ldocs {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .ldocs__link {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 4px 20px;
+    padding: 16px 20px;
+    border: 2px solid transparent;
+    background: var(--c-link-tile);
+    transition:
+      background-color var(--t-fade),
+      border-color var(--t-fade);
+  }
+  .ldocs__link:hover,
+  .ldocs__link:focus-visible {
+    background: var(--c-link-tile-hover);
+    border-color: var(--c-white);
+  }
+  .ldocs__name {
+    font-weight: 700;
+    font-size: 22px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+  .ldocs__subject {
+    font-weight: 500;
+    color: var(--c-grey);
+  }
+  .ldocs__updated {
+    grid-column: 1;
+    font-family: var(--f-mono);
+    font-size: 13px;
+    color: var(--c-grey);
+  }
+  .ldocs__link :global(.ldocs__arrow) {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    /* Grey, as the subject and date on the row. */
+    color: var(--c-grey);
+  }
+
+  @media (max-width: 1279px) {
+    .lsec {
+      padding: 24px;
+    }
+    .ltitle {
+      --title-size: 26px;
+    }
+    .lsec__text,
+    .lsec__company {
+      font-size: 18px;
+    }
+    .ldocs__name {
+      font-size: 20px;
+    }
+  }
+  @media (max-width: 767px) {
+    .lsec {
+      gap: 14px;
+      padding: 4px 2px 8px;
+    }
+    .ltitle {
+      --title-size: 24px;
+    }
+    .lsec__text,
+    .lsec__company {
+      font-size: 17px;
+    }
+    .lsec__company {
+      grid-template-columns: 1fr;
+      gap: 2px;
+    }
+    .lsec__company dd + dt {
+      margin-top: 10px;
+    }
+    .ldocs__link {
+      padding: 14px 16px;
+    }
+    .ldocs__name {
+      font-size: 18px;
+    }
+  }
+</style>

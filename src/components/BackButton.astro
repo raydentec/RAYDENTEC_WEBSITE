@@ -1,0 +1,47 @@
+---
+/**
+ * Outline button that leads back somewhere: ← before the label (the site's buttons put ↗
+ * after it), padding mirrored to match. Used on the 404 and Legal document pages.
+ */
+import Icon from './Icon.astro';
+
+interface Props {
+  href: string;
+  label: string;
+  class?: string;
+}
+
+const { href, label, class: className } = Astro.props;
+---
+
+<a class:list={['btn', 'btn--outline', 'back-btn', className]} href={href}>
+  <Icon name="arrowLeft" size={26} />
+  <span>{label}</span>
+</a>
+
+<style>
+  .back-btn {
+    min-width: 210px;
+    justify-content: flex-start;
+    gap: 16px;
+    padding: 0 28px 0 20px;
+  }
+  @media (max-width: 1279px) {
+    .back-btn {
+      min-width: 200px;
+      --btn-h: 52px;
+      --btn-font: 20px;
+      padding: 0 26px 0 18px;
+    }
+  }
+  /* Mobile: full width, as the other buttons there. */
+  @media (max-width: 767px) {
+    .back-btn {
+      align-self: stretch;
+      min-width: 0;
+      gap: 14px;
+      --btn-font: 22px;
+      padding: 0 24px 0 18px;
+    }
+  }
+</style>
