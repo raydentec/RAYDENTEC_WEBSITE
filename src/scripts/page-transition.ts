@@ -2,6 +2,10 @@
  * Page changes (global.css, "Changing pages"), set on <html> after the swap — the swap
  * replaces <html>'s attributes, and the transition's animations start after that:
  *
+ * - The columns' layer names (page-<id>, from data-vt-name) are only set while a page change
+ *   runs: a view-transition-name makes the column a backdrop root, which would keep the
+ *   backdrop blurs inside it (Community "Social Accounts", the Start lower third) from
+ *   seeing the background video behind it.
  * - Direction: --page-shift, by the pages' order in the top menu — going right moves the
  *   pages down by the content top (as far as the column's top edge moves between Start and
  *   Games), going left moves them up, the same page doesn't slide.
@@ -31,10 +35,23 @@ function chromeAfter(): Chrome {
   return mq.desktop.matches ? 'sidebar' : 'rail';
 }
 
+const setLayerName = (scroller: HTMLElement | null, on: boolean) => {
+  if (scroller) scroller.style.viewTransitionName = on ? (scroller.dataset.vtName ?? '') : '';
+};
+
 // Before anything changes for the new page (the swap handlers already switch the sidebar).
 document.addEventListener('astro:before-preparation', () => {
+  // The old page's layer is captured when the transition starts, after this.
+  setLayerName(getScroller(), true);
   from = order().indexOf(getScroller()?.dataset.page);
   chromeBefore = chromeNow();
+});
+
+// The new page's layer: named before it is captured, cleared once the transition is over.
+document.addEventListener('astro:before-swap', (e) => {
+  const next = e.newDocument.getElementById('scroller');
+  setLayerName(next, true);
+  void e.viewTransition.finished.finally(() => setLayerName(getScroller(), false));
 });
 
 document.addEventListener('astro:after-swap', () => {

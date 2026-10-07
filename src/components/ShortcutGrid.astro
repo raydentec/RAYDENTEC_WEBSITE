@@ -24,7 +24,8 @@ const { links } = Astro.props;
 const FILLERS = 8;
 ---
 
-<ul class="sc" aria-label="Shortcuts">
+<div class="sc-box">
+<ul class="sc" aria-label="Social accounts">
   {
     links.map((l) => {
       // As CommunityCard: YouTube uses the filled play glyph.
@@ -54,6 +55,7 @@ const FILLERS = 8;
   }
   {Array.from({ length: FILLERS }, () => <li class="sc__fill" data-sc-fill aria-hidden="true" hidden />)}
 </ul>
+</div>
 
 <script>
   /**
@@ -98,6 +100,7 @@ const FILLERS = 8;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(min(var(--tile-min), 100%), 1fr));
     gap: 22px 16px;
+    margin: 0;
     padding: 0;
     list-style: none;
     opacity: var(--o-inactive);
@@ -159,11 +162,45 @@ const FILLERS = 8;
     cursor: default;
   }
 
-  /* Tablet: tiles no larger than the desktop minimum (160px) — a smaller minimum lets more
-     columns fit, which keeps them at or under that across tablet widths. */
+  /*
+   * Desktop: always five columns, so tiles are no larger than at the full content width
+   * (994px column, 28px padding, 16px gaps: 175px) and shrink as the column narrows (the
+   * narrowest desktop column, sidebar open at 1280px, is 834px: 143px). A fixed count also
+   * keeps the tiles from jumping while the column animates its width (crossing from tablet,
+   * opening the sidebar). Tablet (below) counts columns by the box's width (.sc-box).
+   */
+  .sc-box {
+    container: sc / inline-size;
+  }
+  @media (min-width: 1280px) {
+    .sc {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+  }
+
+  /*
+   * Tablet: tiles no larger than at the widest tablet column (776px, 24px padding, 12px
+   * gaps: 136px across five); narrower, they shrink before a column is dropped. Columns
+   * by the box's width (container query): up to 776px five, 628px four, 480px three;
+   * inner width = box − 2 × 24px padding (pages/community.astro).
+   */
+  @media (min-width: 768px) and (max-width: 1279px) {
+    .sc {
+      grid-template-columns: repeat(var(--cols, 5), minmax(0, 1fr));
+    }
+    @container sc (max-width: 628px) {
+      .sc {
+        --cols: 4;
+      }
+    }
+    @container sc (max-width: 480px) {
+      .sc {
+        --cols: 3;
+      }
+    }
+  }
   @media (max-width: 1279px) {
     .sc {
-      --tile-min: 125px;
       gap: 18px 12px;
     }
     .sc__name {

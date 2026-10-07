@@ -111,7 +111,7 @@ const headingId = `games-${index}`;
   /* Page open: whole rows fade in one 180ms step apart, the first one step in too (as
      ContainerFrame does for containers); the games inside don't animate on their own. */
   .grow {
-    animation: grow-fade-in 600ms var(--ease-out) both;
+    animation: grow-fade-in 600ms var(--ease-out) backwards;
     animation-delay: calc(min(var(--row-i, 0) + 1, 8) * 180ms);
   }
   .grow .grow__list > :global(.cf) {

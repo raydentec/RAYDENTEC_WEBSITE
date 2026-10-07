@@ -92,9 +92,11 @@ const heightVars = [height && `--cf-h: ${height}px`, tabletHeight && `--cf-h-tab
   }
 
   /* Page open: containers fade in one after another, from the first — one 180ms step
-     apart, the first one step in too (capped at 8 steps). */
+     apart, the first one step in too (capped at 8 steps). Fill "backwards", not "both": an
+     animation that keeps applying its end state blocks backdrop blurs inside the container
+     (Community "Social Accounts"). The page-open fades elsewhere do the same. */
   .cf {
-    animation: cf-fade-in 600ms var(--ease-out) both;
+    animation: cf-fade-in 600ms var(--ease-out) backwards;
     animation-delay: calc(min(var(--cf-i, 0) + 1, 8) * 180ms);
   }
   @keyframes cf-fade-in {

@@ -76,7 +76,7 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
       aria-label={`${pageLabel} content`}
       data-page={page}
       data-snap="off"
-      style={`view-transition-name: page-${page}`}
+      data-vt-name={`page-${page}`}
     >
       {
         page !== 'start' && (
@@ -192,8 +192,8 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
    * ---------- Rows of games (Games, desktop/tablet; mobile: GameRow.astro) ----------
    * The column scrolls vertically between rows like everywhere else, but spans the whole
    * window so each row (GameRow.astro) runs edge to edge — passing under the rail. With
-   * the desktop sidebar open, it is cut off beside the sidebar instead: midway between the
-   * sidebar and the column (--side-edge). Rows line their games up with the usual column
+   * the desktop sidebar open, the rows' tracks are cut off beside the sidebar instead:
+   * midway between the sidebar and the column (--side-edge). Rows line their games up with the usual column
    * (--row-left, --row-w).
    *
    * Opening / closing the sidebar animates these variables themselves (registered below),
@@ -227,7 +227,6 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
       --side-edge: 0px;
       left: 0;
       width: 100%;
-      clip-path: inset(0 0 0 var(--side-edge));
       /* --side-edge isn't transitioned: closing drops the cut to the window edge at once. */
       transition:
         --row-left var(--t-sidebar) var(--ease-out),
@@ -258,6 +257,12 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
         --row-left var(--t-sidebar) var(--ease-out),
         --row-w var(--t-sidebar) var(--ease-out);
       animation: side-edge-open var(--t-sidebar) var(--ease-out);
+    }
+    /* The cut is on the sideways tracks (they span the window from its left edge), not on
+       the column: a clip-path there would keep backdrop blurs inside the column from seeing
+       the background video. */
+    :global(html[data-sidebar='expanded']) .scroller--rows :global(.grow__track) {
+      clip-path: inset(0 0 0 var(--side-edge));
     }
     @keyframes side-edge-open {
       from {

@@ -24,8 +24,8 @@ const shortcuts = links.slice(0, 10);
 ---
 
 <Shell page="community" rows>
-  <h2 class="ctitle" id="community-shortcuts">Shortcuts</h2>
-  <ContainerFrame index={0} variant="community" active fit bare noTab label="Shortcuts">
+  <h2 class="ctitle" id="community-shortcuts">Social Accounts</h2>
+  <ContainerFrame index={0} variant="community" active fit bare noTab label="Social Accounts">
     <ShortcutGrid links={shortcuts} />
   </ContainerFrame>
   <GameRow title="Links" titles={links.map((l) => l.title)} index={1} row={1} itemsLabel="Links" class="crow">
@@ -62,7 +62,7 @@ const shortcuts = links.slice(0, 10);
     letter-spacing: -0.03em;
     opacity: var(--o-inactive);
     transition: opacity var(--t-state) ease;
-    animation: c-fade-in 600ms var(--ease-out) 180ms both;
+    animation: c-fade-in 600ms var(--ease-out) 180ms backwards;
   }
   .ctitle:has(+ :global(.cf.is-active)),
   .ctitle:has(+ :global(.cf:hover)),
@@ -124,6 +124,27 @@ const shortcuts = links.slice(0, 10);
   @media (max-width: 767px) {
     .ctitle {
       --col-gap: var(--card-gap);
+    }
+  }
+
+  /* Social accounts: a translucent black background behind the tiles, as the Start hero's
+     lower third (LowerThird.astro; no border), the grid padded inside it (ShortcutGrid.astro). */
+  #community-shortcuts + :global(.cf .cf__body) {
+    background: rgba(0, 0, 0, 0.5);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
+  #community-shortcuts + :global(.cf .sc) {
+    padding: 28px;
+  }
+  @media (max-width: 1279px) {
+    #community-shortcuts + :global(.cf .sc) {
+      padding: 24px;
+    }
+  }
+  @media (max-width: 767px) {
+    #community-shortcuts + :global(.cf .sc) {
+      padding: 14px;
     }
   }
 
