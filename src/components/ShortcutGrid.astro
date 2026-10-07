@@ -1,13 +1,16 @@
 ---
 /**
- * Community · Shortcuts container body: a grid of square brand tiles (5 × 2) as large as
- * the columns allow, each with its name underneath, linking straight to the platform.
+ * Community · Shortcuts container body: a grid of square brand tiles (as many columns as
+ * fit, wrapping as the window narrows) as large as the columns allow, each with its name underneath, linking straight to the platform.
  * Tiles are grey (as the "More links" tiles) and show the brand colour on hover / focus.
  * The container draws no box (ContainerFrame bare): the grid sits straight on the page,
  * dimmed while the container isn't selected (as the Community link sections). The
  * container takes its height from the grid (ContainerFrame fit). Tiles as on the Community link
  * sections (CommunityCard.astro). An unpublished link (null / "[PLACEHOLDER]") is shown
  * but not clickable.
+ *
+ * When the last row isn't full, empty half-transparent grey squares finish it (shown by the
+ * script below, which counts the columns the grid currently has).
  */
 import Icon from './Icon.astro';
 import { isPlaceholder, linkAttrs } from '../lib/content';
@@ -17,6 +20,8 @@ interface Props {
 }
 
 const { links } = Astro.props;
+// Fillers for the last row: at most one row's worth (a column count is never above 9).
+const FILLERS = 8;
 ---
 
 <ul class="sc" aria-label="Shortcuts">
@@ -47,13 +52,51 @@ const { links } = Astro.props;
       );
     })
   }
+  {Array.from({ length: FILLERS }, () => <li class="sc__fill" data-sc-fill aria-hidden="true" hidden />)}
 </ul>
 
+<script>
+  /**
+   * Shortcuts: show as many empty squares as the last row needs to be full. The column
+   * count follows the window (auto-fill grid), so it is re-counted on resize.
+   */
+  const COLS = /\S+/g;
+
+  function fill() {
+    document.querySelectorAll<HTMLElement>('.sc').forEach((grid) => {
+      const cols = (getComputedStyle(grid).gridTemplateColumns.match(COLS) ?? []).length;
+      const items = grid.querySelectorAll('li:not([data-sc-fill])').length;
+      const needed = cols ? (cols - (items % cols)) % cols : 0;
+      grid.querySelectorAll<HTMLElement>('[data-sc-fill]').forEach((f, i) => (f.hidden = i >= needed));
+    });
+  }
+
+  let observer: ResizeObserver | null = null;
+  document.addEventListener('astro:page-load', () => {
+    observer?.disconnect();
+    observer = null;
+    const grids = document.querySelectorAll('.sc');
+    if (!grids.length) return;
+    observer = new ResizeObserver(fill);
+    grids.forEach((g) => observer?.observe(g));
+    fill();
+  });
+  document.addEventListener('astro:before-swap', () => {
+    observer?.disconnect();
+    observer = null;
+  });
+</script>
+
 <style>
-  /* Five equal columns; each tile is a square filling its column, icon scaled with it. */
+  /*
+   * As many equal columns as fit tiles at least --tile-min wide (five across the full
+   * desktop column, fewer as the window narrows — the rest wrap into more rows, as the
+   * "More links" tiles); each tile a square filling its column, icon scaled with it.
+   */
   .sc {
+    --tile-min: 160px;
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(var(--tile-min), 100%), 1fr));
     gap: 22px 16px;
     padding: 0;
     list-style: none;
@@ -71,6 +114,16 @@ const { links } = Astro.props;
     align-items: center;
     gap: 10px;
     color: var(--c-white);
+  }
+  /* Empty square finishing the last row: a tile's grey, half transparent (no name below). */
+  .sc__fill {
+    align-self: start;
+    aspect-ratio: 1;
+    background: var(--c-link-tile);
+    opacity: 0.5;
+  }
+  .sc__fill[hidden] {
+    display: none;
   }
   .sc__tile {
     display: flex;
@@ -106,25 +159,28 @@ const { links } = Astro.props;
     cursor: default;
   }
 
+  /* Tablet: tiles no larger than the desktop minimum (160px) — a smaller minimum lets more
+     columns fit, which keeps them at or under that across tablet widths. */
   @media (max-width: 1279px) {
     .sc {
+      --tile-min: 125px;
       gap: 18px 12px;
     }
     .sc__name {
       font-size: 14px;
     }
   }
-  /* Mobile: tighter gaps. */
+  /* Mobile: smaller tiles (three across a regular phone), tighter gaps. */
   @media (max-width: 767px) {
     .sc {
-      gap: 16px 4px;
+      --tile-min: 96px;
+      gap: 16px 12px;
     }
     .sc__link {
       gap: 7px;
     }
-    /* Names on one line, scaled to fit a fifth of the row ("ArtStation" ≈ 5.2em wide). */
     .sc__name {
-      font-size: min(12px, calc((100vw - 2 * var(--gutter) - 16px) / 5 / 5.4));
+      font-size: 13px;
       letter-spacing: -0.02em;
     }
   }

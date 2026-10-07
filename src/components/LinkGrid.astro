@@ -2,7 +2,9 @@
 /**
  * Community · "More links" container body: grid of flat link tiles — brand icon, then
  * the label (as on raydentec.com's "more links"). Its headline sits above the container
- * (pages/community.astro).
+ * (pages/community.astro). The container draws no box (ContainerFrame bare): the tiles sit
+ * straight on the page, lined up with the content column, and dim while the container
+ * isn't selected (as the Shortcuts tiles, ShortcutGrid.astro).
  */
 import Icon from './Icon.astro';
 import { linkAttrs } from '../lib/content';
@@ -36,7 +38,13 @@ const { links } = Astro.props;
     justify-content: center;
     gap: 22px;
     height: 100%;
-    padding: 28px 36px 28px 28px;
+    opacity: var(--o-inactive);
+    transition: opacity var(--t-state) ease;
+  }
+  :global(.cf.is-active) .lg,
+  :global(.cf:hover) .lg,
+  :global(.cf:focus-within) .lg {
+    opacity: 1;
   }
   .lg__grid {
     display: grid;
@@ -82,9 +90,6 @@ const { links } = Astro.props;
   }
 
   @media (max-width: 1279px) {
-    .lg {
-      padding: 24px 26px 24px 24px;
-    }
     .lg__grid {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
@@ -98,7 +103,6 @@ const { links } = Astro.props;
 
   @media (max-width: 767px) {
     .lg {
-      padding: 0;
       gap: 16px;
     }
     .lg__grid {

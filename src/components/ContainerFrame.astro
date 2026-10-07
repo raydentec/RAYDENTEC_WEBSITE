@@ -318,7 +318,7 @@ const heightVars = [height && `--cf-h: ${height}px`, tabletHeight && `--cf-h-tab
       border-top: none;
     }
     /* No tab above it: the body keeps its top border. */
-    .cf--notab.is-active .cf__body {
+    .cf--notab:not(.cf--bare).is-active .cf__body {
       border-top: 2px solid var(--c-red);
     }
     .cf--bare .cf__body {

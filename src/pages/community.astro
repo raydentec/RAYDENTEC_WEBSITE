@@ -39,8 +39,8 @@ const shortcuts = links.slice(0, 10);
   </GameRow>
   {
     grids.map((g, i) => [
-      <h2 class="ctitle" id={`community-more-${i}`}>{g.title}</h2>,
-      <ContainerFrame index={links.length + i + 1} variant="community" fit noTab label={g.title}>
+      <h2 class="ctitle ctitle--more" id={`community-more-${i}`} data-cf-head>{g.title}</h2>,
+      <ContainerFrame index={links.length + i + 1} variant="community" fit noTab bare label={g.title}>
         <LinkGrid links={g.links} />
       </ContainerFrame>,
     ])
@@ -125,6 +125,25 @@ const shortcuts = links.slice(0, 10);
     .ctitle {
       --col-gap: var(--card-gap);
     }
+  }
+
+  /*
+   * More ways to connect: while not selected it works as an unselected Games row — dimmed
+   * (also when hovered), its tiles out of reach, and the whole section, headline included
+   * (data-cf-head, scripts/snap.ts), one click target that scrolls it into place.
+   */
+  .ctitle--more:has(+ :global(.cf:not(.is-active))) {
+    opacity: var(--o-inactive);
+    cursor: pointer;
+  }
+  .ctitle--more + :global(.cf:not(.is-active)) {
+    cursor: pointer;
+  }
+  .ctitle--more + :global(.cf:not(.is-active) > *) {
+    pointer-events: none;
+  }
+  .ctitle--more + :global(.cf:not(.is-active) .lg) {
+    opacity: var(--o-inactive);
   }
 
   /* Main links: all cards as tall as the tallest; the card fills its frame's body so its
