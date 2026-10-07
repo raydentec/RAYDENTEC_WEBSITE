@@ -22,12 +22,11 @@ const { links } = Astro.props;
 <ul class="sc" aria-label="Shortcuts">
   {
     links.map((l) => {
-      // As CommunityCard: YouTube uses the filled play glyph; X and GitHub get a light edge.
+      // As CommunityCard: YouTube uses the filled play glyph.
       const icon = l.platform === 'youtube' ? 'play-filled' : l.icon;
-      const edge = l.platform === 'x' || l.platform === 'github';
       const inner = (
         <>
-          <span class:list={['sc__tile', { 'sc__tile--edge': edge }]} style={`--brand: ${l.color}`}>
+          <span class="sc__tile" style={`--brand: ${l.color}`}>
             <Icon name={icon} size={30} />
           </span>
           <span class="sc__name">{l.title}</span>
@@ -90,9 +89,6 @@ const { links } = Astro.props;
   .sc__tile :global(svg) {
     width: 40%;
     height: 40%;
-  }
-  .sc__tile--edge {
-    border: 1px solid rgba(255, 255, 255, 0.35);
   }
   .sc__name {
     font-weight: 600;

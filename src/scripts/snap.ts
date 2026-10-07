@@ -98,16 +98,19 @@ function updateTail(scroller: HTMLElement) {
 }
 
 /**
- * Projects, Games and Start: clicking a container that isn't selected (anywhere but its
+ * Projects, Games, Start and Community: clicking a container that isn't selected (anywhere but its
  * links / buttons) scrolls it onto the snap line; once scrolling settles it becomes the
- * selected one. (A sideways row takes such clicks as a whole, GameRow.astro.)
+ * selected one. (A sideways row takes such clicks as a whole, GameRow.astro.) A headline
+ * marked data-cf-head belongs to the container right after it (Start "About me") and
+ * takes such clicks too, as a row's headline does.
  */
-const CLICK_TO_SELECT = ['projects', 'games', 'start'];
+const CLICK_TO_SELECT = ['projects', 'games', 'start', 'community'];
 document.addEventListener('click', (e) => {
   const scroller = getScroller();
   const target = e.target as Element | null;
   if (!scroller || !target || !CLICK_TO_SELECT.includes(scroller.dataset.page ?? '') || target.closest('a, button')) return;
-  const cf = containers(scroller).find((c) => c.contains(target));
+  const head = target.closest('[data-cf-head]')?.nextElementSibling;
+  const cf = containers(scroller).find((c) => c.contains(target) || c === head);
   if (!cf || cf.classList.contains('is-active')) return;
   scroller.scrollBy({ top: snapTop(cf) - snapLine(scroller), behavior: scrollBehavior() });
 });

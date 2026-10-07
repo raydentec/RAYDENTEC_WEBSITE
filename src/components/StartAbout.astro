@@ -8,7 +8,8 @@
  * beside it (as on the Projects containers). The section
  * headline sits above it and rides along with it
  * (its scroll-margin-top reaches up to the headline, as the Projects category headlines);
- * it is lit while the container is selected. Boxed to the content column like the explore
+ * it is lit while the container is selected and, like a row's headline, clicking it
+ * scrolls to the container (data-cf-head, scripts/snap.ts). Boxed to the content column like the explore
  * row's headline (--row-left / --row-w, Shell.astro).
  */
 import ContainerFrame from './ContainerFrame.astro';
@@ -31,7 +32,7 @@ const [headline, ...leadParagraphs] = lead.split('\n');
 ---
 
 <section class="about" aria-labelledby="about-title">
-  <h2 class="about__title" id="about-title">{title}</h2>
+  <h2 class="about__title" id="about-title" data-cf-head>{title}</h2>
   <ContainerFrame variant="start" index={3} label={title}>
     <div class="about__content">
       <img class="about__media" src={asset(image)} alt={imageAlt} width="1920" height="1080" loading="lazy" decoding="async" />
@@ -79,7 +80,8 @@ const [headline, ...leadParagraphs] = lead.split('\n');
     scroll-margin-top: calc(var(--row-title) + var(--title-gap));
   }
   /* A container that isn't selected can be clicked to scroll to it (scripts/snap.ts). */
-  .about :global(.cf:not(.is-active)) {
+  .about :global(.cf:not(.is-active)),
+  .about:not(:has(:global(.cf.is-active))) .about__title {
     cursor: pointer;
   }
 

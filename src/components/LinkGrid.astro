@@ -1,25 +1,20 @@
 ---
 /**
  * Community · "More links" container body: grid of flat link tiles — brand icon, then
- * the label (as on raydentec.com's "more links").
+ * the label (as on raydentec.com's "more links"). Its headline sits above the container
+ * (pages/community.astro).
  */
 import Icon from './Icon.astro';
 import { linkAttrs } from '../lib/content';
 
 interface Props {
-  eyebrow: string;
-  title: string;
   links: { icon?: string; label: string; href: string }[];
 }
 
-const { eyebrow, title, links } = Astro.props;
+const { links } = Astro.props;
 ---
 
 <div class="lg">
-  <div class="lg__head">
-    <span class="eyebrow">{eyebrow}</span>
-    <h2 class="lg__title">{title}</h2>
-  </div>
   <ul class="lg__grid">
     {
       links.map((l) => (
@@ -42,16 +37,6 @@ const { eyebrow, title, links } = Astro.props;
     gap: 22px;
     height: 100%;
     padding: 28px 36px 28px 28px;
-  }
-  .lg__head {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .lg__title {
-    font-weight: 600;
-    font-size: 28px;
-    line-height: 1.05;
   }
   .lg__grid {
     display: grid;
@@ -100,9 +85,6 @@ const { eyebrow, title, links } = Astro.props;
     .lg {
       padding: 24px 26px 24px 24px;
     }
-    .lg__title {
-      font-size: 25px;
-    }
     .lg__grid {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
@@ -118,9 +100,6 @@ const { eyebrow, title, links } = Astro.props;
     .lg {
       padding: 0;
       gap: 16px;
-    }
-    .lg__title {
-      font-size: 22px;
     }
     .lg__grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));

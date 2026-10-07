@@ -31,8 +31,7 @@ interface Props {
   /** Height from the content instead of a fixed size (desktop/tablet; mobile always is). */
   fit?: boolean;
   /**
-   * No number tab / red column (Community Shortcuts). The body keeps its place right of
-   * where the column would be, lined up with the other containers.
+   * No number tab / red column (Community Shortcuts); the body spans the full width.
    */
   noTab?: boolean;
   /** Position on the page (0-based): staggers the fade-in when the page opens. */
@@ -198,6 +197,11 @@ const heightVars = [height && `--cf-h: ${height}px`, tabletHeight && `--cf-h-tab
   .cf--notab .cf__tab {
     display: none;
   }
+  .cf--notab .cf__body,
+  .cf--notab.cf--fit .cf__body {
+    left: 0;
+    margin-left: 0;
+  }
 
   /* Fit: the body sits in the flow (right of the red column), so the content sets the height. */
   @media (min-width: 768px) {
@@ -312,6 +316,10 @@ const heightVars = [height && `--cf-h: ${height}px`, tabletHeight && `--cf-h-tab
     }
     .cf.is-active .cf__body {
       border-top: none;
+    }
+    /* No tab above it: the body keeps its top border. */
+    .cf--notab.is-active .cf__body {
+      border-top: 2px solid var(--c-red);
     }
     .cf--bare .cf__body {
       padding: 0;

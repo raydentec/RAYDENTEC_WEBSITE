@@ -139,7 +139,7 @@ const community = defineCollection({
     z.object({
       order: z.number(),
       type: z.literal('linkGrid'),
-      eyebrow: z.string(),
+      /** Headline above the container (pages/community.astro). */
       title: z.string(),
       links: z.array(z.object({ icon: z.string().optional(), label: z.string(), href })),
     }),

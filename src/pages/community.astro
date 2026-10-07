@@ -1,6 +1,7 @@
 ---
 import CommunityCard from '../components/CommunityCard.astro';
 import ContainerFrame from '../components/ContainerFrame.astro';
+import GameRow from '../components/GameRow.astro';
 import LinkGrid from '../components/LinkGrid.astro';
 import ShortcutGrid from '../components/ShortcutGrid.astro';
 import Shell from '../layouts/Shell.astro';
@@ -11,51 +12,38 @@ const items = (await getItems('community')).map(({ data }) => data);
 type Item = (typeof items)[number];
 type Link = Exclude<Item, { type: 'linkGrid' }>;
 
-// Link items go two per container (in JSON order), each in its own framed section;
-// the "More links" grid keeps a container of its own. Community containers are
-// unnumbered (same frame and red column / notch tab, no number).
-const containers: ({ kind: 'pair'; links: Link[] } | { kind: 'grid'; item: Extract<Item, { type: 'linkGrid' }> })[] = [];
-for (const item of items) {
-  if (item.type === 'linkGrid') {
-    containers.push({ kind: 'grid', item });
-    continue;
-  }
-  const last = containers.at(-1);
-  if (last?.kind === 'pair' && last.links.length < 2) last.links.push(item);
-  else containers.push({ kind: 'pair', links: [item] });
-}
+// Main links: every link item (JSON order) as its own numbered card in a sideways row, as the
+// Games rows (GameRow.astro); the "More links" grid keeps a container of its own below,
+// headed like Shortcuts (as the Projects category headlines).
+const links = items.filter((i): i is Link => i.type !== 'linkGrid');
+const grids = items.filter((i): i is Extract<Item, { type: 'linkGrid' }> => i.type === 'linkGrid');
 
 // Shortcuts: the first ten link items (JSON order) as tiles, in a container of their own
 // at the top, headed "Shortcuts" (as the Projects category headlines).
-const shortcuts = items.filter((i): i is Link => i.type !== 'linkGrid').slice(0, 10);
+const shortcuts = links.slice(0, 10);
 ---
 
-<Shell page="community">
+<Shell page="community" rows>
   <h2 class="ctitle" id="community-shortcuts">Shortcuts</h2>
   <ContainerFrame index={0} variant="community" active fit bare noTab label="Shortcuts">
     <ShortcutGrid links={shortcuts} />
   </ContainerFrame>
+  <GameRow title="Links" titles={links.map((l) => l.title)} index={1} row={1} itemsLabel="Links" class="crow">
+    {
+      links.map((l, i) => (
+        <ContainerFrame index={i + 1} variant="game" number={i + 1} label={l.title}>
+          <CommunityCard {...l} framed />
+        </ContainerFrame>
+      ))
+    }
+  </GameRow>
   {
-    containers.map((c, i) =>
-      c.kind === 'grid' ? (
-        <ContainerFrame index={i + 1} variant="community" label={c.item.title}>
-          <LinkGrid {...c.item} />
-        </ContainerFrame>
-      ) : (
-        <ContainerFrame
-          index={i + 1}
-          variant="community"
-          bare
-          label={c.links.map((l) => l.title).join(' and ')}
-        >
-          <div class="pair">
-            {c.links.map((l) => (
-              <CommunityCard {...l} />
-            ))}
-          </div>
-        </ContainerFrame>
-      ),
-    )
+    grids.map((g, i) => [
+      <h2 class="ctitle" id={`community-more-${i}`}>{g.title}</h2>,
+      <ContainerFrame index={links.length + i + 1} variant="community" fit noTab label={g.title}>
+        <LinkGrid links={g.links} />
+      </ContainerFrame>,
+    ])
   }
 </Shell>
 
@@ -68,7 +56,6 @@ const shortcuts = items.filter((i): i is Link => i.type !== 'linkGrid').slice(0,
   .ctitle {
     --title-size: 30px;
     --title-gap: 12px;
-    margin-bottom: calc(var(--title-gap) - var(--card-gap));
     font-weight: 700;
     font-size: var(--title-size);
     line-height: 1;
@@ -112,15 +99,66 @@ const shortcuts = items.filter((i): i is Link => i.type !== 'linkGrid').slice(0,
     }
   }
 
-  /* Two framed sections with a transparent gap between them. */
-  .pair {
-    display: flex;
-    gap: var(--card-gap);
-    height: 100%;
+  /*
+   * The column spans the window (Shell rows), so the rows' cards run edge to edge; the
+   * Shortcuts headline and the plain containers are boxed to the usual column (--row-left /
+   * --row-w, as the rows' headlines). Containers sit as far apart as the rows (Shell.astro:
+   * 56px, tablet 52px; mobile the container gap), so the headline's offset uses that gap.
+   */
+  .ctitle {
+    --col-gap: 56px;
+    margin-bottom: calc(var(--title-gap) - var(--col-gap));
+  }
+  @media (min-width: 768px) {
+    .ctitle,
+    :global([data-page='community'] .column > .cf) {
+      margin-left: var(--row-left);
+      width: var(--row-w);
+    }
+  }
+  @media (min-width: 768px) and (max-width: 1279px) {
+    .ctitle {
+      --col-gap: 52px;
+    }
   }
   @media (max-width: 767px) {
-    .pair {
-      flex-direction: column;
+    .ctitle {
+      --col-gap: var(--card-gap);
     }
+  }
+
+  /* Main links: all cards as tall as the tallest; the card fills its frame's body so its
+     button sits at the bottom (as the Start explore row). Desktop / tablet: cards half the
+     content column wide, their bodies at least as tall as a standard container (--card-h),
+     the extra room going between the text and the button. */
+  :global(.crow .grow__list) {
+    align-items: stretch;
+  }
+  @media (min-width: 768px) {
+    :global(.crow.crow) {
+      --game-w: calc(var(--row-w) / 2);
+    }
+    /* Indicator as wide as one card (GameRow's is half a game). */
+    :global(.crow .grow__dots) {
+      width: var(--game-w);
+    }
+    :global(.crow .grow__list > .cf > .cf__body) {
+      min-height: var(--card-h);
+    }
+  }
+  :global(.crow .grow__list > .cf) {
+    display: flex;
+    flex-direction: column;
+  }
+  :global(.crow .grow__list > .cf > .cf__body) {
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+  }
+  :global(.crow .grow__list > .cf .cf__content) {
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+    height: auto;
   }
 </style>

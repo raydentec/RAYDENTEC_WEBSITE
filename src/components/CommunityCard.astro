@@ -5,6 +5,9 @@
  * Community container (pages/community.astro), each with its own black background and
  * red border — bright 2px when the container is selected, dim 1.5px otherwise, like the
  * standard frame. When the container is inactive the section's text dims, not its box.
+ *
+ * `framed`: the card is the body of a numbered ContainerFrame of its own (the Community
+ * links row) — no box of its own then; the frame draws the border and dims the content.
  */
 import Icon from './Icon.astro';
 import LinkButton from './LinkButton.astro';
@@ -18,16 +21,17 @@ interface Props {
   caption: string;
   href: string | null;
   buttonLabel: string;
+  framed?: boolean;
 }
 
-const { platform, icon, color, title, description, caption, href, buttonLabel } = Astro.props;
+const { platform, icon, color, title, description, caption, href, buttonLabel, framed = false } = Astro.props;
 
 // YouTube uses the filled play glyph; X and GitHub tiles get a light edge (dark fills).
 const tileIcon = platform === 'youtube' ? 'play-filled' : icon;
 const tileEdge = platform === 'x' || platform === 'github';
 ---
 
-<section class="card" aria-label={title}>
+<section class:list={['card', { 'card--framed': framed }]} aria-label={title}>
   <div class="card__inner">
     <div class="card__head">
       <span class:list={['card__tile', { 'card__tile--edge': tileEdge }]} style={`background: ${color}`}>
@@ -123,9 +127,24 @@ const tileEdge = platform === 'x' || platform === 'github';
     color: var(--c-grey);
   }
 
+  /* Framed: the ContainerFrame around it draws the box and dims the content. */
+  .card--framed,
+  :global(.cf.is-active) .card--framed {
+    border: 0;
+    background: none;
+    padding: 20px;
+  }
+  .card--framed .card__inner {
+    opacity: 1;
+  }
+
   @media (max-width: 1279px) {
     .card {
       padding: 20px;
+    }
+    .card--framed,
+    :global(.cf.is-active) .card--framed {
+      padding: 16px;
     }
     .card__inner {
       gap: 12px;
@@ -165,6 +184,12 @@ const tileEdge = platform === 'x' || platform === 'github';
     .card {
       height: auto;
       padding: 14px;
+    }
+    /* The frame pads its body here (ContainerFrame). */
+    .card--framed,
+    :global(.cf.is-active) .card--framed {
+      flex: 1 0 auto;
+      padding: 0;
     }
     .card__inner {
       gap: 14px;

@@ -115,8 +115,7 @@
     },
     {
       "type": "linkGrid",
-      "eyebrow": "Other links",
-      "title": "More ways to connect:",
+      "title": "More ways to connect",
       "links": [
         {
           "icon": "threads",
