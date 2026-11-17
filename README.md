@@ -1,7 +1,7 @@
 # RAYDENTEC_WEBSITE_1
 
 RAYDENTEC personal site: Astro + TypeScript (strict), static output, no UI framework.
-Built from the design handoff in `raydentec-handoff-v2/` (see `HANDOFF.md` there).
+See `AGENTS.md` for architecture and conventions.
 
 ## Commands
 
