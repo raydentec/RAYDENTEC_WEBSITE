@@ -123,9 +123,6 @@ clips at 1024, which is a separate breakpoint).
 
 ## Gotchas
 
-- The repo is on an external volume, so git reports every file as modified (mode
-  100644→100755 only, no content changes). `git diff --stat` shows 0 insertions. Don't commit
-  these mode changes. `git config core.fileMode false` silences them.
 - Astro needs Node ≥ 22.12 (local: Homebrew Node 26; Amplify: Node 22). Older Node makes
   `astro check` / `build` / `dev` refuse to run.
 
