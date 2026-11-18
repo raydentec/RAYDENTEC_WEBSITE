@@ -44,6 +44,10 @@ const [videos, socials] = site.ctas;
    * It fades in (after the sidebar has faded out) and out part by part — logo, EXPAND,
    * Join me — not as a whole: opacity on the rail itself would cut EXPAND's backdrop blur
    * off from what's behind the rail until the fade ended. --rail-fade is that fade.
+   *
+   * Hidden, EXPAND also drops its backdrop blur (once the fade-out has ended; it comes back
+   * at once when the rail shows): Safari painted the blur of the invisible button as a
+   * blurry square when capturing the page for page-change transitions.
    */
   .rail {
     position: relative;
@@ -58,14 +62,22 @@ const [videos, socials] = site.ctas;
   .rail__logo,
   .rail__expand,
   .rail__join {
-    --rail-fade: opacity var(--t-fade) ease;
+    --rail-fade: opacity var(--t-fade) ease, backdrop-filter 0s linear var(--t-fade), -webkit-backdrop-filter 0s linear var(--t-fade);
     opacity: 0;
+  }
+  .rail__expand {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
   :global(html[data-sidebar='collapsed']) .rail__logo,
   :global(html[data-sidebar='collapsed']) .rail__expand,
   :global(html[data-sidebar='collapsed']) .rail__join {
     --rail-fade: opacity var(--t-fade) ease var(--t-fade);
     opacity: 1;
+  }
+  :global(html[data-sidebar='collapsed']) .rail__expand {
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
   }
   .rail__logo,
   .rail__join {
@@ -222,6 +234,10 @@ const [videos, socials] = site.ctas;
       --rail-fade: opacity 0s;
       opacity: 1;
     }
+    .rail__expand {
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
+    }
     .rail__join-label {
       font-size: 14px;
     }
@@ -242,7 +258,11 @@ const [videos, socials] = site.ctas;
   :global(html[data-hero-active]) .rail__logo,
   :global(html[data-hero-active]) .rail__expand,
   :global(html[data-hero-active]) .rail__join {
-    --rail-fade: opacity var(--t-fade) ease;
+    --rail-fade: opacity var(--t-fade) ease, backdrop-filter 0s linear var(--t-fade), -webkit-backdrop-filter 0s linear var(--t-fade);
     opacity: 0;
+  }
+  :global(html[data-hero-active]) .rail__expand {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 </style>

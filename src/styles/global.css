@@ -277,9 +277,12 @@ dd {
  * never covers them. Normally they just stay as they are (like the nav). When a page
  * change shows or hides them — Start has none on the hero, other pages open with the
  * sidebar (tablet: the rail) — <html data-chrome-fade="<before>-<after>"> is set
- * (scripts/page-transition.ts) and they cross-fade instead: the old one fading out as
- * the new one fades in. A rail that goes away only fades out its old image; its own
- * fade-out (Rail.astro) stays hidden, as the two together made it flicker.
+ * (scripts/page-transition.ts) and they fade one after the other instead, as when the
+ * sidebar opens or closes on a page: the old one fades out over the first half of the
+ * page change, then the new one fades in over the second half. Overlapping, the old
+ * rail's EXPAND (with its captured backdrop blur) and logo showed as a blurry square
+ * over the new sidebar's logo. A rail that goes away only fades out its old image; its
+ * own fade-out (Rail.astro) stays hidden, as the two together made it flicker.
  */
 /* The rail's parts are positioned on their own (Rail.astro), so each gets a layer. */
 .rail__logo {
@@ -318,10 +321,10 @@ html[data-chrome-fade]::view-transition-old(rail-expand),
 html[data-chrome-fade]::view-transition-old(rail-join),
 html[data-chrome-fade]::view-transition-old(sidebar) {
   display: block;
-  animation: page-fade-out 250ms ease both;
+  animation: page-fade-out 125ms ease both;
 }
 html[data-chrome-fade]::view-transition-new(sidebar) {
-  animation: page-fade-in 250ms ease both;
+  animation: page-fade-in 125ms ease 125ms both;
 }
 html[data-chrome-fade]::view-transition-new(rail-logo),
 html[data-chrome-fade]::view-transition-new(rail-expand),
@@ -333,7 +336,7 @@ html[data-chrome-fade$='-rail']::view-transition-new(rail-logo),
 html[data-chrome-fade$='-rail']::view-transition-new(rail-expand),
 html[data-chrome-fade$='-rail']::view-transition-new(rail-join) {
   display: block;
-  animation: page-fade-in 250ms ease both;
+  animation: page-fade-in 125ms ease 125ms both;
 }
 
 /*
