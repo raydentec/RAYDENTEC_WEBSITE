@@ -45,6 +45,20 @@ function syncCurrentPage() {
   if (label) label.textContent = current?.textContent ?? getScroller()?.dataset.pageLabel ?? '';
 }
 
+/**
+ * The current page's menu item (top nav / mobile menu: aria-current) does nothing — no
+ * reload of the page you're on. Cancelled in the capture phase, before ClientRouter's own
+ * click handler, which leaves cancelled clicks alone. The mobile menu still closes (below).
+ */
+document.addEventListener(
+  'click',
+  (e) => {
+    const link = (e.target as Element | null)?.closest('.topnav__link, .mmenu__row');
+    if (link?.getAttribute('aria-current') === 'page') e.preventDefault();
+  },
+  { capture: true },
+);
+
 document.addEventListener('click', (e) => {
   const target = e.target as Element | null;
   if (target?.closest('[data-mmenu-toggle]')) setMenu(getRootState('mmenu') !== 'open');

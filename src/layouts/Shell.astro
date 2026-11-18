@@ -112,7 +112,8 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
     </div>
     <ScrollControl />
     <BgToggle class="bg-corner" />
-    <!-- Page overlays outside the column (Projects filter panel): above SCROLL, below the menu. -->
+    <!-- Page overlays outside the column (Projects FILTER button + filter panel), so they don't
+         slide with the page on page changes (global.css); below the mobile menu. -->
     <slot name="overlay" />
     <MobileMenu current={menuPage} />
     <Footer />

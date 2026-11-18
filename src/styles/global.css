@@ -271,6 +271,32 @@ dd {
 ::view-transition-new(mobile-header) {
   animation: none;
 }
+/*
+ * Projects FILTER (FilterButton.astro, in Shell's overlay slot, not the column): part of
+ * the fixed bottom controls like SCROLL, so it doesn't slide with the page. Only Projects
+ * has it, so it fades out in place when leaving Projects and in when arriving (a group with
+ * just an old or just a new image); old and new both there → the new one at once.
+ */
+.pfilter-ctl {
+  view-transition-name: filter-ctl;
+}
+::view-transition-group(filter-ctl) {
+  z-index: 10;
+  animation: none;
+}
+::view-transition-old(filter-ctl) {
+  display: none;
+}
+::view-transition-new(filter-ctl) {
+  animation: none;
+}
+::view-transition-old(filter-ctl):only-child {
+  display: block;
+  animation: page-fade-out 160ms cubic-bezier(0.76, 0, 0.24, 1) both;
+}
+::view-transition-new(filter-ctl):only-child {
+  animation: page-fade-in 160ms cubic-bezier(0.76, 0, 0.24, 1) both;
+}
 
 /*
  * The rail and the sidebar get layers of their own too, above the pages, so the new page

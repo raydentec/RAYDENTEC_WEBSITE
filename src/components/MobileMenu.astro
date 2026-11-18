@@ -104,6 +104,8 @@ const currentLabel = site.pages.find((p) => p.id === current)?.label ?? '';
     border-left: 6px solid var(--c-red);
     background: rgba(204, 24, 30, 0.12);
     color: var(--c-white);
+    /* Tapping it only closes the menu (scripts/mobile-menu.ts). */
+    cursor: default;
   }
   .mmenu__index {
     font-family: var(--f-mono);

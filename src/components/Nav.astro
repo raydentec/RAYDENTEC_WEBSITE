@@ -58,8 +58,10 @@ const site = await getSite();
   .topnav__link:hover {
     color: rgba(255, 255, 255, 0.8);
   }
+  /* The current page isn't a link you can follow (scripts/mobile-menu.ts). */
   .topnav__link[aria-current='page'] {
     color: var(--c-white);
+    cursor: default;
   }
   @media (max-width: 767px) {
     .topnav {
