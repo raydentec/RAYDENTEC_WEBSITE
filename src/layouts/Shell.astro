@@ -168,10 +168,11 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
   .scroller:focus {
     outline: none;
   }
-  /* Desktop, sidebar expanded: column sits right of the sidebar (x = 416). */
+  /* Desktop, sidebar expanded: column stays centred when that clears the sidebar, else sits
+     right beside it (x = 416) — --col-left-open, global.css. */
   @media (min-width: 1280px) {
     :global(html[data-sidebar='expanded']) .scroller {
-      left: var(--col-left-expanded);
+      left: var(--col-left-open);
       width: var(--content-w-expanded);
     }
   }
@@ -284,11 +285,12 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
     }
   }
   @media (min-width: 1280px) {
-    /* Sidebar open: the column sits right of it; games are cut off beside the sidebar. */
+    /* Sidebar open: the column at --col-left-open (centred, or beside the sidebar when there's
+       no room); games are cut off between the sidebar and the column. */
     :global(html[data-sidebar='expanded']) .scroller--rows {
-      --row-left: var(--col-left-expanded);
+      --row-left: var(--col-left-open);
       --row-w: var(--content-w-expanded);
-      --side-edge: calc((var(--gutter) + var(--sidebar-w) + var(--col-left-expanded)) / 2);
+      --side-edge: calc((var(--gutter) + var(--sidebar-w) + var(--col-left-open)) / 2);
       left: 0;
       width: 100%;
       /* Opening: the cut starts just left of the selected game — the column's closed-sidebar
