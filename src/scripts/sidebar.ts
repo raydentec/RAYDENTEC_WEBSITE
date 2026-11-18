@@ -207,8 +207,11 @@ document.addEventListener(ACTIVE_CHANGE, (e) => {
   if (firstActive) {
     // Container 1 selected: cancel any running countdown, so an expanded EXPAND stays so.
     window.clearTimeout(expandCollapseTimer);
-    // Tablet: selecting container 1 also expands it (animated) if it isn't already.
-    if (isTablet() && !wasFirst && getRootState('expandOpen') === null) openExpandButton();
+    // Coming back to container 1 from a lower one expands it again (animated), as on page
+    // load — wherever the rail shows: tablet, and desktop with the sidebar closed (Start's
+    // explore row; other pages open the sidebar at the top, which hides the rail).
+    const railShown = isTablet() || (mq.desktop.matches && getRootState('sidebar') === 'collapsed');
+    if (railShown && !wasFirst && getRootState('expandOpen') === null) openExpandButton();
   }
   // Leaving container 1 with EXPAND expanded: the normal countdown starts now.
   if (wasFirst && !firstActive && getRootState('expandOpen') !== null && !expandBtn()?.matches(':hover, :focus-visible')) {

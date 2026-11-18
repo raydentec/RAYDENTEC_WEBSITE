@@ -1,6 +1,6 @@
 # AGENTS.md: RAYDENTEC website
 
-The RAYDENTEC personal site (raydentec.com): a creator portfolio with four menu pages
+The RAYDENTEC personal site, live at **https://www.raydentec.com**: a creator portfolio with four menu pages
 (Start, Games, Projects, Community) plus Legal and 404 pages. All content is laid out as
 scroll-snapping columns of numbered "containers", in three responsive layouts.
 
@@ -11,7 +11,7 @@ scroll-snapping columns of numbered "containers", in three responsive layouts.
   scoped `<style>` in each component. Interactivity is small TS modules in `src/scripts/`.
 - **Content collections** with Zod schemas (`src/content.config.ts`): bad content fails the build.
 - **`<ClientRouter />`** (view transitions) with `transition:persist` on the shell.
-- Hosting: **AWS Amplify** (`amplify.yml`: Node 22, `npm ci`, `npm run build`, serves `dist/`).
+- Hosting: **AWS Amplify** (`amplify.yml`: Node 22, `npm ci`, `npm run build`, serves `dist/`), live at https://www.raydentec.com.
 
 ## Development
 
