@@ -21,7 +21,7 @@ const [videos, socials] = site.ctas;
     aria-label="Expand profile sidebar"
   >
     <Icon name="arrowRight" size={30} />
-    <span class="rail__expand-label" aria-hidden="true">EXPAND</span>
+    <span class="rail__expand-mask" aria-hidden="true"><span class="rail__expand-label">EXPAND</span></span>
   </button>
   <div class="rail__join">
     <p class="rail__join-label">Join me:</p>
@@ -124,6 +124,25 @@ const [videos, socials] = site.ctas;
   :global(html:not([data-expand-open])) .rail__expand-label {
     opacity: 0;
     transition: none;
+  }
+  /*
+   * Label mask: the expandable part of the button only — everything but the arrow's
+   * square (at the top), so the label never shows over the arrow or outside the button, and is
+   * fully hidden while the button is collapsed to the square.
+   * Safari: the fading label gets a GPU layer of its own, which neither overflow nor
+   * clip-path on a plain parent clips. translateZ(0) puts the mask on a layer too, and
+   * Safari then applies its clip to everything inside it.
+   */
+  .rail__expand-mask {
+    position: absolute;
+    /* The square is --rail-w tall outside; this box starts inside the 2px border. */
+    top: calc(var(--rail-w) - 2px);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    clip-path: inset(0);
+    transform: translateZ(0);
   }
   .rail__expand-label {
     position: absolute;

@@ -14,9 +14,11 @@ import Icon from './Icon.astro';
 ---
 
 <button type="button" class="scroll-ctl ctl" data-scroll-ctl data-state="top" data-mode="down" aria-label="Scroll to next item" transition:persist="scroll-ctl">
-  <span class="scroll-ctl__label" aria-hidden="true">
-    <span class="scroll-ctl__text scroll-ctl__text--top">SCROLL</span>
-    <span class="scroll-ctl__text scroll-ctl__text--back">BACK TO TOP</span>
+  <span class="scroll-ctl__mask" aria-hidden="true">
+    <span class="scroll-ctl__label">
+      <span class="scroll-ctl__text scroll-ctl__text--top">SCROLL</span>
+      <span class="scroll-ctl__text scroll-ctl__text--back">BACK TO TOP</span>
+    </span>
   </span>
   <span class="scroll-ctl__icon scroll-ctl__icon--down"><Icon name="arrowDown" size={30} /></span>
   <span class="scroll-ctl__icon scroll-ctl__icon--up"><Icon name="arrowUp" size={30} /></span>
@@ -40,6 +42,25 @@ import Icon from './Icon.astro';
     white-space: nowrap;
     z-index: 6;
     transition: width var(--t-ctl) var(--ease-out);
+  }
+  /*
+   * Label mask: the expandable part of the button only — everything but the arrow's
+   * square (at the right end), so the label never shows over the arrow or outside the button, and is
+   * fully hidden while the button is collapsed to the square.
+   * Safari: the fading label gets a GPU layer of its own, which neither overflow nor
+   * clip-path on a plain parent clips. translateZ(0) puts the mask on a layer too, and
+   * Safari then applies its clip to everything inside it.
+   */
+  .scroll-ctl__mask {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    /* The square is --ctl-h wide outside; this box ends inside the 2px border. */
+    right: calc(var(--ctl-h) - 2px);
+    overflow: hidden;
+    clip-path: inset(0);
+    transform: translateZ(0);
   }
   .scroll-ctl__label {
     position: absolute;

@@ -25,7 +25,7 @@ import Icon from './Icon.astro';
   data-filter-toggle
   data-state="idle"
 >
-  <span class="pfilter-ctl__label" aria-hidden="true">FILTER</span>
+  <span class="pfilter-ctl__mask" aria-hidden="true"><span class="pfilter-ctl__label">FILTER</span></span>
   <Icon name="filter" size={30} />
 </button>
 
@@ -145,6 +145,25 @@ import Icon from './Icon.astro';
     transition: width var(--t-ctl) var(--ease-out);
   }
   /* Collapsing hides the label at once; opening fades it back in. */
+  /*
+   * Label mask: the expandable part of the button only — everything but the arrow's
+   * square (at the right end), so the label never shows over the arrow or outside the button, and is
+   * fully hidden while the button is collapsed to the square.
+   * Safari: the fading label gets a GPU layer of its own, which neither overflow nor
+   * clip-path on a plain parent clips. translateZ(0) puts the mask on a layer too, and
+   * Safari then applies its clip to everything inside it.
+   */
+  .pfilter-ctl__mask {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    /* The square is --ctl-h wide outside; this box ends inside the 2px border. */
+    right: calc(var(--ctl-h) - 2px);
+    overflow: hidden;
+    clip-path: inset(0);
+    transform: translateZ(0);
+  }
   .pfilter-ctl__label {
     position: absolute;
     left: 28px;
