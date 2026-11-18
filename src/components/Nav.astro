@@ -40,6 +40,11 @@ const site = await getSite();
       left var(--t-sidebar) var(--ease-out),
       width var(--t-sidebar) var(--ease-out);
   }
+  /* Window being resized (scripts/dom.ts): follow the new size at once, like the content
+     column (Shell.astro), instead of gliding after it. */
+  :global(html[data-resizing]) .topnav {
+    transition: none !important;
+  }
   @media (min-width: 1280px) {
     :global(html[data-sidebar='expanded']) .topnav {
       left: var(--col-left-open);

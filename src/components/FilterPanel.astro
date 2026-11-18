@@ -128,6 +128,19 @@ import { projectCategories } from '../lib/project-categories';
       left var(--t-sidebar) var(--ease-out),
       width var(--t-sidebar) var(--ease-out);
   }
+  /* Window being resized (scripts/dom.ts): position and width follow the new size at once,
+     like the content column (Shell.astro); opening / closing still animates. */
+  :global(html[data-resizing]) .fpanel {
+    transition:
+      opacity var(--t-fade) ease,
+      transform var(--t-fade) ease,
+      visibility 0s linear var(--t-fade);
+  }
+  :global(html[data-resizing]) .fpanel[data-open] {
+    transition:
+      opacity var(--t-fade) ease,
+      transform var(--t-sidebar) var(--ease-out);
+  }
   /* Desktop / tablet: centred horizontally on the screen (still at the bottom, as wide as
      the column); rises into place. */
   @media (min-width: 768px) {
