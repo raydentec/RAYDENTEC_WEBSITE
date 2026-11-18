@@ -15,7 +15,12 @@
  * Disabled while the page can't scroll at all (one container that fits, e.g. the 404 page
  * on desktop / tablet; mobile always scrolls between the profile and the containers):
  * re-checked on every page, on resize and whenever the content's size changes.
+ * Page changes: the control keeps its look (size and mode) until the page-change transition
+ * has finished, then takes the new page's state and animates to it like any other change.
+ * During the transition the browser shows an image of it, and browsers differ in how that
+ * image follows a resizing element: Firefox scaled it into odd shapes.
  */
+import type { TransitionBeforeSwapEvent } from 'astro:transitions/client';
 import {
   ACTIVE_CHANGE,
   activeIndex,
@@ -33,6 +38,8 @@ const HOVER_COLLAPSE_MS = 2000;
 let idleTimer = 0;
 /** Pointer over (or keyboard focus on) the control: don't collapse it. */
 let held = false;
+/** A page change is running: state / mode changes wait for it to finish (see top). */
+let frozen = false;
 
 const control = () => document.querySelector<HTMLButtonElement>('[data-scroll-ctl]');
 
@@ -48,7 +55,7 @@ function collapseLater(ms: number) {
 
 function setState(state: 'top' | 'scroll' | 'idle') {
   const btn = control();
-  if (!btn || btn.dataset.state === state) return;
+  if (!btn || frozen || btn.dataset.state === state) return;
   btn.dataset.state = state;
 }
 
@@ -56,7 +63,7 @@ function setState(state: 'top' | 'scroll' | 'idle') {
 function updateMode() {
   const btn = control();
   const scroller = getScroller();
-  if (!btn || !scroller) return;
+  if (!btn || !scroller || frozen) return;
   const last = containers(scroller).length - 1;
   const backOnly = scroller.hasAttribute('data-back-only');
   const mode = backOnly || (last >= 0 && activeIndex() === last && scroller.scrollTop > 0) ? 'up' : 'down';
@@ -201,5 +208,15 @@ function syncToStart() {
   if (scroller.scrollTop > 0) setState(held || keepOpen() ? 'scroll' : 'idle');
   else setState('top');
 }
+// Hold the look from the swap until the transition is over, then apply the new page's state
+// (the CSS width transition animates it). syncToStart also runs on after-swap / page-load
+// meanwhile — for the track; its state changes wait.
+document.addEventListener('astro:before-swap', (e) => {
+  frozen = true;
+  void (e as TransitionBeforeSwapEvent).viewTransition.finished.finally(() => {
+    frozen = false;
+    syncToStart();
+  });
+});
 document.addEventListener('astro:after-swap', syncToStart);
 onPageLoad(syncToStart);
