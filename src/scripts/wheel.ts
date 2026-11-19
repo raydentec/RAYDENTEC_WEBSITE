@@ -1,6 +1,11 @@
 /**
  * Vertical mouse wheel / trackpad scrolling of the content column, from anywhere in the
- * viewport (not only over the column: nav, rail, footer, background, gutters…).
+ * viewport (not only over the column: nav, rail, footer, background, gutters…) — and the
+ * scrolling keys: ↑ / ↓, Page Up / Down and Space (Shift+Space up) move one container the
+ * same way (below), as do the wheel's. Left to the browser, keyboard scrolling was abrupt in
+ * Safari / Firefox and could be pulled back to the selected container while a row glided
+ * sideways. Not while typing, on a focused button / link (Space presses it), in the
+ * sidebar or the open mobile menu, or with Ctrl / Alt / Cmd. Home / End stay the browser's.
  *
  * Between containers, each wheel gesture glides to the next / previous one (dom.ts
  * glideScroll), as when a container is clicked or SCROLL is used. Left to the browser,
@@ -184,15 +189,46 @@ document.addEventListener(
   { passive: false },
 );
 
-// The user takes over (key, touch): stop a glide, snapping takes over. (Clicks don't stop
-// it: a click on a container or SCROLL takes it over, snap.ts / scroll-control.ts.)
+// ---------- Keys: one container per press, as a wheel gesture (see top) ----------
+const KEY_DIR: Record<string, number> = { ArrowDown: 1, ArrowUp: -1, PageDown: 1, PageUp: -1, ' ': 1 };
+
+document.addEventListener('keydown', (e) => {
+  const scroller = getScroller();
+  let dir = KEY_DIR[e.key];
+  if (!scroller || !dir || e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
+  if (e.key === ' ') dir = e.shiftKey ? -1 : 1;
+  else if (e.shiftKey) return;
+  if (getRootState('mmenu') === 'open') return;
+  const target = e.target as Element | null;
+  if (target?.closest('input, textarea, select, [contenteditable], #sidebar, [data-filter-panel]')) return;
+  if (e.key === ' ' && target?.closest('a, button, summary, [role="button"]')) return;
+  // From where a running glide is heading, so quick presses add up.
+  const from = isGliding(scroller) ? glideTo : scroller.scrollTop;
+  const to = scroller.dataset.snap === 'off' ? 'free' : stepTarget(scroller, from, dir);
+  if (to === 'free') {
+    stopGlide(scroller); // the browser's own keyboard scrolling
+    return;
+  }
+  e.preventDefault();
+  if (to === null) return; // at the end
+  glideTo = to;
+  glideScroll(scroller, { top: to });
+});
+
+// The user takes over (touch, Home / End): stop a glide, snapping takes over. (Clicks and
+// the keys above don't: they take it over, snap.ts / scroll-control.ts.)
 const stopColumnGlide = () => {
   const scroller = getScroller();
   if (scroller) stopGlide(scroller);
 };
-for (const type of ['keydown', 'touchstart'] as const) {
-  document.addEventListener(type, stopColumnGlide, { capture: true, passive: true });
-}
+document.addEventListener('touchstart', stopColumnGlide, { capture: true, passive: true });
+document.addEventListener(
+  'keydown',
+  (e) => {
+    if (e.key === 'Home' || e.key === 'End') stopColumnGlide();
+  },
+  { capture: true },
+);
 document.addEventListener('astro:before-swap', () => {
   stopColumnGlide();
   gesture = null;
