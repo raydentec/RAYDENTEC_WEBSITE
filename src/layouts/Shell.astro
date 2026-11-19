@@ -239,8 +239,8 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
    * ---------- Rows of games (Games, desktop/tablet; mobile: GameRow.astro) ----------
    * The column scrolls vertically between rows like everywhere else, but spans the whole
    * window so each row (GameRow.astro) runs edge to edge — passing under the rail. With
-   * the desktop sidebar open, the rows' tracks are cut off at the sidebar's right edge
-   * instead (--sidebar-edge, global.css), from the moment it opens. Rows line their games up
+   * the desktop sidebar open, the rows' tracks are hidden under the sidebar and fade in from
+   * its right edge instead, with the selected game clear of the fade (--sidebar-edge, global.css), from the moment it opens. Rows line their games up
    * with the usual column (--row-left, --row-w).
    *
    * Opening / closing the sidebar animates these variables themselves (registered below),
@@ -283,11 +283,12 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
     }
   }
   @media (min-width: 1280px) {
-    /* Sidebar open: the column at --col-left-open (centred, or beside the sidebar when there's
-       no room); games are cut off at the sidebar's edge. */
+    /* Sidebar open: the games at --row-left-open (as the column, --col-left-open: centred, or
+       beside the sidebar when there's no room — but at least clear of the fade below,
+       global.css); they fade out towards the sidebar. */
     :global(html[data-sidebar='expanded']) .scroller--rows {
-      --row-left: var(--col-left-open);
-      --row-w: var(--content-w-expanded);
+      --row-left: var(--row-left-open);
+      --row-w: var(--row-w-open);
       left: 0;
       width: 100%;
       transition:
@@ -295,11 +296,18 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
         --row-w var(--t-sidebar) var(--ease-out);
     }
     /* The cut is on the sideways tracks (they span the window from its left edge), not on
-       the column: a clip-path there would keep backdrop blurs inside the column from seeing
-       the background video. Fixed at the sidebar's edge, not animated: the games glide in
-       under it; closing drops the cut at once. */
+       the column: a mask there would keep backdrop blurs inside the column from seeing the
+       background video. Hidden under the sidebar, then fading in from its edge over
+       --side-fade (global.css: the square EXPAND button's width plus twice the rail's button
+       spacing); the selected game sits clear of it (--row-left-open). Tied to the sidebar's
+       edge, not animated: the games glide in under it; closing drops it at once. */
     :global(html[data-sidebar='expanded']) .scroller--rows :global(.grow__track) {
-      clip-path: inset(0 0 0 var(--sidebar-edge));
+      -webkit-mask-image: linear-gradient(
+        90deg,
+        transparent var(--sidebar-edge),
+        #000 calc(var(--sidebar-edge) + var(--side-fade))
+      );
+      mask-image: linear-gradient(90deg, transparent var(--sidebar-edge), #000 calc(var(--sidebar-edge) + var(--side-fade)));
     }
   }
 

@@ -23,7 +23,8 @@
   --col-left-expanded: 416px;
   /* Desktop sidebar's right edge (Sidebar.astro: its width from the window's left edge):
      midway between the right edge of its collapse button and the open-sidebar column's
-     leftmost position. The Games / Start rows are cut off here while it's open (Shell.astro). */
+     leftmost position. While it's open, the Games / Start rows are hidden left of here and
+     fade in from it over --side-fade (Shell.astro). */
   --sidebar-edge: calc((var(--gutter) + 263px + var(--ctl-h) + var(--col-left-expanded)) / 2);
   /* Content column's left edge while the desktop sidebar is open: centred on the window as
      when it's closed, as long as that leaves at least the usual gap to the sidebar
@@ -31,6 +32,14 @@
   --col-left-open: max(var(--col-left-expanded), calc((100vw - var(--content-w)) / 2));
   /* Expanded sidebar leaves 416px on the left; shrink the column on narrow desktops. */
   --content-w-expanded: min(var(--content-w), calc(100vw - var(--col-left-expanded) - 30px));
+  /* The rail's button spacing (logo → EXPAND, Rail.astro). */
+  --rail-gap: calc(var(--content-top) - var(--nav-top) - var(--rail-w));
+  /* Rows' fade beside the open sidebar: the square EXPAND button's width + 2× the rail spacing. */
+  --side-fade: calc(var(--rail-w) + 2 * var(--rail-gap));
+  /* Rows' selected game while the sidebar is open: at --col-left-open, but at least past the
+     fade (+ the rail spacing), so the fade never reaches it; narrower to keep the right gap. */
+  --row-left-open: max(var(--col-left-open), calc(var(--sidebar-edge) + var(--side-fade) + var(--rail-gap)));
+  --row-w-open: min(var(--content-w-expanded), calc(100vw - var(--row-left-open) - 30px));
   --t-fade: 160ms;
   --t-ctl: 200ms;
   /* Sideways rows (GameRow.astro): headline size, and headline + indicator above the cards
