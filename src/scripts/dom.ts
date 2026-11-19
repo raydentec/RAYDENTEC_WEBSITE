@@ -218,17 +218,21 @@ export function visibleBottom(scroller: HTMLElement) {
 /**
  * Scroll positions at which each container's snap edge (snapTop) sits on the snap line
  * (start); a container taller than the visible area (down to visibleBottom) can rest
- * anywhere from there down to where its bottom edge shows (end).
+ * anywhere from there down to where its bottom edge shows (end). A container with its own
+ * empty space at the bottom for the controls ([data-bottom-space]: the mobile Start hero,
+ * as the info area on other pages) counts down to the column's bottom instead.
  */
 export function snapSpans(scroller: HTMLElement) {
   const line = scroller.getBoundingClientRect().top + snapOffset(scroller);
-  const visible = visibleBottom(scroller) - line;
+  const visible = visibleBottom(scroller);
+  const columnBottom = scroller.getBoundingClientRect().bottom;
   const max = scroller.scrollHeight - scroller.clientHeight;
   return containers(scroller).map((cf) => {
-    const top = snapTop(cf);
-    const height = cf.getBoundingClientRect().bottom - top;
-    const start = Math.min(max, Math.max(0, scroller.scrollTop + (top - line)));
-    const end = Math.min(max, start + Math.max(0, height - visible));
+    const start = Math.min(max, Math.max(0, scroller.scrollTop + (snapTop(cf) - line)));
+    // Where its bottom edge reaches the visible bottom (from the top of the page, not the
+    // snap line, for one that starts above it: the Start hero under the top bar).
+    const bottom = cf.hasAttribute('data-bottom-space') ? columnBottom : visible;
+    const end = Math.min(max, Math.max(start, scroller.scrollTop + cf.getBoundingClientRect().bottom - bottom));
     return { start, end };
   });
 }

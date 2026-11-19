@@ -31,7 +31,8 @@
  * by script, not the browser (with snapping on, Safari / Firefox pulled the column back
  * to the container's top): wheel deltas move the column with snapping paused, and the
  * keys glide by a quarter screen (arrows) or most of one (Page Up / Down, Space), up to
- * the container's ends; snap.ts keeps snapping off while the column rests partway in.
+ * the container's ends — an arrow held down scrolls on continuously instead (below);
+ * snap.ts keeps snapping off while the column rests partway in.
  * The deltas would fight `scroll-snap-type: y mandatory` (every small trackpad delta would
  * snap a whole container), so snapping is paused (#scroller[data-wheel]) and the column
  * moves freely. When that gesture stops it settles on a container like a native wheel
@@ -221,6 +222,23 @@ document.addEventListener('keydown', (e) => {
   const target = e.target as Element | null;
   if (target?.closest('input, textarea, select, [contenteditable], #sidebar, [data-filter-panel]')) return;
   if (e.key === ' ' && target?.closest('a, button, summary, [role="button"]')) return;
+  // Held arrow key inside a tall container: one continuous scroll (see below), not a glide
+  // restarted by every key repeat (that stuttered).
+  if (hold) {
+    if (e.key === hold.key) {
+      e.preventDefault();
+      return;
+    }
+    endHold(scroller);
+  }
+  if (e.repeat && e.key.startsWith('Arrow')) {
+    const span = stepTarget(scroller, scroller.scrollTop, dir);
+    if (span !== null && typeof span === 'object') {
+      e.preventDefault();
+      startHold(scroller, e.key, dir, span);
+      return;
+    }
+  }
   // From where a running glide is heading, so quick presses add up.
   const from = isGliding(scroller) ? glideTo : scroller.scrollTop;
   const to = stepTarget(scroller, from, dir);
@@ -239,11 +257,64 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
+/*
+ * Arrow key held down inside a tall container: once the key repeats, the column scrolls on
+ * continuously — easing up to HOLD_SPEED, at most to the container's end — until the key is
+ * let go, then eases to a stop (HOLD_RAMP_MS). Snapping is paused meanwhile
+ * (#scroller[data-wheel], as for wheel input). A short press stays a single glide (above).
+ */
+const HOLD_SPEED = 700; // px/s
+const HOLD_RAMP_MS = 180;
+let hold: { key: string; dir: number; span: Span; v: number; last: number; frame: number; releasing: boolean } | null =
+  null;
+
+function startHold(scroller: HTMLElement, key: string, dir: number, span: Span) {
+  // Carry on from the first press's glide where it is (keeping its pace would need its speed).
+  stopGlide(scroller);
+  scroller.dataset.wheel = '';
+  const h = { key, dir, span, v: 0, last: performance.now(), frame: 0, releasing: false };
+  hold = h;
+  const accel = HOLD_SPEED / (HOLD_RAMP_MS / 1000);
+  const step = (now: number) => {
+    if (hold !== h) return;
+    const dt = Math.min(50, now - h.last) / 1000;
+    h.last = now;
+    h.v = h.releasing ? Math.max(0, h.v - accel * dt) : Math.min(HOLD_SPEED, h.v + accel * dt);
+    const pos = Math.min(h.span.end, Math.max(h.span.start, scroller.scrollTop + h.dir * h.v * dt));
+    scroller.scrollTo({ top: pos, behavior: 'instant' });
+    const atEdge = pos <= h.span.start || pos >= h.span.end;
+    if (h.releasing && (h.v === 0 || atEdge)) {
+      endHold(scroller);
+      return;
+    }
+    h.frame = requestAnimationFrame(step);
+  };
+  h.frame = requestAnimationFrame(step);
+}
+
+/** Stop the held-key scroll at once; snapping takes over (snap.ts keeps it off partway in). */
+function endHold(scroller: HTMLElement) {
+  if (!hold) return;
+  cancelAnimationFrame(hold.frame);
+  hold = null;
+  glideTo = scroller.scrollTop;
+  delete scroller.dataset.wheel;
+}
+
+/** The held key is let go (or the window loses focus): ease to a stop. */
+const releaseHold = (e?: KeyboardEvent) => {
+  if (hold && (!e || e.key === hold.key)) hold.releasing = true;
+};
+document.addEventListener('keyup', releaseHold);
+window.addEventListener('blur', () => releaseHold());
+
 // The user takes over (touch, Home / End): stop a glide, snapping takes over. (Clicks and
 // the keys above don't: they take it over, snap.ts / scroll-control.ts.)
 const stopColumnGlide = () => {
   const scroller = getScroller();
-  if (scroller) stopGlide(scroller);
+  if (!scroller) return;
+  stopGlide(scroller);
+  endHold(scroller);
 };
 document.addEventListener('touchstart', stopColumnGlide, { capture: true, passive: true });
 document.addEventListener(

@@ -15,7 +15,12 @@
  * The hero is shorter than the scroll area, so the explore row (StartExplore.astro) peeks
  * in below it: its cards' top edge lines up with the top of the scroll control. Hero
  * height = viewport − scroller top − (scroll control's top edge from the viewport bottom)
- * − the explore row's headline + indicator (--row-head, GameRow.astro).
+ * − the explore row's headline + indicator (--row-head, GameRow.astro). Mobile: as tall as
+ * the scroll area (nothing of the explore row shows below it at the top, as the containers
+ * on other pages come after their info area), but at least as it takes to show 180px of
+ * picture plus the lower third's height more — scrolled around freely where that's taller
+ * than the screen; under the lower third, the same empty space as under the info area
+ * (clear of the bottom controls).
  */
 import BgToggle from './BgToggle.astro';
 import Icon from './Icon.astro';
@@ -46,7 +51,7 @@ const first = looped ? 1 : 0;
 const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imagePosition.tablet}; --pos-mobile: ${imagePosition.mobile}`;
 ---
 
-<div class="hero is-active" data-cf data-hero data-slider style={positions}>
+<div class="hero is-active" data-cf data-hero data-slider data-bottom-space style={positions}>
   <div class="hero__art" aria-hidden={imageAlt ? undefined : 'true'}>
     <div class:list={['hero__track', { 'hero__track--single': images.length < 2 }]} data-slide-track>
       {
@@ -306,16 +311,35 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
 
   /* Mobile: the scroller starts under the top bar; the hero reaches out over its gutters. */
   @media (max-width: 767px) {
+    /* The whole scroll area (top bar down to the footer), so nothing of the explore row
+       shows below it at the top of the page — as the info area on other pages (.mprofile,
+       Shell.astro; Start has no padding above it). At least (min-height): --min-strip of
+       the picture plus the lower third's height more, above the indicator (below it: the
+       indicator's 12px gap, the lower third — --lt-h from scripts/start.ts — and the empty
+       space under it, --bottom-space); on all but very tall phones that's taller than the
+       screen, and the wheel / keys / touch scroll freely through it before moving on to the
+       explore row (scripts/wheel.ts, snap.ts).
+       --bottom-space: empty space at the bottom, as under the info area (.mprofile__spacer,
+       Shell.astro): the bottom controls (menu bar + SCROLL / back-to-top + gaps) + 16px, so
+       the CTAs can scroll clear of them (data-bottom-space: scrolling counts it as the
+       space under the controls, scripts/dom.ts snapSpans). */
     .hero {
       --scroller-top: var(--top-bar);
+      --min-strip: 180px;
+      --bottom-space: calc(var(--ctl-bottom) - var(--footer-h) + var(--ctl-h) + 16px);
       margin: 0 calc(-1 * var(--gutter));
+      height: calc(100dvh - var(--top-bar) - var(--footer-h));
+      min-height: calc(var(--min-strip) + var(--lt-h, 380px) + 24px + var(--lt-h, 380px) + var(--bottom-space));
+    }
+    .hero__front {
+      bottom: var(--bottom-space);
     }
     /* Only as tall as the hero (down to the explore row's top); the image fades out across
        the lower third, from its top edge to its bottom edge (--lt-h: its height, measured
-       by scripts/start.ts; it sits 16px above the hero's bottom). */
+       by scripts/start.ts; it sits --bottom-space above the hero's bottom). */
     .hero__art {
-      --fade-from: calc(100% - 16px - var(--lt-h, 380px));
-      --fade-to: calc(100% - 16px);
+      --fade-from: calc(100% - var(--bottom-space) - var(--lt-h, 380px));
+      --fade-to: calc(100% - var(--bottom-space));
       height: 100%;
     }
     .hero__img {

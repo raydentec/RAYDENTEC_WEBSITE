@@ -129,6 +129,10 @@ clips at 1024, which is a separate breakpoint).
   `transform:`. The dev server doesn't minify, so it only breaks live. Put the shift inside
   `transform` (e.g. `transform: translateX(-50%) rotate(180deg)`), and check visual fixes
   with `npm run build` + `npm run preview`, not only `astro dev`.
+- The background dev server sometimes keeps serving an old copy of a component's `<style>`
+  after you edit it (seen with `StartHero.astro`). If a CSS change doesn't show up locally,
+  check the built CSS in `dist/_astro/` and restart the server: `astro dev stop`, then
+  `astro dev --background`.
 - Safari: `overflow`/`clip-path` on a plain parent doesn't clip a child that Safari has moved
   to its own GPU layer (e.g. while its opacity/transform animates). Give the clipping element
   `transform: translateZ(0)` too (see the label masks in Rail, ScrollControl, FilterButton).
