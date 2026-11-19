@@ -21,6 +21,10 @@
   --track-w: 6px;
   --expand-h: 300px;
   --col-left-expanded: 416px;
+  /* Desktop sidebar's right edge (Sidebar.astro: its width from the window's left edge):
+     midway between the right edge of its collapse button and the open-sidebar column's
+     leftmost position. The Games / Start rows are cut off here while it's open (Shell.astro). */
+  --sidebar-edge: calc((var(--gutter) + 263px + var(--ctl-h) + var(--col-left-expanded)) / 2);
   /* Content column's left edge while the desktop sidebar is open: centred on the window as
      when it's closed, as long as that leaves at least the usual gap to the sidebar
      (--col-left-expanded); otherwise right beside the sidebar at --col-left-expanded. */

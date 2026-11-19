@@ -42,7 +42,8 @@ import Profile from './Profile.astro';
     left: 0;
     top: 0;
     bottom: var(--footer-h);
-    width: calc((var(--collapse-left) + var(--ctl-h) + var(--col-left-expanded)) / 2);
+    /* --collapse-left + its button, to --col-left-expanded: halfway (global.css). */
+    width: var(--sidebar-edge);
     padding: var(--nav-top) 0 calc(var(--content-bottom) - var(--footer-h)) var(--gutter);
     z-index: 4;
     overflow: hidden auto;
