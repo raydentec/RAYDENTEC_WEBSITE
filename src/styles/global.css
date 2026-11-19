@@ -324,7 +324,7 @@ dd {
  * sidebar opens or closes on a page: the old one fades out over the first half of the
  * page change, then the new one fades in over the second half. Overlapping, the old
  * rail's EXPAND (with its captured backdrop blur) and logo showed as a blurry square
- * over the new sidebar's logo. A rail that goes away only fades out its old image; its
+ * over the new sidebar's logo; EXPAND's layer drops its blur too (below). A rail that goes away only fades out its old image; its
  * own fade-out (Rail.astro) stays hidden, as the two together made it flicker.
  */
 /* The rail's parts are positioned on their own (Rail.astro), so each gets a layer. */
@@ -368,6 +368,14 @@ html[data-chrome-fade]::view-transition-old(sidebar) {
 }
 html[data-chrome-fade]::view-transition-new(sidebar) {
   animation: page-fade-in 125ms ease 125ms both;
+}
+/* The browser carries EXPAND's backdrop blur over to its layer (the group, not the image),
+   which stays for the whole page change: once the old image had faded, the empty layer
+   still blurred what came in under it — a blurry rectangle over the new sidebar (leaving
+   Start, where the sidebar is already in place under it). No blur while they cross-fade. */
+html[data-chrome-fade]::view-transition-group(rail-expand) {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
 }
 html[data-chrome-fade]::view-transition-new(rail-logo),
 html[data-chrome-fade]::view-transition-new(rail-expand),
