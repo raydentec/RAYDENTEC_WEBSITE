@@ -3,7 +3,10 @@
  *
  * Mode (data-mode) — what a click does:
  *   "down" SCROLL ↓       snap to the next container; until the last one is selected
- *   "up"   BACK TO TOP ↑  scroll to the very top; once the last container is selected
+ *   "up"   BACK TO TOP ↑  back to the first container (on mobile not up to the profile /
+ *                         info area above it: only the wheel / keys go on there, wheel.ts;
+ *                         already there — one container — the very top); once the last
+ *                         container is selected
  * Size (data-state):
  *   scrollTop 0     → "top"    full width
  *   scrolled        → "idle"   arrow-only; scrolling doesn't expand it
@@ -145,12 +148,15 @@ document.addEventListener('click', (e) => {
   if (!(e.target as Element | null)?.closest('[data-scroll-ctl]')) return;
   const scroller = getScroller();
   if (!scroller) return;
+  const line = scroller.getBoundingClientRect().top + snapOffset(scroller);
   if (control()?.dataset.mode === 'up') {
-    scrollToTop(scroller);
+    const first = containers(scroller)[0];
+    const offset = first ? snapTop(first) - line : -scroller.scrollTop;
+    if (!first || Math.abs(offset) < 2) scrollToTop(scroller);
+    else glideScroll(scroller, { top: scroller.scrollTop + offset });
     return;
   }
   // Snap to the next container below the snap line.
-  const line = scroller.getBoundingClientRect().top + snapOffset(scroller);
   const next = containers(scroller).find((cf) => snapTop(cf) > line + 2);
   if (next) glideScroll(scroller, { top: scroller.scrollTop + snapTop(next) - line });
 });

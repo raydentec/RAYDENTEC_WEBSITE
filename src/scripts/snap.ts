@@ -8,8 +8,11 @@
  * i.e. its top has passed the middle of the visible area between the header line
  * and the scroll control.
  *
- * Containers taller than the visible area (short phones) can be scrolled freely
- * inside, so the browser may come to rest part-way into the next or previous one.
+ * Containers taller than the visible area (dom.ts snapSpans: on mobile, the area above the
+ * bottom controls; short phones, Legal documents) can be scrolled freely inside: snapping
+ * is off (data-snap="off") while the column rests partway into one — Safari / Firefox
+ * pulled it back to the container's top otherwise. So the browser may come to rest
+ * part-way into the next or previous one.
  * Switching to another container therefore always re-aligns its top to the snap line.
  */
 import {
@@ -22,6 +25,7 @@ import {
   onScrollerScroll,
   scrollBehavior,
   snapOffset,
+  snapSpans,
   snapTop,
 } from './dom';
 
@@ -76,7 +80,7 @@ function settle(scroller: HTMLElement, align: boolean) {
   setActive(scroller, target);
   // Wheel input forwarded from outside the column settles itself (wheel.ts).
   if (!align || 'wheel' in scroller.dataset || 'gliding' in scroller.dataset) return;
-  if (scroller.dataset.snap === 'off' || returningToTop) {
+  if (scroller.dataset.snap === 'off' || holdTo !== null) {
     home = null; // in the free-scrolling profile area
     return;
   }
@@ -122,13 +126,13 @@ export function refreshColumn(scroller: HTMLElement) {
   updateSnapping(scroller);
 }
 
-/** True while a back-to-top scroll is running: snapping stays off until it reaches 0. */
-let returningToTop = false;
+/** Set while a scrollToTop() glide runs: snapping stays off until it reaches this position. */
+let holdTo: number | null = null;
 
 function updateSnapping(scroller: HTMLElement) {
-  if (returningToTop) {
-    if (scroller.scrollTop > 0) return;
-    returningToTop = false;
+  if (holdTo !== null) {
+    if (Math.abs(scroller.scrollTop - holdTo) > 1) return;
+    holdTo = null;
   }
   const first = containers(scroller)[0];
   let on = true;
@@ -138,20 +142,30 @@ function updateSnapping(scroller: HTMLElement) {
       document.querySelector('[data-scroll-ctl]')?.getBoundingClientRect().top ?? scroller.getBoundingClientRect().bottom;
     on = snapTop(first) <= (line + bottom) / 2;
   }
+  // Partway into a container taller than the visible area (short phones, Legal documents):
+  // free scrolling there. Chrome allows it with snapping on; Safari / Firefox pulled the
+  // column back to the container's top.
+  if (on) {
+    const pos = scroller.scrollTop;
+    on = !snapSpans(scroller).some((s) => s.end - s.start > 2 && pos > s.start + 2 && pos <= s.end + 2);
+  }
   const value = on ? 'on' : 'off';
   if (scroller.dataset.snap !== value) scroller.dataset.snap = value;
 }
 
 /**
- * Scroll to the very top of the page. On mobile the profile above the containers has
- * no snap point, so snapping is held off for the whole trip — otherwise the browser
- * would snap the target onto container 1.
+ * Scroll to the very top of the page — or to `top`, any spot that isn't a snap point: in
+ * the mobile profile / info area above the containers, or partway into a container taller
+ * than the visible area (the wheel / keys, wheel.ts; BACK TO TOP when there's nowhere else
+ * to go back to, scroll-control.ts) — gliding as other switches do (dom.ts glideScroll).
+ * Snapping is held off for the whole trip, or the browser would snap the target onto a
+ * container's top (and in Chrome, switching it off on the way cut the glide short).
  */
-export function scrollToTop(scroller: HTMLElement) {
-  if (scroller.scrollTop <= 0) return;
-  returningToTop = true;
+export function scrollToTop(scroller: HTMLElement, top = 0) {
+  if (Math.abs(scroller.scrollTop - top) < 1) return;
+  holdTo = top;
   scroller.dataset.snap = 'off';
-  scroller.scrollTo({ top: 0, behavior: scrollBehavior() });
+  glideScroll(scroller, { top });
 }
 
 onScrollerScroll((scroller) => {
@@ -172,7 +186,7 @@ document.addEventListener(
       // can end in a scrollend: the scroll timer above selects once it has arrived.
       if ('gliding' in target.dataset) return;
       // A back-to-top scroll interrupted by the user ends here: resume normal snapping.
-      returningToTop = false;
+      holdTo = null;
       updateSnapping(target);
       settle(target, true);
     }
@@ -199,7 +213,7 @@ document.addEventListener('astro:after-swap', () => {
   const scroller = getScroller();
   const first = scroller ? containers(scroller)[0] : undefined;
   if (!scroller || !first || !mq.mobile.matches || scroller.dataset.page === 'start') return;
-  returningToTop = false;
+  holdTo = null;
   scroller.dataset.snap = 'on';
   scroller.scrollTop += snapTop(first) - snapLine(scroller);
   home = first;
@@ -210,7 +224,7 @@ document.addEventListener('astro:after-swap', () => {
 onPageLoad(() => {
   const scroller = getScroller();
   if (!scroller) return;
-  returningToTop = false;
+  holdTo = null;
   if (!positionedOnSwap) {
     scroller.scrollTop = 0;
     // The page opens resting in its first container (desktop / tablet; on mobile the profile

@@ -200,6 +200,39 @@ export const containers = (scroller: HTMLElement) =>
 export const snapTop = (cf: Element) =>
   cf.getBoundingClientRect().top - (parseFloat(getComputedStyle(cf).scrollMarginTop) || 0);
 
+/**
+ * Bottom of the area the containers show in (viewport px). Mobile: 16px above the bottom
+ * controls (SCROLL / BACK TO TOP, the page menu bar — they cover the column's bottom; the
+ * column's bottom padding keeps that much clear, Shell.astro); else the column's bottom.
+ */
+export function visibleBottom(scroller: HTMLElement) {
+  const bottom = scroller.getBoundingClientRect().bottom;
+  if (!mq.mobile.matches) return bottom;
+  const tops = Array.from(document.querySelectorAll<HTMLElement>('[data-scroll-ctl], .mmenu__bar'))
+    .map((el) => el.getBoundingClientRect())
+    .filter((r) => r.height > 0)
+    .map((r) => r.top - 16);
+  return Math.min(bottom, ...tops);
+}
+
+/**
+ * Scroll positions at which each container's snap edge (snapTop) sits on the snap line
+ * (start); a container taller than the visible area (down to visibleBottom) can rest
+ * anywhere from there down to where its bottom edge shows (end).
+ */
+export function snapSpans(scroller: HTMLElement) {
+  const line = scroller.getBoundingClientRect().top + snapOffset(scroller);
+  const visible = visibleBottom(scroller) - line;
+  const max = scroller.scrollHeight - scroller.clientHeight;
+  return containers(scroller).map((cf) => {
+    const top = snapTop(cf);
+    const height = cf.getBoundingClientRect().bottom - top;
+    const start = Math.min(max, Math.max(0, scroller.scrollTop + (top - line)));
+    const end = Math.min(max, start + Math.max(0, height - visible));
+    return { start, end };
+  });
+}
+
 /** Fired on document by snap.ts when the active container changes; detail = its index. */
 export const ACTIVE_CHANGE = 'raydentec:active-change';
 export type ActiveChangeEvent = CustomEvent<{ index: number }>;

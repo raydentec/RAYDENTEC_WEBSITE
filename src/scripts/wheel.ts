@@ -19,32 +19,42 @@
  * phones) has two stops: its top and its bottom edge. One taller by less than
  * TALL_IGNORE_PX (a Games row's bottom margin) counts as fitting: just its top.
  *
- * Free scrolling instead (decided per gesture):
- *   - inside a much taller container (a Legal document) while there's more of it in the
- *     gesture's direction;
- *   - the mobile profile above the containers (snapping off, snap.ts).
- * Over the column that's the browser's own scrolling. From outside it, the deltas are
- * forwarded; they would fight `scroll-snap-type: y mandatory` (every small trackpad delta
- * would snap a whole container), so snapping is paused (#scroller[data-wheel]) and the
- * column moves freely. When that gesture stops it settles on a container like a native
- * wheel scroll: the nearest one, or the next one in the scroll direction once it has moved
- * a little. Containers taller than the visible area can rest anywhere inside.
+ * Mobile: the profile / info area above the containers counts as one more container, from
+ * the very top of the page: one stop where it fits the screen (regular phones), and on
+ * short phones the same stops / free scrolling inside as a taller container, down to
+ * where its end (the space kept clear of the bottom controls) reaches the column's bottom.
+ * Glides into it go via snap.ts scrollToTop, which keeps snapping off for the trip (the
+ * browser would pull it back onto container 1).
+ *
+ * Free scrolling instead (decided per gesture): inside a much taller container (a Legal
+ * document, a row on a short phone) while there's more of it in the gesture's direction —
+ * by script, not the browser (with snapping on, Safari / Firefox pulled the column back
+ * to the container's top): wheel deltas move the column with snapping paused, and the
+ * keys glide by a quarter screen (arrows) or most of one (Page Up / Down, Space), up to
+ * the container's ends; snap.ts keeps snapping off while the column rests partway in.
+ * The deltas would fight `scroll-snap-type: y mandatory` (every small trackpad delta would
+ * snap a whole container), so snapping is paused (#scroller[data-wheel]) and the column
+ * moves freely. When that gesture stops it settles on a container like a native wheel
+ * scroll: the nearest one, or the next one in the scroll direction once it has moved a
+ * little (gliding there). Containers taller than the visible area can rest anywhere inside.
+ * (A page without containers scrolls natively.)
  *
  * Left alone: over the sidebar when its own content is taller than the viewport (it
  * scrolls itself), the open mobile page menu, pinch-zoom (ctrl) and mostly-horizontal
  * gestures (sideways rows, the hero slider).
  */
 import {
-  containers,
   getRootState,
   getScroller,
   glideScroll,
   isGliding,
-  scrollBehavior,
+  mq,
   snapOffset,
-  snapTop,
+  snapSpans,
   stopGlide,
+  visibleBottom,
 } from './dom';
+import { scrollToTop } from './snap';
 
 const SETTLE_MS = 140;
 /** Moving at least this far commits to the next container in that direction. */
@@ -52,13 +62,17 @@ const COMMIT_PX = 30;
 /** A wheel gesture (incl. trackpad momentum) has ended when no event came for this long. */
 const INPUT_REST_MS = 200;
 /** A container this much taller than the visible area or less counts as fitting (one stop). */
-const TALL_IGNORE_PX = 24;
+const TALL_IGNORE_PX = 32;
 
 let settleTimer = 0;
 let gestureStart: number | null = null;
 
-/** Current gesture: 'step' (one glide), 'free' (scrolls freely), or null between gestures. */
-let gesture: 'step' | 'free' | null = null;
+/**
+ * Current gesture: 'step' (one glide), 'free' (scrolls freely by script, deltas applied to
+ * the column with snapping paused), 'native' (the browser's own: no containers), or null
+ * between gestures.
+ */
+let gesture: 'step' | 'free' | 'native' | null = null;
 let gestureTimer = 0;
 /** Where the running wheel glide is heading. */
 let glideTo = 0;
@@ -69,37 +83,55 @@ function normalizedDelta(e: WheelEvent, scroller: HTMLElement) {
   return e.deltaY;
 }
 
-/** Scroll positions at which each container's snap edge (dom.ts snapTop) sits on the snap line. */
-function snapPositions(scroller: HTMLElement) {
-  const line = scroller.getBoundingClientRect().top + snapOffset(scroller);
-  const max = scroller.scrollHeight - scroller.clientHeight;
-  return containers(scroller).map((cf) => {
-    const top = snapTop(cf);
-    const height = cf.getBoundingClientRect().bottom - top;
-    const start = Math.min(max, Math.max(0, scroller.scrollTop + (top - line)));
-    // A container taller than the visible area can rest anywhere between its start and end.
-    const end = Math.min(max, start + Math.max(0, height - (scroller.clientHeight - snapOffset(scroller))));
-    return { start, end };
-  });
-}
+type Span = { start: number; end: number };
+
+/** Height of the area containers show in, from the snap line (dom.ts visibleBottom). */
+const visibleHeight = (scroller: HTMLElement) =>
+  visibleBottom(scroller) - scroller.getBoundingClientRect().top - snapOffset(scroller);
 
 /**
- * Where a wheel gesture in direction `dir` from `pos` glides to: the next snap position
- * that way; 'free' inside a tall container with more of it that way (or no containers);
- * null at either end of the column.
+ * Where a wheel gesture / key in direction `dir` from `pos` glides to: the next snap
+ * position that way; inside a tall container with more of it that way, that container's
+ * span (scrolled freely within, see top); 'free' with no containers; null at either end.
  */
-function stepTarget(scroller: HTMLElement, pos: number, dir: number): number | 'free' | null {
-  const spans = snapPositions(scroller);
+function stepTarget(scroller: HTMLElement, pos: number, dir: number): number | Span | 'free' | null {
+  const spans = withProfile(scroller, snapSpans(scroller));
   if (!spans.length) return 'free';
-  const free = (scroller.clientHeight - snapOffset(scroller)) / 2;
-  const inTall = spans.some(
+  const free = visibleHeight(scroller) / 2;
+  const tall = spans.find(
     (s) => s.end - s.start > free && (dir > 0 ? pos >= s.start - 2 && pos < s.end - 2 : pos <= s.end + 2 && pos > s.start + 2),
   );
-  if (inTall) return 'free';
+  if (tall) return tall;
   const points = spans.flatMap((s) => (s.end - s.start > TALL_IGNORE_PX ? [s.start, s.end] : [s.start]));
   const ahead = points.filter((p) => (dir > 0 ? p > pos + 2 : p < pos - 2));
   if (!ahead.length) return null;
   return dir > 0 ? Math.min(...ahead) : Math.max(...ahead);
+}
+
+/**
+ * Mobile: the profile / info area above the containers ([data-mprofile], Shell.astro) as a
+ * span before theirs — from the top of the page to where its bottom edge reaches the
+ * column's bottom (0 where it fits).
+ */
+function withProfile(scroller: HTMLElement, spans: { start: number; end: number }[]) {
+  const profile = scroller.querySelector<HTMLElement>('[data-mprofile]');
+  if (!mq.mobile.matches || !profile || !spans.length || spans[0].start <= 2 || !profile.getClientRects().length) {
+    return spans;
+  }
+  const bottom = scroller.scrollTop + profile.getBoundingClientRect().bottom - scroller.getBoundingClientRect().top;
+  const end = Math.min(spans[0].start, Math.max(0, bottom - scroller.clientHeight));
+  return [{ start: 0, end }, ...spans];
+}
+
+/**
+ * Glide the column to a stop: to a container's top as usual; anywhere else (the mobile
+ * profile, partway into a tall container) via snap.ts scrollToTop, which keeps snapping off
+ * for the trip (see top).
+ */
+function glideColumn(scroller: HTMLElement, to: number) {
+  glideTo = to;
+  if (snapSpans(scroller).some((s) => Math.abs(s.start - to) <= 2)) glideScroll(scroller, { top: to });
+  else scrollToTop(scroller, to);
 }
 
 /** Forwarded free scrolling has stopped: settle on a container (see top). */
@@ -112,7 +144,7 @@ function settle(scroller: HTMLElement) {
   if (scroller.dataset.snap === 'off') return release();
 
   const pos = scroller.scrollTop;
-  const spans = snapPositions(scroller);
+  const spans = snapSpans(scroller);
   if (!spans.length) return release();
   // Resting inside a tall container is allowed, as with native scrolling.
   if (spans.some((s) => s.end > s.start && pos >= s.start && pos <= s.end)) return release();
@@ -129,20 +161,9 @@ function settle(scroller: HTMLElement) {
   }
 
   if (Math.abs(target - pos) < 1) return release();
-  // Resume snapping only once the glide has reached the target — a late `scrollend`
-  // from the forwarded scroll must not switch it back on mid-glide (it would snap back).
-  const done = () => {
-    if (Math.abs(scroller.scrollTop - target) > 2) return;
-    scroller.removeEventListener('scrollend', done);
-    window.clearTimeout(fallback);
-    release();
-  };
-  const fallback = window.setTimeout(() => {
-    scroller.removeEventListener('scrollend', done);
-    release();
-  }, 1200); // in case scrollend never fires
-  scroller.addEventListener('scrollend', done);
-  scroller.scrollTo({ top: target, behavior: scrollBehavior() });
+  // Resume snapping only once the glide has reached the target (it would snap back).
+  glideTo = target;
+  glideScroll(scroller, { top: target }, release);
 }
 
 document.addEventListener(
@@ -162,12 +183,9 @@ document.addEventListener(
     // A new gesture: glide one container, or scroll freely (see top).
     if (gesture === null) {
       const from = isGliding(scroller) ? glideTo : scroller.scrollTop;
-      const to = scroller.dataset.snap === 'off' ? 'free' : stepTarget(scroller, from, Math.sign(dy));
-      gesture = to === 'free' ? 'free' : 'step';
-      if (typeof to === 'number') {
-        glideTo = to;
-        glideScroll(scroller, { top: to });
-      }
+      const to = stepTarget(scroller, from, Math.sign(dy));
+      gesture = to === null || typeof to === 'number' ? 'step' : to === 'free' ? 'native' : 'free';
+      if (typeof to === 'number') glideColumn(scroller, to);
     }
     window.clearTimeout(gestureTimer);
     gestureTimer = window.setTimeout(() => (gesture = null), INPUT_REST_MS);
@@ -177,8 +195,9 @@ document.addEventListener(
       return;
     }
 
-    // Free: native over the column; forwarded from outside it.
-    if (scroller.contains(target)) return;
+    if (gesture === 'native' && scroller.contains(target)) return;
+    // Free: the deltas move the column, snapping paused (natively, Safari / Firefox pulled a
+    // tall container back to its top; from outside the column there's no native scrolling).
     e.preventDefault();
     if (gestureStart === null) gestureStart = scroller.scrollTop;
     scroller.dataset.wheel = '';
@@ -204,15 +223,20 @@ document.addEventListener('keydown', (e) => {
   if (e.key === ' ' && target?.closest('a, button, summary, [role="button"]')) return;
   // From where a running glide is heading, so quick presses add up.
   const from = isGliding(scroller) ? glideTo : scroller.scrollTop;
-  const to = scroller.dataset.snap === 'off' ? 'free' : stepTarget(scroller, from, dir);
+  const to = stepTarget(scroller, from, dir);
   if (to === 'free') {
     stopGlide(scroller); // the browser's own keyboard scrolling
     return;
   }
   e.preventDefault();
   if (to === null) return; // at the end
-  glideTo = to;
-  glideScroll(scroller, { top: to });
+  if (typeof to === 'number') glideColumn(scroller, to);
+  // Inside a tall container: on by a quarter screen (arrows) or most of one (Page / Space),
+  // not past its ends — the next press there goes on to the next stop.
+  else {
+    const by = (e.key.startsWith('Arrow') ? 0.25 : 0.85) * visibleHeight(scroller);
+    glideColumn(scroller, Math.min(to.end, Math.max(to.start, from + dir * by)));
+  }
 });
 
 // The user takes over (touch, Home / End): stop a glide, snapping takes over. (Clicks and

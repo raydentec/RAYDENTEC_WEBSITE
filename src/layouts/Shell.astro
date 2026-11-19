@@ -162,9 +162,12 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
     transition: none !important;
   }
   /* Snapping paused while wheel input from outside the column is forwarded (scripts/wheel.ts),
-     or the column glides by script (Safari / Firefox, scripts/dom.ts glideScroll). */
+     while the column glides by script (Safari / Firefox, scripts/dom.ts glideScroll), and
+     where it scrolls freely (scripts/snap.ts data-snap="off": the mobile profile area until
+     container 1 is about to activate; partway into a container taller than the visible area). */
   :global(.scroller[data-wheel]),
-  :global(.scroller[data-gliding]) {
+  :global(.scroller[data-gliding]),
+  :global(.scroller[data-snap='off']) {
     scroll-snap-type: none !important;
   }
   .scroller:focus {
@@ -340,13 +343,9 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
       clip-path: inset(calc(var(--header-h) - var(--top-bar)) 0 0 0);
     }
     /*
-     * Profile area: scrolls freely (no snap point). Snapping is switched off by
-     * scripts/snap.ts (data-snap="off") until container 1 is about to activate.
-     * At the top only the profile shows: it fills the scroll area down to the footer.
+     * Profile area: scrolls freely (no snap point; data-snap="off", below). At the top
+     * only the profile shows: it fills the scroll area down to the footer.
      */
-    :global(.scroller[data-snap='off']) {
-      scroll-snap-type: none;
-    }
     .mprofile {
       display: flex;
       flex-direction: column;
