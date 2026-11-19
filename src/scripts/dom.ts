@@ -23,6 +23,28 @@ export const isStartPage = (doc: Document = document) => doc.getElementById('scr
 
 export const scrollBehavior = (): ScrollBehavior => (mq.reducedMotion.matches ? 'auto' : 'smooth');
 
+/** CSS-style cubic-bezier easing (x1, x2 in 0…1): progress for a time fraction. */
+export function cubicBezier(x1: number, y1: number, x2: number, y2: number) {
+  const at = (a: number, b: number, u: number) => 3 * (1 - u) ** 2 * u * a + 3 * (1 - u) * u ** 2 * b + u ** 3;
+  return (x: number) => {
+    let lo = 0;
+    let hi = 1;
+    for (let i = 0; i < 24; i++) {
+      const mid = (lo + hi) / 2;
+      if (at(x1, x2, mid) < x) lo = mid;
+      else hi = mid;
+    }
+    return at(y1, y2, (lo + hi) / 2);
+  };
+}
+
+/**
+ * Chrome's own smooth-scroll curve (fitted to its scrollTo({ behavior: 'smooth' })), for
+ * scroll glides done by script so they look the same in every browser (wheel.ts,
+ * hero-slider.ts).
+ */
+export const CHROME_EASE = cubicBezier(0.4, 0, 0, 1);
+
 /**
  * UI state lives in data-* attributes on <html> so CSS can react to it.
  * ClientRouter replaces <html>'s attributes on every swap, so re-apply them.

@@ -167,6 +167,9 @@ document.addEventListener(
   (e) => {
     const target = e.target;
     if (target instanceof HTMLElement && target.id === 'scroller') {
+      // A wheel glide (wheel.ts) steps the column every frame, and each step can end in a
+      // scrollend: the scroll timer above selects once it has arrived.
+      if (target.dataset.wheel === 'glide') return;
       // A back-to-top scroll interrupted by the user ends here: resume normal snapping.
       returningToTop = false;
       updateSnapping(target);

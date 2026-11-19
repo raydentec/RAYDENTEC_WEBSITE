@@ -28,7 +28,7 @@
  * (data-gliding, StartHero.astro), so it looks the same everywhere. Touching the track
  * stops it.
  */
-import { getRootState, getScroller, mq, onPageLoad, onScrollerScroll } from './dom';
+import { CHROME_EASE, getRootState, getScroller, mq, onPageLoad, onScrollerScroll } from './dom';
 
 const INTERVAL_MS = 5000;
 const SETTLE_MS = 90;
@@ -40,7 +40,7 @@ const INPUT_REST_MS = 200;
 const WHEEL_STEP_PX = 30;
 /** Script glide: duration (Chrome's smooth scroll takes ~625ms) and easing (cubic-bezier 0.4, 0, 0, 1, as Chrome's). */
 const GLIDE_MS = 1000;
-const GLIDE_EASE = cubicBezier(0.4, 0, 0, 1);
+const GLIDE_EASE = CHROME_EASE;
 
 let timer = 0;
 let settleTimer = 0;
@@ -59,21 +59,6 @@ let wheelRestTimer = 0;
 /** Running script glide (requestAnimationFrame id), 0 when none. */
 let glideFrame = 0;
 let glideTrack: HTMLElement | null = null;
-
-/** CSS-style cubic-bezier easing (x1, x2 in 0…1): progress for a time fraction. */
-function cubicBezier(x1: number, y1: number, x2: number, y2: number) {
-  const at = (a: number, b: number, u: number) => 3 * (1 - u) ** 2 * u * a + 3 * (1 - u) * u ** 2 * b + u ** 3;
-  return (x: number) => {
-    let lo = 0;
-    let hi = 1;
-    for (let i = 0; i < 24; i++) {
-      const mid = (lo + hi) / 2;
-      if (at(x1, x2, mid) < x) lo = mid;
-      else hi = mid;
-    }
-    return at(y1, y2, (lo + hi) / 2);
-  };
-}
 
 /** Stop a running glide where it is; snapping takes over again. */
 function stopGlide() {
