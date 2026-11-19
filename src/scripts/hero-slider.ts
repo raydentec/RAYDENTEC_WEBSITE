@@ -20,8 +20,14 @@
  * while keyboard focus is in the hero (its indicator / links; leaving restarts it) and
  * while the tab is hidden. Reduced motion: no timer, and slides
  * switch without the smooth scroll. A single image: nothing to slide, no timer.
+ *
+ * Switches by script (timer, lines, arrows, keys, wheel) glide by script too, not with
+ * scrollTo's smooth behaviour: its speed and easing are the browser's own — long and soft
+ * in Chrome, short and abrupt in Firefox / Safari. The glide (GLIDE_MS, GLIDE_EASE: fitted
+ * to Chrome's) steps scrollLeft every frame with snapping paused (data-gliding,
+ * StartHero.astro), so it looks the same everywhere. Touching the track stops it.
  */
-import { getRootState, getScroller, mq, onPageLoad, onScrollerScroll, scrollBehavior } from './dom';
+import { getRootState, getScroller, mq, onPageLoad, onScrollerScroll } from './dom';
 
 const INTERVAL_MS = 5000;
 const SETTLE_MS = 90;
@@ -31,6 +37,9 @@ const PAGE_REST_MS = 150;
 const INPUT_REST_MS = 200;
 /** Sideways wheel travel that switches a slide. */
 const WHEEL_STEP_PX = 30;
+/** Script glide: duration and easing (cubic-bezier 0.4, 0, 0, 1 — as Chrome's smooth scroll). */
+const GLIDE_MS = 625;
+const GLIDE_EASE = cubicBezier(0.4, 0, 0, 1);
 
 let timer = 0;
 let settleTimer = 0;
@@ -46,6 +55,33 @@ let touching = false;
 let wheelSum = 0;
 let wheelDone = false;
 let wheelRestTimer = 0;
+/** Running script glide (requestAnimationFrame id), 0 when none. */
+let glideFrame = 0;
+let glideTrack: HTMLElement | null = null;
+
+/** CSS-style cubic-bezier easing (x1, x2 in 0…1): progress for a time fraction. */
+function cubicBezier(x1: number, y1: number, x2: number, y2: number) {
+  const at = (a: number, b: number, u: number) => 3 * (1 - u) ** 2 * u * a + 3 * (1 - u) * u ** 2 * b + u ** 3;
+  return (x: number) => {
+    let lo = 0;
+    let hi = 1;
+    for (let i = 0; i < 24; i++) {
+      const mid = (lo + hi) / 2;
+      if (at(x1, x2, mid) < x) lo = mid;
+      else hi = mid;
+    }
+    return at(y1, y2, (lo + hi) / 2);
+  };
+}
+
+/** Stop a running glide where it is; snapping takes over again. */
+function stopGlide() {
+  if (!glideFrame) return;
+  cancelAnimationFrame(glideFrame);
+  glideFrame = 0;
+  delete glideTrack?.dataset.gliding;
+  glideTrack = null;
+}
 
 const slider = () => getScroller()?.querySelector<HTMLElement>('[data-slider]') ?? null;
 const track = (root: HTMLElement) => root.querySelector<HTMLElement>('[data-slide-track]');
@@ -61,8 +97,37 @@ const left = (t: HTMLElement, index: number) => (index + 1) * t.clientWidth;
 function scrollToSlide(root: HTMLElement, index: number) {
   const t = track(root);
   if (!t || !looped(root)) return;
+  // A running glide hands over where it is, snapping still paused (resuming it here would
+  // pull the track back to a slide first).
+  cancelAnimationFrame(glideFrame);
+  glideFrame = 0;
   target = index;
-  t.scrollTo({ left: left(t, index), behavior: scrollBehavior() });
+  const to = left(t, index);
+  const from = t.scrollLeft;
+  if (mq.reducedMotion.matches || Math.abs(to - from) < 1) {
+    delete t.dataset.gliding;
+    glideTrack = null;
+    t.scrollTo({ left: to, behavior: 'instant' });
+    return;
+  }
+  // Glide by script (see top); settle once it has arrived.
+  t.dataset.gliding = '';
+  glideTrack = t;
+  const start = performance.now();
+  const frame = (now: number) => {
+    const p = Math.min(1, (now - start) / GLIDE_MS);
+    t.scrollTo({ left: from + (to - from) * GLIDE_EASE(p), behavior: 'instant' });
+    if (p < 1) {
+      glideFrame = requestAnimationFrame(frame);
+      return;
+    }
+    glideFrame = 0;
+    glideTrack = null;
+    delete t.dataset.gliding;
+    window.clearTimeout(settleTimer);
+    settle(root);
+  };
+  glideFrame = requestAnimationFrame(frame);
 }
 
 function lightDot(root: HTMLElement, index: number) {
@@ -128,6 +193,7 @@ document.addEventListener(
     const n = count(root);
     lightDot(root, (position(t) + n) % n);
     window.clearTimeout(settleTimer);
+    if (glideFrame) return; // the glide settles when it arrives
     settleTimer = window.setTimeout(() => settle(root), SETTLE_MS);
   },
   { capture: true, passive: true },
@@ -138,7 +204,7 @@ document.addEventListener(
     const t = e.target;
     if (!(t instanceof HTMLElement) || !t.matches('[data-slide-track]')) return;
     const root = t.closest<HTMLElement>('[data-slider]');
-    if (!root) return;
+    if (!root || glideFrame) return; // each glide step can end in a scrollend
     window.clearTimeout(settleTimer);
     settle(root);
   },
@@ -153,12 +219,13 @@ onScrollerScroll(() => {
   pageRestTimer = window.setTimeout(restart, PAGE_REST_MS);
 });
 
-// The user takes over (touch, pointer on the track): stop waiting for a script scroll.
+// The user takes over (touch, pointer on the track): stop a glide / waiting for a script scroll.
 for (const type of ['touchstart', 'pointerdown'] as const) {
   document.addEventListener(
     type,
     (e) => {
       if (!(e.target as Element | null)?.closest('[data-slide-track]')) return;
+      stopGlide();
       target = null;
       if (type === 'touchstart') touching = true;
     },
@@ -248,6 +315,8 @@ document.addEventListener('keydown', (e) => {
 function place(root: HTMLElement) {
   const t = track(root);
   if (!t || !looped(root)) return;
+  stopGlide();
+  target = null;
   t.scrollTo({ left: left(t, current), behavior: 'instant' });
 }
 
@@ -257,6 +326,7 @@ window.addEventListener('resize', () => {
 });
 
 document.addEventListener('astro:before-swap', () => {
+  stopGlide();
   window.clearInterval(timer);
   window.clearTimeout(pageRestTimer);
 });

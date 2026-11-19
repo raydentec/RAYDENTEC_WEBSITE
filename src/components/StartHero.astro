@@ -166,6 +166,11 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
   }
+  /* Gliding to a slide by script (scripts/hero-slider.ts): snapping paused, or Safari /
+     Firefox would pull each frame's position back to the nearest slide. */
+  .hero__track[data-gliding] {
+    scroll-snap-type: none;
+  }
   .hero__track::-webkit-scrollbar {
     display: none;
   }
