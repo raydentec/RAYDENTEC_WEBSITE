@@ -23,9 +23,10 @@
  *
  * Switches by script (timer, lines, arrows, keys, wheel) glide by script too, not with
  * scrollTo's smooth behaviour: its speed and easing are the browser's own — long and soft
- * in Chrome, short and abrupt in Firefox / Safari. The glide (GLIDE_MS, GLIDE_EASE: fitted
- * to Chrome's) steps scrollLeft every frame with snapping paused (data-gliding,
- * StartHero.astro), so it looks the same everywhere. Touching the track stops it.
+ * in Chrome, short and abrupt in Firefox / Safari. The glide (GLIDE_EASE: fitted to
+ * Chrome's; GLIDE_MS longer) steps scrollLeft every frame with snapping paused
+ * (data-gliding, StartHero.astro), so it looks the same everywhere. Touching the track
+ * stops it.
  */
 import { getRootState, getScroller, mq, onPageLoad, onScrollerScroll } from './dom';
 
@@ -37,8 +38,8 @@ const PAGE_REST_MS = 150;
 const INPUT_REST_MS = 200;
 /** Sideways wheel travel that switches a slide. */
 const WHEEL_STEP_PX = 30;
-/** Script glide: duration and easing (cubic-bezier 0.4, 0, 0, 1 — as Chrome's smooth scroll). */
-const GLIDE_MS = 625;
+/** Script glide: duration (Chrome's smooth scroll takes ~625ms) and easing (cubic-bezier 0.4, 0, 0, 1, as Chrome's). */
+const GLIDE_MS = 1000;
 const GLIDE_EASE = cubicBezier(0.4, 0, 0, 1);
 
 let timer = 0;
