@@ -177,7 +177,7 @@ document.addEventListener(
   (e) => {
     const scroller = getScroller();
     const target = e.target as Element | null;
-    if (!scroller || !target) return;
+    if (!scroller || !target || e.defaultPrevented) return; // taken by a sideways row / the hero
     if (e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
     if (getRootState('mmenu') === 'open') return;
     const sidebar = target.closest<HTMLElement>('#sidebar');
