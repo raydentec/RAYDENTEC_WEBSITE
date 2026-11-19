@@ -44,8 +44,10 @@
  * (A page without containers scrolls natively.)
  *
  * Left alone: over the sidebar when its own content is taller than the viewport (it
- * scrolls itself), the open mobile page menu, pinch-zoom (ctrl) and mostly-horizontal
- * gestures (sideways rows, the hero slider).
+ * scrolls itself), the open mobile page menu and pinch-zoom (ctrl). Sideways gestures
+ * (dom.ts wheelAxis: by a gesture's first event, kept for all of it) never move the column
+ * — the sideways rows and the hero slider take them — and a vertical gesture's sideways
+ * drift doesn't scroll anything sideways.
  */
 import {
   getRootState,
@@ -57,6 +59,7 @@ import {
   snapSpans,
   stopGlide,
   visibleBottom,
+  wheelAxis,
 } from './dom';
 import { scrollToTop } from './snap';
 
@@ -138,6 +141,14 @@ function glideColumn(scroller: HTMLElement, to: number) {
   else scrollToTop(scroller, to);
 }
 
+/** Something between `el` and the column scrolls sideways by itself (a wide Legal table). */
+function scrollsSideways(el: Element, scroller: HTMLElement) {
+  for (let n: Element | null = el; n && n !== scroller; n = n.parentElement) {
+    if (n.scrollWidth > n.clientWidth + 1 && /auto|scroll/.test(getComputedStyle(n).overflowX)) return true;
+  }
+  return false;
+}
+
 /** Forwarded free scrolling has stopped: settle on a container (see top). */
 function settle(scroller: HTMLElement) {
   const from = gestureStart ?? scroller.scrollTop;
@@ -176,13 +187,23 @@ document.addEventListener(
     const scroller = getScroller();
     const target = e.target as Element | null;
     if (!scroller || !target || e.defaultPrevented) return; // taken by a sideways row / the hero
-    if (e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
-    if (getRootState('mmenu') === 'open') return;
+    if (e.ctrlKey || getRootState('mmenu') === 'open') return;
     const sidebar = target.closest<HTMLElement>('#sidebar');
     if (sidebar && sidebar.scrollHeight > sidebar.clientHeight + 1) return; // sidebar scrolls itself
 
+    // A sideways gesture (dom.ts wheelAxis) never moves the column, even where it drifts
+    // vertically — rows / the hero take it, or nothing does (a wide Legal table scrolls itself).
+    if (wheelAxis() === 'x') {
+      if (!scrollsSideways(target, scroller)) e.preventDefault();
+      return;
+    }
     const dy = normalizedDelta(e, scroller);
-    if (!dy) return;
+    if (!dy) {
+      // A vertical gesture drifting sideways: no sideways scrolling either (but natively scrolled
+      // pages keep theirs).
+      if (gesture !== 'native') e.preventDefault();
+      return;
+    }
 
     // A new gesture: glide one container, or scroll freely (see top).
     if (gesture === null) {

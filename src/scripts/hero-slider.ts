@@ -28,7 +28,7 @@
  * (data-gliding, StartHero.astro), so it looks the same everywhere. Touching the track
  * stops it.
  */
-import { CHROME_EASE, getRootState, getScroller, mq, onPageLoad, onScrollerScroll } from './dom';
+import { CHROME_EASE, getRootState, getScroller, mq, onPageLoad, onScrollerScroll, wheelAxis } from './dom';
 
 const INTERVAL_MS = 5000;
 const SETTLE_MS = 90;
@@ -268,10 +268,11 @@ document.addEventListener(
   'wheel',
   (e) => {
     const root = (e.target as Element | null)?.closest('[data-slide-track]')?.closest<HTMLElement>('[data-slider]');
-    if (!root || !looped(root) || e.ctrlKey) return;
-    const dx = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.shiftKey ? e.deltaY : 0;
-    if (!dx) return;
+    // Only sideways gestures (dom.ts wheelAxis); vertical ones go to the page (wheel.ts).
+    if (!root || !looped(root) || e.ctrlKey || wheelAxis() !== 'x') return;
     e.preventDefault();
+    const dx = e.deltaX || (e.shiftKey ? e.deltaY : 0);
+    if (!dx) return;
     window.clearTimeout(wheelRestTimer);
     wheelRestTimer = window.setTimeout(() => {
       wheelSum = 0;

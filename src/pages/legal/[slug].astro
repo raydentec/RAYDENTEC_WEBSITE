@@ -84,13 +84,14 @@ const name = `${doc.data.title} (${doc.data.subject})`;
   /*
    * ← BACK TO LEGAL sits above the container's tab (as the headlines on the Legal page),
    * --back-gap above it, and as wide as the tab: ⅓ of the column (mobile: the tab spans the
-   * container, so does the button). It rides along when the container snaps.
+   * container, so does the button) — but never narrower than its arrow + label (narrow
+   * tablet windows). It rides along when the container snaps.
    */
   :global(.column > .back-btn.ldoc__back) {
     --back-gap: 12px;
     flex-shrink: 0;
     width: calc(100% / 3);
-    min-width: 0;
+    min-width: max-content;
     margin-bottom: calc(var(--back-gap) - var(--card-gap));
   }
   :global(.column > .back-btn.ldoc__back + .cf) {

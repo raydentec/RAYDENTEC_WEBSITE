@@ -162,6 +162,30 @@ window.addEventListener('resize', () => {
   resizeTimer = window.setTimeout(() => document.documentElement.removeAttribute('data-resizing'), 150);
 });
 
+/**
+ * Axis of the current wheel / trackpad gesture: decided by its first event (mostly sideways,
+ * or Shift+wheel → 'x'; else 'y') and kept until the input has rested for GESTURE_REST_MS
+ * (trackpad momentum included). The column (wheel.ts) only moves on 'y' gestures, the
+ * sideways rows and the hero slider (game-rows.ts, hero-slider.ts) only on 'x' ones — so a
+ * diagonal swipe never switches both. Bound here, before their listeners (dom.ts is
+ * evaluated first), so they read it for the event at hand.
+ */
+const GESTURE_REST_MS = 200;
+let axis: 'x' | 'y' = 'y';
+let lastWheel = -Infinity;
+document.addEventListener(
+  'wheel',
+  (e) => {
+    const now = performance.now();
+    const dx = Math.abs(e.deltaX);
+    const dy = Math.abs(e.deltaY);
+    if (now - lastWheel > GESTURE_REST_MS && (dx || dy)) axis = dx > dy || (e.shiftKey && !dx) ? 'x' : 'y';
+    lastWheel = now;
+  },
+  { capture: true, passive: true },
+);
+export const wheelAxis = () => axis;
+
 /** Scroll events don't bubble; one capturing listener fans out scroller scrolls. */
 type ScrollHandler = (scroller: HTMLElement) => void;
 const scrollHandlers: ScrollHandler[] = [];

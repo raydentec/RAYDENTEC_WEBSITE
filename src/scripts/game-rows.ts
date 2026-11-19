@@ -17,7 +17,7 @@
  * wheel event cut into it (as the column did, wheel.ts). A new gesture during a glide
  * carries on from the game it heads to; touching the track stops it.
  */
-import { ACTIVE_CHANGE, getRootState, getScroller, glideScroll, onPageLoad, stopGlide } from './dom';
+import { ACTIVE_CHANGE, getRootState, getScroller, glideScroll, onPageLoad, stopGlide, wheelAxis } from './dom';
 
 const SETTLE_MS = 90;
 /** A wheel gesture (incl. trackpad momentum) has ended when no event came for this long. */
@@ -141,10 +141,12 @@ document.addEventListener(
   (e) => {
     const t = (e.target as Element | null)?.closest<HTMLElement>('[data-row-track]');
     const row = t?.closest<HTMLElement>('[data-row]');
-    if (!t || !row || e.ctrlKey) return;
-    const dx = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.shiftKey ? e.deltaY : 0;
-    if (!dx) return; // vertical: the column (wheel.ts)
+    // Only sideways gestures (dom.ts wheelAxis: a diagonal swipe doesn't also move the column);
+    // vertical ones go to the column (wheel.ts).
+    if (!t || !row || e.ctrlKey || wheelAxis() !== 'x') return;
     e.preventDefault();
+    const dx = e.deltaX || (e.shiftKey ? e.deltaY : 0);
+    if (!dx) return;
     window.clearTimeout(wheelRestTimer);
     wheelRestTimer = window.setTimeout(() => {
       wheelSum = 0;
