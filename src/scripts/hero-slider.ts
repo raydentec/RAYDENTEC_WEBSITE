@@ -52,6 +52,8 @@ let held = false;
 let target: number | null = null;
 /** A finger is on the track. */
 let touching = false;
+/** Presses (±1 each) waiting to go on past the copy a glide is heading to (step). */
+let pending = 0;
 /** Current wheel gesture: sideways travel so far, and whether it has switched a slide. */
 let wheelSum = 0;
 let wheelDone = false;
@@ -62,6 +64,7 @@ let glideTrack: HTMLElement | null = null;
 
 /** Stop a running glide where it is; snapping takes over again. */
 function stopGlide() {
+  pending = 0;
   if (!glideFrame) return;
   cancelAnimationFrame(glideFrame);
   glideFrame = 0;
@@ -103,6 +106,11 @@ function scrollToSlide(root: HTMLElement, index: number) {
   const frame = (now: number) => {
     const p = Math.min(1, (now - start) / GLIDE_MS);
     t.scrollTo({ left: from + (to - from) * GLIDE_EASE(p), behavior: 'instant' });
+    // Presses waiting to go on past the copy: the track is close enough to it now.
+    if (pending && canLeaveCopy(root)) {
+      flushPending(root);
+      return;
+    }
     if (p < 1) {
       glideFrame = requestAnimationFrame(frame);
       return;
@@ -135,6 +143,7 @@ function settle(root: HTMLElement) {
   }
   const byHand = target === null;
   target = null;
+  pending = 0;
   // Scrolled by hand: the timer starts again now that the track rests (also on the same slide).
   if (byHand) restart();
   // On a copy: jump to the real slide it shows (they look the same).
@@ -146,13 +155,47 @@ function settle(root: HTMLElement) {
   current = index;
 }
 
-/** Previous / next slide (wheel gesture, arrow buttons): from the slide a running switch
- * is heading to; not while it heads to a copy (wait for the jump off it). */
+/**
+ * Previous / next slide (arrow buttons, ← / → keys, wheel gesture): from the slide a running
+ * switch is heading to, so quick presses add up instead of restarting the glide to the
+ * same slide. Heading to a copy, a press can't go on from it (there's nothing beyond):
+ * once the track is between the copy and its neighbour, it moves instantly to the same
+ * spot by the real slide the copy shows — the two look the same — and carries on from
+ * there. Presses that come before the track gets that far wait (pending) until it does.
+ */
 function step(root: HTMLElement, by: number) {
   const from = target ?? current;
-  if (from < 0 || from >= count(root)) return;
-  scrollToSlide(root, from + by);
+  if (from < 0 || from >= count(root)) {
+    pending += by;
+    if (canLeaveCopy(root)) flushPending(root);
+  } else scrollToSlide(root, from + by);
   restart();
+}
+
+/** Heading to a copy, the track is between it and its neighbour: it can move to the real slide. */
+function canLeaveCopy(root: HTMLElement) {
+  const t = track(root);
+  if (!t || target === null) return false;
+  const n = count(root);
+  if (target >= n) return t.scrollLeft >= left(t, n - 1) - 1;
+  if (target < 0) return t.scrollLeft <= left(t, 0) + 1;
+  return false;
+}
+
+/** Move from the copy's side to the real slide's (instantly, looks the same) and go on by the waiting presses. */
+function flushPending(root: HTMLElement) {
+  const t = track(root);
+  if (!t || target === null) return;
+  const n = count(root);
+  const forward = target >= n;
+  cancelAnimationFrame(glideFrame); // snapping stays paused for the glide below
+  glideFrame = 0;
+  t.scrollTo({ left: t.scrollLeft + (forward ? -n : n) * t.clientWidth, behavior: 'instant' });
+  const from = forward ? 0 : n - 1;
+  // Past the next copy at most; any further presses wait there again.
+  const to = Math.max(-1, Math.min(n, from + pending));
+  pending -= to - from;
+  scrollToSlide(root, to);
 }
 
 function restart() {
@@ -293,8 +336,7 @@ document.addEventListener('keydown', (e) => {
   const root = slider();
   if (!root || !looped(root)) return;
   e.preventDefault();
-  scrollToSlide(root, current + (e.key === 'ArrowRight' ? 1 : -1));
-  restart();
+  step(root, e.key === 'ArrowRight' ? 1 : -1); // as the arrow buttons
 });
 
 /** Rest the track on the current slide at once (page load, resize: slide width = track width). */
