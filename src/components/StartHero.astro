@@ -6,9 +6,11 @@
  * explore headline. The slides scroll and snap sideways (swipe / trackpad / Shift+wheel)
  * and switch on a timer (scripts/hero-slider.ts); an indicator like the Games rows'
  * (GameRow.astro) — current slide white — sits above the lower third's left edge, and
- * clicking a line shows that slide. Copies of the last slide before the first and of the
- * first after the last let the slider go round both ways instead of rewinding. With one
- * image there is nothing to slide: no copies, indicator, scrolling or timer.
+ * clicking a line shows that slide. Arrow buttons at the left and right edges (in line with
+ * the lower third's edges, vertically centred between the nav and the hero's bottom) show
+ * the previous / next slide (not on mobile: swipe). Copies of the last slide before the
+ * first and of the first after the last let the slider go round both ways instead of rewinding. With one
+ * image there is nothing to slide: no copies, indicator, arrows, scrolling or timer.
  *
  * The hero is shorter than the scroll area, so the explore row (StartExplore.astro) peeks
  * in below it: its cards' top edge lines up with the top of the scroll control. Hero
@@ -16,6 +18,7 @@
  * − the explore row's headline + indicator (--row-head, GameRow.astro).
  */
 import BgToggle from './BgToggle.astro';
+import Icon from './Icon.astro';
 import LowerThird from './LowerThird.astro';
 import { asset } from '../lib/content';
 
@@ -65,6 +68,18 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
       }
     </div>
   </div>
+  {
+    looped && (
+      <>
+        <button type="button" class="hero__arrow hero__arrow--prev" data-slide-prev aria-label="Previous image">
+          <Icon name="chevron" size={56} />
+        </button>
+        <button type="button" class="hero__arrow hero__arrow--next" data-slide-next aria-label="Next image">
+          <Icon name="chevron" size={56} />
+        </button>
+      </>
+    )
+  }
   <div class="hero__front">
     {
       images.length > 1 && (
@@ -174,6 +189,53 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
     scroll-snap-align: none;
   }
 
+  /* Previous / next arrows: control-sized squares at the gutters (the lower third's left
+     and right edges), vertically centred between the nav's bottom edge and the hero's
+     bottom — but at least 16px above the indicator (short windows: the lower third
+     is --lt-h tall, scripts/start.ts; the indicator is 12px + 12px gap above it, all 16px
+     above the hero's bottom). A translucent white fill over the blurred image, white
+     chevron (filling the square, its own margins included). */
+  .hero__arrow {
+    position: absolute;
+    z-index: 1;
+    top: min(
+      calc((var(--nav-top) + var(--nav-h) + 100% - var(--ctl-h)) / 2),
+      calc(100% - 16px - var(--lt-h, 380px) - 24px - 16px - var(--ctl-h))
+    );
+    width: var(--ctl-h);
+    height: var(--ctl-h);
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    background: var(--c-control-fill);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    color: var(--c-white);
+    cursor: pointer;
+    transition: background-color var(--t-state) ease;
+  }
+  .hero__arrow :global(svg) {
+    width: 100%;
+    height: 100%;
+  }
+  .hero__arrow:hover {
+    background: rgba(255, 255, 255, 0.7);
+  }
+  .hero__arrow:focus-visible {
+    outline: 2px solid var(--c-white);
+    outline-offset: 2px;
+  }
+  .hero__arrow--prev {
+    left: var(--gutter);
+  }
+  .hero__arrow--prev :global(svg) {
+    transform: rotate(180deg);
+  }
+  .hero__arrow--next {
+    right: var(--gutter);
+  }
+
   /* Indicator, then the lower third, 16px above the explore headline. */
   .hero__front {
     position: absolute;
@@ -253,6 +315,10 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
     }
     .hero__img {
       object-position: var(--pos-mobile);
+    }
+    /* Swipe instead of arrows. */
+    .hero__arrow {
+      display: none;
     }
     .hero__dots {
       width: auto;

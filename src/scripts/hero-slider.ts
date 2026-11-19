@@ -1,12 +1,18 @@
 /**
  * Start hero image slider (StartHero.astro). The slides sit side by side in a track that
- * scrolls and snaps sideways — swipe, trackpad or Shift+wheel, and ← / → while the hero
- * is in view. The track holds a copy of the last slide before the first and a copy of the
+ * scrolls and snaps sideways — swipe, and ← / → while the hero is in view. Sideways wheel /
+ * trackpad / Shift+wheel input doesn't scroll the track natively: each gesture switches
+ * one slide by script (as the indicator lines do), and the rest of the gesture (further
+ * notches, trackpad momentum) is ignored until the input has stopped for INPUT_REST_MS.
+ * (Natively, the browser's wheel snapping could carry on after the jump off a copy below
+ * and switch a second time.) The track holds a copy of the last slide before the first and a copy of the
  * first after the last: scrolling on to a copy jumps to the real slide it shows, so the
  * slider goes round both ways (the first's left neighbour is the last) without rewinding.
+ * The jump waits until the track truly rests on the copy: snapped into place, and no finger
+ * down (a swipe could otherwise carry on from the new position).
  * Every INTERVAL_MS it scrolls on to the next slide. The slide at rest is the current one:
- * its indicator line is lit; clicking a line scrolls to that slide. Switching by hand
- * (swipe, line, key) restarts the timer.
+ * its indicator line is lit; clicking a line scrolls to that slide, the arrow buttons to
+ * the previous / next one. Switching by hand (swipe, line, arrow, key) restarts the timer.
  *
  * The timer keeps running while the pointer is over the hero and while the explore row
  * is in view. It stops while the slider or the page is being scrolled (not by the slider
@@ -21,6 +27,10 @@ const INTERVAL_MS = 5000;
 const SETTLE_MS = 90;
 /** Page scrolling has stopped when no scroll event came for this long (no `scrollend`). */
 const PAGE_REST_MS = 150;
+/** A wheel / trackpad gesture (incl. momentum) has ended when no event came for this long. */
+const INPUT_REST_MS = 200;
+/** Sideways wheel travel that switches a slide. */
+const WHEEL_STEP_PX = 30;
 
 let timer = 0;
 let settleTimer = 0;
@@ -30,6 +40,12 @@ let current = 0;
 let held = false;
 /** Slide the track is scrolling to by script (timer, line, key; -1 / count = a copy); null for the user's own scrolling. */
 let target: number | null = null;
+/** A finger is on the track. */
+let touching = false;
+/** Current wheel gesture: sideways travel so far, and whether it has switched a slide. */
+let wheelSum = 0;
+let wheelDone = false;
+let wheelRestTimer = 0;
 
 const slider = () => getScroller()?.querySelector<HTMLElement>('[data-slider]') ?? null;
 const track = (root: HTMLElement) => root.querySelector<HTMLElement>('[data-slide-track]');
@@ -61,6 +77,11 @@ function settle(root: HTMLElement) {
   let index = position(t);
   // Scrolling by script: wait until it has arrived.
   if (target !== null && index !== target) return;
+  // On a copy: jump only once the track rests there for good (see top).
+  if (index < 0 || index >= n) {
+    if (touching) return; // settles again on touchend
+    if (Math.abs(t.scrollLeft - left(t, index)) > 2) return; // still snapping: more scroll events follow
+  }
   const byHand = target === null;
   target = null;
   // Scrolled by hand: the timer starts again now that the track rests (also on the same slide).
@@ -72,6 +93,15 @@ function settle(root: HTMLElement) {
   }
   lightDot(root, index);
   current = index;
+}
+
+/** Previous / next slide (wheel gesture, arrow buttons): from the slide a running switch
+ * is heading to; not while it heads to a copy (wait for the jump off it). */
+function step(root: HTMLElement, by: number) {
+  const from = target ?? current;
+  if (from < 0 || from >= count(root)) return;
+  scrollToSlide(root, from + by);
+  restart();
 }
 
 function restart() {
@@ -123,12 +153,53 @@ onScrollerScroll(() => {
   pageRestTimer = window.setTimeout(restart, PAGE_REST_MS);
 });
 
-// The user takes over (touch, wheel, pointer on the track): stop waiting for a script scroll.
-for (const type of ['touchstart', 'wheel', 'pointerdown'] as const) {
+// The user takes over (touch, pointer on the track): stop waiting for a script scroll.
+for (const type of ['touchstart', 'pointerdown'] as const) {
   document.addEventListener(
     type,
     (e) => {
-      if ((e.target as Element | null)?.closest('[data-slide-track]')) target = null;
+      if (!(e.target as Element | null)?.closest('[data-slide-track]')) return;
+      target = null;
+      if (type === 'touchstart') touching = true;
+    },
+    { capture: true, passive: true },
+  );
+}
+
+// Sideways wheel / trackpad over the track: one slide per gesture, by script (see top).
+// Vertical wheel goes on to the page.
+document.addEventListener(
+  'wheel',
+  (e) => {
+    const root = (e.target as Element | null)?.closest('[data-slide-track]')?.closest<HTMLElement>('[data-slider]');
+    if (!root || !looped(root) || e.ctrlKey) return;
+    const dx = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.shiftKey ? e.deltaY : 0;
+    if (!dx) return;
+    e.preventDefault();
+    window.clearTimeout(wheelRestTimer);
+    wheelRestTimer = window.setTimeout(() => {
+      wheelSum = 0;
+      wheelDone = false;
+    }, INPUT_REST_MS);
+    if (wheelDone) return;
+    wheelSum += e.deltaMode === WheelEvent.DOM_DELTA_LINE ? dx * 16 : dx;
+    if (Math.abs(wheelSum) < WHEEL_STEP_PX) return;
+    wheelDone = true;
+    step(root, Math.sign(wheelSum));
+  },
+  { capture: true, passive: false },
+);
+// Finger lifted: settle again (a jump onto the real slide may have been waiting).
+for (const type of ['touchend', 'touchcancel'] as const) {
+  document.addEventListener(
+    type,
+    (e) => {
+      if (!touching || (e as TouchEvent).touches.length) return;
+      touching = false;
+      const root = slider();
+      if (!root) return;
+      window.clearTimeout(settleTimer);
+      settleTimer = window.setTimeout(() => settle(root), SETTLE_MS);
     },
     { capture: true, passive: true },
   );
@@ -148,6 +219,9 @@ document.addEventListener('focusout', (e) => {
 });
 
 document.addEventListener('click', (e) => {
+  const arrow = (e.target as Element | null)?.closest<HTMLElement>('[data-slide-prev], [data-slide-next]');
+  const arrowRoot = arrow?.closest<HTMLElement>('[data-slider]');
+  if (arrow && arrowRoot) return step(arrowRoot, arrow.matches('[data-slide-prev]') ? -1 : 1);
   const dot = (e.target as Element | null)?.closest<HTMLElement>('[data-slide-dot]');
   const root = dot?.closest<HTMLElement>('[data-slider]');
   if (!dot || !root) return;
@@ -192,6 +266,7 @@ onPageLoad(() => {
   current = 0;
   held = false;
   target = null;
+  touching = false;
   const root = slider();
   if (!root) return;
   place(root);
