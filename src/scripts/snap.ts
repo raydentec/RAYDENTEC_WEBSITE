@@ -16,6 +16,7 @@ import {
   ACTIVE_CHANGE,
   containers,
   getScroller,
+  glideScroll,
   mq,
   onPageLoad,
   onScrollerScroll,
@@ -74,7 +75,7 @@ function settle(scroller: HTMLElement, align: boolean) {
   if (!target) return;
   setActive(scroller, target);
   // Wheel input forwarded from outside the column settles itself (wheel.ts).
-  if (!align || 'wheel' in scroller.dataset) return;
+  if (!align || 'wheel' in scroller.dataset || 'gliding' in scroller.dataset) return;
   if (scroller.dataset.snap === 'off' || returningToTop) {
     home = null; // in the free-scrolling profile area
     return;
@@ -112,7 +113,7 @@ document.addEventListener('click', (e) => {
   const head = target.closest('[data-cf-head]')?.nextElementSibling;
   const cf = containers(scroller).find((c) => c.contains(target) || c === head);
   if (!cf || cf.classList.contains('is-active')) return;
-  scroller.scrollBy({ top: snapTop(cf) - snapLine(scroller), behavior: scrollBehavior() });
+  glideScroll(scroller, { top: scroller.scrollTop + snapTop(cf) - snapLine(scroller) });
 });
 
 /** Re-measure after the column's contents change (Projects filter, project-filter.ts). */
@@ -167,9 +168,9 @@ document.addEventListener(
   (e) => {
     const target = e.target;
     if (target instanceof HTMLElement && target.id === 'scroller') {
-      // A wheel glide (wheel.ts) steps the column every frame, and each step can end in a
-      // scrollend: the scroll timer above selects once it has arrived.
-      if (target.dataset.wheel === 'glide') return;
+      // A glide by script (dom.ts glideScroll) steps the column every frame, and each step
+      // can end in a scrollend: the scroll timer above selects once it has arrived.
+      if ('gliding' in target.dataset) return;
       // A back-to-top scroll interrupted by the user ends here: resume normal snapping.
       returningToTop = false;
       updateSnapping(target);

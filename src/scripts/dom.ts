@@ -45,6 +45,90 @@ export function cubicBezier(x1: number, y1: number, x2: number, y2: number) {
  */
 export const CHROME_EASE = cubicBezier(0.4, 0, 0, 1);
 
+/** Chromium (Chrome, Edge, Opera…): only it has navigator.userAgentData. */
+const NATIVE_SMOOTH = 'userAgentData' in navigator;
+/** Default glide length (≈ Chrome's own smooth scroll over a screen). */
+export const GLIDE_MS = 625;
+
+const glides = new WeakMap<HTMLElement, () => void>();
+
+/**
+ * Smooth scroll of `el` to `to` — the one way the column and the sideways rows switch
+ * container / game (click, SCROLL, keys, wheel gestures), so every switch looks alike:
+ *   - Chromium: the browser's own smooth scroll — smooth (run off the main thread) and
+ *     already on CHROME_EASE; a glide stepped by script stuttered there, the page being
+ *     repainted each frame.
+ *   - Safari / Firefox: their own is short and abrupt, so a glide by script — `ms` on
+ *     CHROME_EASE, scrollTo every frame with snapping paused (<el data-gliding>: CSS turns
+ *     scroll-snap-type off for the column and the row / hero tracks).
+ * Reduced motion: at once. A new glide on the same element takes over from where the
+ * running one is (snapping stays paused, or the track would be pulled to a snap point
+ * first). `onDone` runs once it has arrived; not after stopGlide().
+ */
+export function glideScroll(el: HTMLElement, to: { left?: number; top?: number }, onDone?: () => void, ms = GLIDE_MS) {
+  glides.get(el)?.(); // hand over: stop the running one, keep data-gliding for now
+  const x0 = el.scrollLeft;
+  const y0 = el.scrollTop;
+  const x1 = to.left ?? x0;
+  const y1 = to.top ?? y0;
+  let frame = 0;
+  let fallback = 0;
+  let over = false;
+  const cleanUp = () => {
+    over = true;
+    cancelAnimationFrame(frame);
+    window.clearTimeout(fallback);
+    el.removeEventListener('scrollend', onEnd);
+    if (glides.get(el) === handOver) glides.delete(el);
+  };
+  const finish = () => {
+    if (over) return;
+    cleanUp();
+    delete el.dataset.gliding;
+    onDone?.();
+  };
+  const onEnd = () => {
+    if (Math.abs(el.scrollLeft - x1) <= 2 && Math.abs(el.scrollTop - y1) <= 2) finish();
+  };
+  // Taken over by another glide: stop without resuming snapping.
+  const handOver = () => cleanUp();
+  glides.set(el, handOver);
+
+  if (mq.reducedMotion.matches || (Math.abs(x1 - x0) < 1 && Math.abs(y1 - y0) < 1)) {
+    el.scrollTo({ left: x1, top: y1, behavior: 'instant' });
+    finish();
+    return;
+  }
+  if (NATIVE_SMOOTH) {
+    delete el.dataset.gliding;
+    el.addEventListener('scrollend', onEnd);
+    fallback = window.setTimeout(finish, ms + 1000); // in case no scrollend comes
+    el.scrollTo({ left: x1, top: y1, behavior: 'smooth' });
+    return;
+  }
+  el.dataset.gliding = '';
+  const start = performance.now();
+  const step = (now: number) => {
+    const p = Math.min(1, (now - start) / ms);
+    const e = CHROME_EASE(p);
+    el.scrollTo({ left: x0 + (x1 - x0) * e, top: y0 + (y1 - y0) * e, behavior: 'instant' });
+    if (p < 1) frame = requestAnimationFrame(step);
+    else finish();
+  };
+  frame = requestAnimationFrame(step);
+}
+
+/** Stop a running glide of `el` where it is; snapping takes over again. */
+export function stopGlide(el: HTMLElement) {
+  const stop = glides.get(el);
+  if (!stop) return;
+  stop();
+  delete el.dataset.gliding;
+}
+
+/** A glide of `el` is running. */
+export const isGliding = (el: HTMLElement) => glides.has(el);
+
 /**
  * UI state lives in data-* attributes on <html> so CSS can react to it.
  * ClientRouter replaces <html>'s attributes on every swap, so re-apply them.

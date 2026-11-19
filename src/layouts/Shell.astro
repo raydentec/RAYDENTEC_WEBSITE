@@ -161,9 +161,10 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
   :global(html[data-resizing]) .scroller {
     transition: none !important;
   }
-  /* Snapping paused while a wheel gesture glides the column, or wheel input from outside it is
-     forwarded (scripts/wheel.ts). */
-  :global(.scroller[data-wheel]) {
+  /* Snapping paused while wheel input from outside the column is forwarded (scripts/wheel.ts),
+     or the column glides by script (Safari / Firefox, scripts/dom.ts glideScroll). */
+  :global(.scroller[data-wheel]),
+  :global(.scroller[data-gliding]) {
     scroll-snap-type: none !important;
   }
   .scroller:focus {

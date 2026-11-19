@@ -2,14 +2,13 @@
  * Vertical mouse wheel / trackpad scrolling of the content column, from anywhere in the
  * viewport (not only over the column: nav, rail, footer, background, gutters…).
  *
- * Between containers, each wheel gesture glides to the next / previous one by script:
- * GLIDE_MS with Chrome's smooth-scroll curve (dom.ts CHROME_EASE), as when a container is
- * clicked. Left to the browser, wheel snapping differs a lot: Chrome switched in a quick
- * jerk, and in Safari every further wheel event cut into the running glide (stutter). The
- * rest of the gesture (further notches, trackpad momentum) is swallowed until the input
- * has stopped for INPUT_REST_MS; a new gesture during a glide carries on from where that
- * glide is heading. Snapping is paused while gliding (#scroller[data-wheel="glide"],
- * Shell.astro); a click, key or touch stops the glide and snapping takes over again.
+ * Between containers, each wheel gesture glides to the next / previous one (dom.ts
+ * glideScroll), as when a container is clicked or SCROLL is used. Left to the browser,
+ * wheel snapping differs a lot: Chrome switched in a quick jerk, and in Safari every
+ * further wheel event cut into the running glide (stutter). The rest of the gesture
+ * (further notches, trackpad momentum) is swallowed until the input has stopped for
+ * INPUT_REST_MS; a new gesture during a glide carries on from where that glide is heading.
+ * A click, key or touch stops the glide and snapping takes over again.
  *
  * A container a little taller than the visible area (by up to half of it; short windows,
  * phones) has two stops: its top and its bottom edge. One taller by less than
@@ -30,13 +29,21 @@
  * scrolls itself), the open mobile page menu, pinch-zoom (ctrl) and mostly-horizontal
  * gestures (sideways rows, the hero slider).
  */
-import { CHROME_EASE, containers, getRootState, getScroller, mq, scrollBehavior, snapOffset, snapTop } from './dom';
+import {
+  containers,
+  getRootState,
+  getScroller,
+  glideScroll,
+  isGliding,
+  scrollBehavior,
+  snapOffset,
+  snapTop,
+  stopGlide,
+} from './dom';
 
 const SETTLE_MS = 140;
 /** Moving at least this far commits to the next container in that direction. */
 const COMMIT_PX = 30;
-/** Glide from container to container. */
-const GLIDE_MS = 625;
 /** A wheel gesture (incl. trackpad momentum) has ended when no event came for this long. */
 const INPUT_REST_MS = 200;
 /** A container this much taller than the visible area or less counts as fitting (one stop). */
@@ -48,9 +55,7 @@ let gestureStart: number | null = null;
 /** Current gesture: 'step' (one glide), 'free' (scrolls freely), or null between gestures. */
 let gesture: 'step' | 'free' | null = null;
 let gestureTimer = 0;
-/** Running glide: requestAnimationFrame id (0: none), its scroller and destination. */
-let glideFrame = 0;
-let glideScroller: HTMLElement | null = null;
+/** Where the running wheel glide is heading. */
 let glideTo = 0;
 
 function normalizedDelta(e: WheelEvent, scroller: HTMLElement) {
@@ -90,43 +95,6 @@ function stepTarget(scroller: HTMLElement, pos: number, dir: number): number | '
   const ahead = points.filter((p) => (dir > 0 ? p > pos + 2 : p < pos - 2));
   if (!ahead.length) return null;
   return dir > 0 ? Math.min(...ahead) : Math.max(...ahead);
-}
-
-/** Stop a running glide where it is; snapping takes over again. */
-function stopGlide() {
-  if (!glideFrame) return;
-  cancelAnimationFrame(glideFrame);
-  glideFrame = 0;
-  if (glideScroller?.dataset.wheel === 'glide') delete glideScroller.dataset.wheel;
-  glideScroller = null;
-}
-
-function glide(scroller: HTMLElement, to: number) {
-  cancelAnimationFrame(glideFrame);
-  glideFrame = 0;
-  glideTo = to;
-  const from = scroller.scrollTop;
-  if (mq.reducedMotion.matches || Math.abs(to - from) < 1) {
-    if (scroller.dataset.wheel === 'glide') delete scroller.dataset.wheel;
-    scroller.scrollTo({ top: to, behavior: 'instant' });
-    return;
-  }
-  scroller.dataset.wheel = 'glide';
-  glideScroller = scroller;
-  const start = performance.now();
-  const frame = (now: number) => {
-    const p = Math.min(1, (now - start) / GLIDE_MS);
-    scroller.scrollTo({ top: from + (to - from) * CHROME_EASE(p), behavior: 'instant' });
-    if (p < 1) {
-      glideFrame = requestAnimationFrame(frame);
-      return;
-    }
-    // Arrived on a snap position: snapping takes over again (snap.ts selects it).
-    glideFrame = 0;
-    glideScroller = null;
-    delete scroller.dataset.wheel;
-  };
-  glideFrame = requestAnimationFrame(frame);
 }
 
 /** Forwarded free scrolling has stopped: settle on a container (see top). */
@@ -188,10 +156,13 @@ document.addEventListener(
 
     // A new gesture: glide one container, or scroll freely (see top).
     if (gesture === null) {
-      const from = glideFrame ? glideTo : scroller.scrollTop;
+      const from = isGliding(scroller) ? glideTo : scroller.scrollTop;
       const to = scroller.dataset.snap === 'off' ? 'free' : stepTarget(scroller, from, Math.sign(dy));
       gesture = to === 'free' ? 'free' : 'step';
-      if (typeof to === 'number') glide(scroller, to);
+      if (typeof to === 'number') {
+        glideTo = to;
+        glideScroll(scroller, { top: to });
+      }
     }
     window.clearTimeout(gestureTimer);
     gestureTimer = window.setTimeout(() => (gesture = null), INPUT_REST_MS);
@@ -213,11 +184,16 @@ document.addEventListener(
   { passive: false },
 );
 
-// The user takes over (click, key, touch): stop a glide, snapping takes over.
-for (const type of ['pointerdown', 'keydown', 'touchstart'] as const) {
-  document.addEventListener(type, stopGlide, { capture: true, passive: true });
+// The user takes over (key, touch): stop a glide, snapping takes over. (Clicks don't stop
+// it: a click on a container or SCROLL takes it over, snap.ts / scroll-control.ts.)
+const stopColumnGlide = () => {
+  const scroller = getScroller();
+  if (scroller) stopGlide(scroller);
+};
+for (const type of ['keydown', 'touchstart'] as const) {
+  document.addEventListener(type, stopColumnGlide, { capture: true, passive: true });
 }
 document.addEventListener('astro:before-swap', () => {
-  stopGlide();
+  stopColumnGlide();
   gesture = null;
 });

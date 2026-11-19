@@ -23,12 +23,12 @@
 import type { TransitionBeforeSwapEvent } from 'astro:transitions/client';
 import {
   ACTIVE_CHANGE,
+  glideScroll,
   activeIndex,
   containers,
   getScroller,
   onPageLoad,
   onScrollerScroll,
-  scrollBehavior,
   snapOffset,
   snapTop,
 } from './dom';
@@ -152,7 +152,7 @@ document.addEventListener('click', (e) => {
   // Snap to the next container below the snap line.
   const line = scroller.getBoundingClientRect().top + snapOffset(scroller);
   const next = containers(scroller).find((cf) => snapTop(cf) > line + 2);
-  if (next) scroller.scrollBy({ top: snapTop(next) - line, behavior: scrollBehavior() });
+  if (next) glideScroll(scroller, { top: scroller.scrollTop + snapTop(next) - line });
 });
 
 /** While the window is being resized the control follows its size at once (no width
