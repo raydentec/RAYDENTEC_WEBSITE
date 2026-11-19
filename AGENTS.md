@@ -78,6 +78,8 @@ clips at 1024, which is a separate breakpoint).
 - `href` set to `null`, or to a bracketed placeholder like `"[URL]"`, renders a **disabled** button (`isPlaceholder`).
   External links open in a new tab (`linkAttrs`).
 - `releaseDate` is `YYYY-MM-DD`. Games rows and Projects groups list items newest first.
+- Start hero `images`: a path, or `{ "src": "assets/…", "mobilePosition": "center" }` to give
+  that slide its own mobile placement (CSS `object-position`; otherwise `imagePosition.mobile`).
 - Games: one row per category (rows sorted alphabetically). A game in several categories appears in each of their rows.
 - Projects: `category` must be one of `projectCategoryOrder` in `lib/project-categories.ts`.
   To add a category, add it there.

@@ -11,6 +11,8 @@
  * the previous / next slide (not on mobile: swipe). Copies of the last slide before the
  * first and of the first after the last let the slider go round both ways instead of rewinding. With one
  * image there is nothing to slide: no copies, indicator, arrows, scrolling or timer.
+ * Image placement (object-position) per layout from imagePosition; on mobile a slide can
+ * have its own (images[].mobilePosition, content/start.json).
  *
  * The hero is shorter than the scroll area, so the explore row (StartExplore.astro) peeks
  * in below it: its cards' top edge lines up with the top of the scroll control. Hero
@@ -28,7 +30,8 @@ import LowerThird from './LowerThird.astro';
 import { asset } from '../lib/content';
 
 interface Props {
-  images: string[];
+  /** mobilePosition: this slide's own mobile object-position (else imagePosition.mobile). */
+  images: { src: string; mobilePosition?: string }[];
   imageAlt: string;
   imagePosition: { desktop: string; tablet: string; mobile: string };
   name: string;
@@ -46,7 +49,12 @@ const slides = [
   ...(looped ? [{ image: images[images.length - 1], clone: true }] : []),
   ...images.map((image) => ({ image, clone: false })),
   ...(looped ? [{ image: images[0], clone: true }] : []),
-];
+].map(({ image, clone }) => ({
+  src: image.src,
+  clone,
+  // Overrides the hero's --pos-mobile for this slide (and its copy).
+  style: image.mobilePosition ? `--pos-mobile: ${image.mobilePosition}` : undefined,
+}));
 const first = looped ? 1 : 0;
 const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imagePosition.tablet}; --pos-mobile: ${imagePosition.mobile}`;
 ---
@@ -55,12 +63,13 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
   <div class="hero__art" aria-hidden={imageAlt ? undefined : 'true'}>
     <div class:list={['hero__track', { 'hero__track--single': images.length < 2 }]} data-slide-track>
       {
-        slides.map(({ image, clone }, i) => (
+        slides.map(({ src, clone, style }, i) => (
           <img
             class="hero__img"
             data-slide={clone ? undefined : ''}
             data-slide-clone={clone ? '' : undefined}
-            src={asset(image)}
+            src={asset(src)}
+            style={style}
             alt={clone ? '' : imageAlt}
             width="1920"
             height="1080"

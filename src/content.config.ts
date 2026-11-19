@@ -50,10 +50,21 @@ const start = defineCollection({
   }),
   schema: z.object({
     hero: z.object({
-      /** Slider images (StartHero.astro), shown in this order. */
-      images: z.array(assetPath).min(1),
+      /**
+       * Slider images (StartHero.astro), shown in this order: a path, or
+       * { src, mobilePosition } to give that slide its own mobile object-position
+       * (otherwise imagePosition.mobile). Normalised to { src, mobilePosition? }.
+       */
+      images: z
+        .array(
+          z.union([
+            assetPath.transform((src) => ({ src, mobilePosition: undefined as string | undefined })),
+            z.object({ src: assetPath, mobilePosition: z.string().optional() }),
+          ]),
+        )
+        .min(1),
       imageAlt: z.string(),
-      /** CSS object-position per layout. */
+      /** CSS object-position per layout (mobile: per slide in images, if set). */
       imagePosition: z.object({ desktop: z.string(), tablet: z.string(), mobile: z.string() }),
       name: z.string(),
       tagline: z.string(),
