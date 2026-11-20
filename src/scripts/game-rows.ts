@@ -67,16 +67,34 @@ function currentIndex(row: HTMLElement) {
 
 /**
  * A touch swipe on a row (native scrolling): the game it counts from — the one a switch
- * still under way heads to, else the one at rest — and, once the finger has moved
- * SWIPE_DECIDE_PX sideways, its direction (from the finger: the row itself may still be
- * moving). From then the row's target is the next game (its line lit at once), so the next
+ * still under way heads to, else the one at rest — and, once the finger or the track has
+ * moved SWIPE_DECIDE_PX sideways, its direction (phones may hold back touch moves while a
+ * fling scrolls; the track can't snap back meanwhile: at rest it isn't moving, mid-switch
+ * its snapping is paused). From then the row's target is the next game (its line lit at once), so the next
  * swipe, key or wheel already goes on from there. A swipe that began while a switch was
  * under way (`chained`) keeps the row's snapping paused (it would snap back meanwhile) and
  * glides to its target when let go (or back, not swiped); one from rest is left to the
  * browser (scroll-snap-stop stops it at the next game).
  */
 const SWIPE_DECIDE_PX = 10;
-let touch: { row: HTMLElement; base: number; x0: number; y0: number; chained: boolean; dir: number } | null = null;
+let touch: {
+  row: HTMLElement;
+  base: number;
+  x0: number;
+  y0: number;
+  left0: number;
+  chained: boolean;
+  dir: number;
+} | null = null;
+
+/** The touch swipe's direction is known (finger or track moved, see touch): target the next game. */
+function decide(dir: number) {
+  if (!touch || touch.dir) return;
+  touch.dir = dir;
+  const to = Math.max(0, Math.min(games(touch.row).length - 1, touch.base + dir));
+  targets.set(touch.row, to);
+  light(touch.row, to);
+}
 /** Rows a touch swipe has let go of, still settling (the browser's own snapping). */
 const settlingTouch = new WeakSet<HTMLElement>();
 
@@ -127,9 +145,15 @@ function show(row: HTMLElement, index: number) {
 const onTrackScroll = (e: Event, delay: number) => {
   const t = e.target;
   if (!(t instanceof HTMLElement) || !t.matches('[data-row-track]')) return;
-  if ('gliding' in t.dataset) return; // a wheel glide syncs once it arrives
   const row = t.closest<HTMLElement>('[data-row]');
   if (!row) return;
+  // A touch swipe the track has followed far enough: its direction (see touch).
+  if (touch?.row === row && !touch.dir && Math.abs(t.scrollLeft - touch.left0) >= SWIPE_DECIDE_PX) {
+    decide(Math.sign(t.scrollLeft - touch.left0));
+  }
+  if ('gliding' in t.dataset) return; // a glide syncs once it arrives
+  // No switch under way (the browser's own scrolling): the line follows the row.
+  if (!targets.has(row)) light(row, currentIndex(row));
   window.clearTimeout(settleTimers.get(row));
   settleTimers.set(
     row,
@@ -238,7 +262,15 @@ for (const type of ['touchstart'] as const) {
       stopGlide(t);
       if (chained) t.dataset.gliding = ''; // snapping stays paused (see touch above)
       const f = (e as TouchEvent).touches[0];
-      touch = { row, base: targets.get(row) ?? currentIndex(row), x0: f.clientX, y0: f.clientY, chained, dir: 0 };
+      touch = {
+        row,
+        base: targets.get(row) ?? currentIndex(row),
+        x0: f.clientX,
+        y0: f.clientY,
+        left0: t.scrollLeft,
+        chained,
+        dir: 0,
+      };
     },
     { capture: true, passive: true },
   );
@@ -251,10 +283,7 @@ document.addEventListener(
     const f = e.touches[0];
     const dx = f.clientX - touch.x0;
     if (Math.abs(dx) < SWIPE_DECIDE_PX || Math.abs(dx) < Math.abs(f.clientY - touch.y0)) return;
-    touch.dir = dx < 0 ? 1 : -1; // finger to the left: on to the next game
-    const to = Math.max(0, Math.min(games(touch.row).length - 1, touch.base + touch.dir));
-    targets.set(touch.row, to);
-    light(touch.row, to);
+    decide(dx < 0 ? 1 : -1); // finger to the left: on to the next game
   },
   { capture: true, passive: true },
 );

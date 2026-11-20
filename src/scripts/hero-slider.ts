@@ -63,8 +63,10 @@ let target: number | null = null;
 let touching = false;
 /**
  * A touch swipe (native scrolling): the slide it counts from — the one a switch still under
- * way heads to, else the current one — and, once the finger has moved SWIPE_DECIDE_PX
- * sideways, its direction (from the finger: the track may still be moving): from then its
+ * way heads to, else the current one — and, once the finger or the track has moved
+ * SWIPE_DECIDE_PX sideways, its direction (phones may hold back touch moves while a fling
+ * scrolls; the track can't snap back meanwhile: at rest it isn't moving, mid-switch its
+ * snapping is paused): from then its
  * slide (`swipeTarget`, -1 / count = a copy) is the one the next input goes on from, its
  * line lit at once. Begun while a switch was under way (`chained`), the track's snapping
  * stays paused (it would snap back meanwhile) and it glides to its slide when let go (or
@@ -72,7 +74,15 @@ let touching = false;
  * the track rests (settle).
  */
 const SWIPE_DECIDE_PX = 10;
-let swipe: { base: number; x0: number; y0: number; chained: boolean; dir: number } | null = null;
+let swipe: { base: number; x0: number; y0: number; left0: number; chained: boolean; dir: number } | null = null;
+
+/** The touch swipe's direction is known (finger or track moved, see swipe): its slide. */
+function decideSwipe(root: HTMLElement, dir: number) {
+  if (!swipe || swipe.dir) return;
+  swipe.dir = dir;
+  swipeTarget = swipe.base + dir;
+  lightDot(root, (swipeTarget + count(root)) % count(root));
+}
 let swipeTarget: number | null = null;
 /** Presses (±1 each) waiting to go on past the copy a glide is heading to (step). */
 let pending = 0;
@@ -246,6 +256,10 @@ document.addEventListener(
     // Scrolled by hand: no timer until the track rests (settle).
     if (target === null) window.clearInterval(timer);
     const n = count(root);
+    // A touch swipe the track has followed far enough: its direction (see swipe).
+    if (swipe && touching && !swipe.dir && Math.abs(t.scrollLeft - swipe.left0) >= SWIPE_DECIDE_PX) {
+      decideSwipe(root, Math.sign(t.scrollLeft - swipe.left0));
+    }
     // The line of the slide a switch heads to (it counts at once), else the one under way.
     const heading = target ?? swipeTarget;
     lightDot(root, ((heading ?? position(t)) + n) % n);
@@ -292,7 +306,7 @@ for (const type of ['touchstart', 'pointerdown'] as const) {
         const base = heading === null ? current : (heading + n) % n;
         if (heading !== null) track(root)?.setAttribute('data-gliding', ''); // snapping stays paused
         const f = (e as TouchEvent).touches[0];
-        swipe = { base, x0: f.clientX, y0: f.clientY, chained: heading !== null, dir: 0 };
+        swipe = { base, x0: f.clientX, y0: f.clientY, left0: track(root)?.scrollLeft ?? 0, chained: heading !== null, dir: 0 };
       }
     },
     { capture: true, passive: true },
@@ -331,10 +345,8 @@ document.addEventListener(
     const f = e.touches[0];
     const dx = f.clientX - swipe.x0;
     if (Math.abs(dx) < SWIPE_DECIDE_PX || Math.abs(dx) < Math.abs(f.clientY - swipe.y0)) return;
-    swipe.dir = dx < 0 ? 1 : -1; // finger to the left: on to the next slide
-    swipeTarget = swipe.base + swipe.dir;
     const root = slider();
-    if (root) lightDot(root, (swipeTarget + count(root)) % count(root));
+    if (root) decideSwipe(root, dx < 0 ? 1 : -1); // finger to the left: on to the next slide
   },
   { capture: true, passive: true },
 );
