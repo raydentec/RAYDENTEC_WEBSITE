@@ -17,7 +17,8 @@
  * A click, key or touch stops the glide and snapping takes over again.
  *
  * A container a little taller than the visible area (by up to half of it; short windows,
- * phones) has two stops: its top and its bottom edge. One taller by less than
+ * phones) has two stops on the way down: its top and its bottom edge; on the way up just its
+ * top (any taller container is entered at its top going up, too, then scrolled down). One taller by less than
  * TALL_IGNORE_PX (a Games row's bottom margin) counts as fitting: just its top.
  *
  * Mobile: the profile / info area above the containers counts as one more container, from
@@ -110,7 +111,9 @@ function stepTarget(scroller: HTMLElement, pos: number, dir: number): number | S
     (s) => s.end - s.start > free && (dir > 0 ? pos >= s.start - 2 && pos < s.end - 2 : pos <= s.end + 2 && pos > s.start + 2),
   );
   if (tall) return tall;
-  const points = spans.flatMap((s) => (s.end - s.start > TALL_IGNORE_PX ? [s.start, s.end] : [s.start]));
+  // Going down, a container a little taller than the screen also stops at its bottom edge;
+  // going up, at its top only (the visitor scrolls on down through it from there).
+  const points = spans.flatMap((s) => (dir > 0 && s.end - s.start > TALL_IGNORE_PX ? [s.start, s.end] : [s.start]));
   const ahead = points.filter((p) => (dir > 0 ? p > pos + 2 : p < pos - 2));
   if (!ahead.length) return null;
   return dir > 0 ? Math.min(...ahead) : Math.max(...ahead);

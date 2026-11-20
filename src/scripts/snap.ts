@@ -26,7 +26,6 @@ import {
   mq,
   onPageLoad,
   onScrollerScroll,
-  scrollBehavior,
   snapOffset,
   snapSpans,
   snapTop,
@@ -85,14 +84,19 @@ function settle(scroller: HTMLElement, align: boolean) {
   if (!('gliding' in scroller.dataset)) clearArriving(scroller);
   // Wheel input forwarded from outside the column settles itself (wheel.ts).
   if (!align || 'wheel' in scroller.dataset || 'gliding' in scroller.dataset) return;
-  if (scroller.dataset.snap === 'off' || holdTo !== null) {
-    home = null; // in the free-scrolling profile area
+  // The free-scrolling mobile profile area (or a trip to it, scrollToTop): nothing to align.
+  const firstStart = snapSpans(scroller)[0]?.start ?? 0;
+  if (holdTo !== null || (mq.mobile.matches && scroller.scrollTop < firstStart - 2)) {
+    home = null;
     return;
   }
+  // Within the container last rested in, scrolling is free (also partway into a tall one,
+  // where snapping is off). Come to rest in another one — scrolling up into a tall one too —
+  // its top is aligned: the visitor scrolls on down through it from there.
   if (target === home) return;
   home = target;
   const offset = snapTop(target) - snapLine(scroller);
-  if (Math.abs(offset) > 1) scroller.scrollBy({ top: offset, behavior: scrollBehavior() });
+  if (Math.abs(offset) > 1) glideScroll(scroller, { top: scroller.scrollTop + offset });
 }
 
 /** Extra space after the last container so it can snap to the top as well. */

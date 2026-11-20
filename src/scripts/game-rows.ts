@@ -10,8 +10,9 @@
  * Chrome's own smooth scroll there, a glide by script elsewhere; Safari's own was a quick
  * jump on click).
  *
- * Touch swipes move one game each too, however strong (dom.ts bindSwipe), as do the ← / →
- * keys (one per press: holding one doesn't run on).
+ * Touch swipes scroll natively, but stop at the next game (scroll-snap-stop, GameRow.astro);
+ * one that still lands further away is brought back to the next game once it rests
+ * (touchFrom below). The ← / → keys move one game per press (holding one doesn't run on).
  *
  * Sideways wheel / trackpad / Shift+wheel over a track doesn't scroll it natively: each
  * gesture glides one game on, and the rest of the gesture (further notches, trackpad
@@ -22,7 +23,6 @@
  */
 import {
   ACTIVE_CHANGE,
-  bindSwipe,
   getRootState,
   getScroller,
   glideScroll,
@@ -64,9 +64,23 @@ function currentIndex(row: HTMLElement) {
   return best;
 }
 
+/** Game a touch swipe began at, while the finger is down / the swipe hasn't come to rest. */
+const touchFrom = new WeakMap<HTMLElement, number>();
+let touchingRow: HTMLElement | null = null;
+
 function sync(row: HTMLElement) {
   targets.delete(row);
   const current = currentIndex(row);
+  // A swipe that came to rest more than one game from where it began (a browser that let
+  // it fly past scroll-snap-stop): back to the next game in its direction.
+  const from = touchFrom.get(row);
+  if (from !== undefined && touchingRow !== row) {
+    touchFrom.delete(row);
+    if (Math.abs(current - from) > 1) {
+      show(row, from + Math.sign(current - from));
+      return;
+    }
+  }
   const active = row.classList.contains('is-active');
   games(row).forEach((game, i) => game.classList.toggle('is-active', active && i === current));
   dots(row).forEach((dot, i) => {
@@ -189,24 +203,6 @@ document.addEventListener(
   { capture: true, passive: false },
 );
 
-// Touch swipes: one game per swipe (dom.ts bindSwipe), from the game the drag began at.
-bindSwipe(
-  '[data-row-track]',
-  (t) => {
-    const g = t.querySelectorAll<HTMLElement>('[data-cf]');
-    return g.length > 1 ? g[1].getBoundingClientRect().left - g[0].getBoundingClientRect().left : t.clientWidth;
-  },
-  (t, dir, startLeft) => {
-    const row = t.closest<HTMLElement>('[data-row]');
-    if (!row) return;
-    const max = t.scrollWidth - t.clientWidth;
-    const at = games(row).map((g) => Math.min(max, Math.max(0, t.scrollLeft + g.getBoundingClientRect().left - snapLine(t))));
-    const from = at.reduce((best, x, i) => (Math.abs(x - startLeft) < Math.abs(at[best] - startLeft) ? i : best), 0);
-    const to = from + dir;
-    show(row, to >= 0 && to < at.length ? to : from);
-  },
-);
-
 // The user takes over (touch on a track): stop the glide. (Clicks don't: a click on a
 // line or a partly visible game takes it over.)
 for (const type of ['touchstart'] as const) {
@@ -214,7 +210,30 @@ for (const type of ['touchstart'] as const) {
     type,
     (e) => {
       const t = (e.target as Element | null)?.closest<HTMLElement>('[data-row-track]');
-      if (t) stopGlide(t);
+      if (!t) return;
+      stopGlide(t);
+      const row = t.closest<HTMLElement>('[data-row]');
+      if (row) {
+        touchingRow = row;
+        touchFrom.set(row, targets.get(row) ?? currentIndex(row));
+      }
+    },
+    { capture: true, passive: true },
+  );
+}
+for (const type of ['touchend', 'touchcancel'] as const) {
+  document.addEventListener(
+    type,
+    (e) => {
+      if ((e as TouchEvent).touches.length) return;
+      const row = touchingRow;
+      touchingRow = null;
+      // It may already rest (a slow drag): check now; otherwise sync does once it rests.
+      const t = row && track(row);
+      if (row && t) {
+        window.clearTimeout(settleTimers.get(row));
+        settleTimers.set(row, window.setTimeout(() => sync(row), SETTLE_MS));
+      }
     },
     { capture: true, passive: true },
   );

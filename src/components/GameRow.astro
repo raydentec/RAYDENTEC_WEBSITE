@@ -175,8 +175,6 @@ const headingId = `games-${index}`;
 
   /* Sideways track: no scrollbar; snaps each game to the column's left edge. */
   .grow__track {
-    /* Sideways touch drags are the script's (one game per swipe, scripts/dom.ts bindSwipe). */
-    touch-action: pan-y;
     overflow-x: auto;
     overflow-y: hidden;
     overscroll-behavior-x: contain;

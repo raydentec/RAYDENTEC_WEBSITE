@@ -1,7 +1,8 @@
 /**
  * Start hero image slider (StartHero.astro). The slides sit side by side in a track that
- * scrolls and snaps sideways — swipe (one slide per swipe, however strong: dom.ts
- * bindSwipe), and ← / → while the hero is in view (one slide per press). Sideways wheel /
+ * scrolls and snaps sideways — swipe (stopping at the next slide, scroll-snap-stop; one that
+ * still lands further away is brought back to the next slide, touchFrom), and ← / → while
+ * the hero is in view (one slide per press). Sideways wheel /
  * trackpad / Shift+wheel input doesn't scroll the track natively: each gesture switches
  * one slide by script (as the indicator lines do), and the rest of the gesture (further
  * notches, trackpad momentum) is ignored until the next gesture (dom.ts wheelGesture).
@@ -30,7 +31,6 @@
  * stops it.
  */
 import {
-  bindSwipe,
   CHROME_EASE,
   getRootState,
   getScroller,
@@ -61,6 +61,8 @@ let held = false;
 let target: number | null = null;
 /** A finger is on the track. */
 let touching = false;
+/** Slide a touch swipe began at, until it has come to rest (settle). */
+let touchFrom: number | null = null;
 /** Presses (±1 each) waiting to go on past the copy a glide is heading to (step). */
 let pending = 0;
 /** Current wheel gesture: sideways travel so far, and whether it has switched a slide. */
@@ -152,6 +154,16 @@ function settle(root: HTMLElement) {
     if (Math.abs(t.scrollLeft - left(t, index)) > 2) return; // still snapping: more scroll events follow
   }
   const byHand = target === null;
+  // A swipe that came to rest more than one slide from where it began (a browser that let
+  // it fly past scroll-snap-stop): back to the next slide in its direction.
+  if (byHand && touchFrom !== null && !touching) {
+    const from = touchFrom;
+    touchFrom = null;
+    if (Math.abs(index - from) > 1) {
+      scrollToSlide(root, from + Math.sign(index - from));
+      return;
+    }
+  }
   target = null;
   pending = 0;
   // Scrolled by hand: the timer starts again now that the track rests (also on the same slide).
@@ -266,7 +278,10 @@ for (const type of ['touchstart', 'pointerdown'] as const) {
       if (!(e.target as Element | null)?.closest('[data-slide-track]')) return;
       stopGlide();
       target = null;
-      if (type === 'touchstart') touching = true;
+      if (type === 'touchstart') {
+        touching = true;
+        touchFrom = current;
+      }
     },
     { capture: true, passive: true },
   );
@@ -296,21 +311,6 @@ document.addEventListener(
   },
   { capture: true, passive: false },
 );
-// Touch swipes: one slide per swipe, however strong (dom.ts bindSwipe), from the slide the
-// drag began at (a copy past either end goes round, as with the arrows).
-bindSwipe(
-  '[data-slide-track]',
-  (t) => t.clientWidth,
-  (t, dir, startLeft) => {
-    const root = t.closest<HTMLElement>('[data-slider]');
-    if (!root || !looped(root)) return;
-    const n = count(root);
-    const from = Math.min(n, Math.max(-1, Math.round(startLeft / t.clientWidth) - 1));
-    scrollToSlide(root, Math.min(n, Math.max(-1, from + dir)));
-    restart();
-  },
-);
-
 // Finger lifted: settle again (a jump onto the real slide may have been waiting).
 for (const type of ['touchend', 'touchcancel'] as const) {
   document.addEventListener(
@@ -396,6 +396,7 @@ onPageLoad(() => {
   held = false;
   target = null;
   touching = false;
+  touchFrom = null;
   const root = slider();
   if (!root) return;
   place(root);
