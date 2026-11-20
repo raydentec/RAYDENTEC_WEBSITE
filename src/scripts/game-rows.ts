@@ -10,9 +10,10 @@
  * Chrome's own smooth scroll there, a glide by script elsewhere; Safari's own was a quick
  * jump on click).
  *
- * Touch swipes scroll natively, but stop at the next game (scroll-snap-stop, GameRow.astro);
- * one that still lands further away is brought back to the next game once it rests
- * (touchFrom below). The ← / → keys move one game per press (holding one doesn't run on).
+ * Touch swipes scroll natively, but stop at the next game (scroll-snap-stop, GameRow.astro).
+ * Every switch — swipe, key, wheel, click — counts at once: the row's target (and lit game)
+ * moves on as it starts, so the next input goes on from there (quick swipes add up; see
+ * `touch` below). The ← / → keys move one game per press (holding one doesn't run on).
  *
  * Sideways wheel / trackpad / Shift+wheel over a track doesn't scroll it natively: each
  * gesture glides one game on, and the rest of the gesture (further notches, trackpad
@@ -64,29 +65,42 @@ function currentIndex(row: HTMLElement) {
   return best;
 }
 
-/** Game a touch swipe began at, while the finger is down / the swipe hasn't come to rest. */
-const touchFrom = new WeakMap<HTMLElement, number>();
-let touchingRow: HTMLElement | null = null;
+/**
+ * A touch swipe on a row (native scrolling): the game it counts from — the one a switch
+ * still under way heads to, else the one at rest — and, once the finger has moved
+ * SWIPE_DECIDE_PX sideways, its direction (from the finger: the row itself may still be
+ * moving). From then the row's target is the next game (its line lit at once), so the next
+ * swipe, key or wheel already goes on from there. A swipe that began while a switch was
+ * under way (`chained`) keeps the row's snapping paused (it would snap back meanwhile) and
+ * glides to its target when let go (or back, not swiped); one from rest is left to the
+ * browser (scroll-snap-stop stops it at the next game).
+ */
+const SWIPE_DECIDE_PX = 10;
+let touch: { row: HTMLElement; base: number; x0: number; y0: number; chained: boolean; dir: number } | null = null;
+/** Rows a touch swipe has let go of, still settling (the browser's own snapping). */
+const settlingTouch = new WeakSet<HTMLElement>();
 
-function sync(row: HTMLElement) {
-  targets.delete(row);
-  const current = currentIndex(row);
-  // A swipe that came to rest more than one game from where it began (a browser that let
-  // it fly past scroll-snap-stop): back to the next game in its direction.
-  const from = touchFrom.get(row);
-  if (from !== undefined && touchingRow !== row) {
-    touchFrom.delete(row);
-    if (Math.abs(current - from) > 1) {
-      show(row, from + Math.sign(current - from));
-      return;
-    }
+/**
+ * Light a game as the row's current one: its indicator line, and (`select`, once the row
+ * rests) its selected look while the row is selected. Not mid-switch: that changes the
+ * frames' layout, and the browser re-snapped the moving row back to where it was.
+ */
+function light(row: HTMLElement, index: number, select = false) {
+  if (select) {
+    const active = row.classList.contains('is-active');
+    games(row).forEach((game, i) => game.classList.toggle('is-active', active && i === index));
   }
-  const active = row.classList.contains('is-active');
-  games(row).forEach((game, i) => game.classList.toggle('is-active', active && i === current));
   dots(row).forEach((dot, i) => {
-    if (i === current) dot.setAttribute('aria-current', 'true');
+    if (i === index) dot.setAttribute('aria-current', 'true');
     else dot.removeAttribute('aria-current');
   });
+}
+
+function sync(row: HTMLElement) {
+  if (touch?.row === row) return; // a finger is still on it (touchend syncs)
+  settlingTouch.delete(row);
+  targets.delete(row);
+  light(row, currentIndex(row), true);
 }
 
 const syncAll = () => rows().forEach(sync);
@@ -99,7 +113,14 @@ function show(row: HTMLElement, index: number) {
   const max = t.scrollWidth - t.clientWidth;
   const to = Math.min(max, Math.max(0, t.scrollLeft + game.getBoundingClientRect().left - snapLine(t)));
   targets.set(row, index);
-  glideScroll(t, { left: to }, () => sync(row));
+  light(row, index); // the switch counts at once (see touch above)
+  // A settle check still pending from earlier scrolling would clear the target mid-glide.
+  window.clearTimeout(settleTimers.get(row));
+  // Right after a touch swipe, by script (its snapping paused): the browser's own pending
+  // snap would pull the row back to the swipe's game (dom.ts glideScroll).
+  const afterTouch = settlingTouch.has(row);
+  settlingTouch.delete(row);
+  glideScroll(t, { left: to }, () => sync(row), undefined, afterTouch);
 }
 
 // Track scrolls (scroll events don't bubble): update the row once it pauses / ends.
@@ -211,29 +232,50 @@ for (const type of ['touchstart'] as const) {
     (e) => {
       const t = (e.target as Element | null)?.closest<HTMLElement>('[data-row-track]');
       if (!t) return;
-      stopGlide(t);
       const row = t.closest<HTMLElement>('[data-row]');
-      if (row) {
-        touchingRow = row;
-        touchFrom.set(row, targets.get(row) ?? currentIndex(row));
-      }
+      if (!row) return;
+      const chained = targets.has(row);
+      stopGlide(t);
+      if (chained) t.dataset.gliding = ''; // snapping stays paused (see touch above)
+      const f = (e as TouchEvent).touches[0];
+      touch = { row, base: targets.get(row) ?? currentIndex(row), x0: f.clientX, y0: f.clientY, chained, dir: 0 };
     },
     { capture: true, passive: true },
   );
 }
+// The finger has moved far enough sideways: the swipe's target is the next game that way.
+document.addEventListener(
+  'touchmove',
+  (e) => {
+    if (!touch || touch.dir) return;
+    const f = e.touches[0];
+    const dx = f.clientX - touch.x0;
+    if (Math.abs(dx) < SWIPE_DECIDE_PX || Math.abs(dx) < Math.abs(f.clientY - touch.y0)) return;
+    touch.dir = dx < 0 ? 1 : -1; // finger to the left: on to the next game
+    const to = Math.max(0, Math.min(games(touch.row).length - 1, touch.base + touch.dir));
+    targets.set(touch.row, to);
+    light(touch.row, to);
+  },
+  { capture: true, passive: true },
+);
 for (const type of ['touchend', 'touchcancel'] as const) {
   document.addEventListener(
     type,
     (e) => {
-      if ((e as TouchEvent).touches.length) return;
-      const row = touchingRow;
-      touchingRow = null;
-      // It may already rest (a slow drag): check now; otherwise sync does once it rests.
-      const t = row && track(row);
-      if (row && t) {
-        window.clearTimeout(settleTimers.get(row));
-        settleTimers.set(row, window.setTimeout(() => sync(row), SETTLE_MS));
+      if ((e as TouchEvent).touches.length || !touch) return;
+      const { row, chained, base } = touch;
+      touch = null;
+      // Begun while a switch was under way: on to its target (the browser would stop at the
+      // earlier one), or back to where it counted from if it wasn't swiped. From rest: the
+      // browser's snapping settles it.
+      if (chained) {
+        settlingTouch.add(row); // by script: its snapping is still paused (show)
+        show(row, targets.get(row) ?? base);
+        return;
       }
+      settlingTouch.add(row);
+      window.clearTimeout(settleTimers.get(row));
+      settleTimers.set(row, window.setTimeout(() => sync(row), SETTLE_MS));
     },
     { capture: true, passive: true },
   );

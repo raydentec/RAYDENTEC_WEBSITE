@@ -65,7 +65,15 @@ const glides = new WeakMap<HTMLElement, () => void>();
  * running one is (snapping stays paused, or the track would be pulled to a snap point
  * first). `onDone` runs once it has arrived; not after stopGlide().
  */
-export function glideScroll(el: HTMLElement, to: { left?: number; top?: number }, onDone?: () => void, ms = GLIDE_MS) {
+export function glideScroll(
+  el: HTMLElement,
+  to: { left?: number; top?: number },
+  onDone?: () => void,
+  ms = GLIDE_MS,
+  /** By script even in Chromium: while the browser's own snapping of a touch swipe is
+      still pending there, it pulled the track back after a native smooth scroll. */
+  byScript = false,
+) {
   glides.get(el)?.(); // hand over: stop the running one, keep data-gliding for now
   const x0 = el.scrollLeft;
   const y0 = el.scrollTop;
@@ -99,7 +107,7 @@ export function glideScroll(el: HTMLElement, to: { left?: number; top?: number }
     finish();
     return;
   }
-  if (NATIVE_SMOOTH) {
+  if (NATIVE_SMOOTH && !byScript) {
     delete el.dataset.gliding;
     el.addEventListener('scrollend', onEnd);
     fallback = window.setTimeout(finish, ms + 1000); // in case no scrollend comes
