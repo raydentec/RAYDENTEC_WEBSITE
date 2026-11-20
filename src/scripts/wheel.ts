@@ -33,10 +33,9 @@
  * to the container's top): wheel deltas move the column with snapping paused, and the
  * keys glide by a quarter screen (arrows) or most of one (Page Up / Down, Space), up to
  * the container's ends — an arrow held down scrolls on continuously instead (below);
- * snap.ts keeps snapping off while the column rests partway in. An arrow only switches
- * section with a tap: pressed towards the next / previous section, it goes once the key is
- * let go before it repeats; held down, it stays in the section (scrolling on within a tall
- * one, else nothing).
+ * snap.ts keeps snapping off while the column rests partway in. An arrow switches section
+ * once per press, as soon as it goes down, however long it's held (as ← / → in the rows);
+ * held inside a tall one, it scrolls on within it, up to its edge (it doesn't switch on).
  * The deltas would fight `scroll-snap-type: y mandatory` (every small trackpad delta would
  * snap a whole container), so snapping is paused (#scroller[data-wheel]) and the column
  * moves freely. When that gesture stops it settles on a container like a native wheel
@@ -258,11 +257,11 @@ document.addEventListener('keydown', (e) => {
     endHold(scroller);
   }
   const arrow = e.key.startsWith('Arrow');
-  // A held arrow never switches section (see below): its repeats only scroll on inside a
-  // tall one, else do nothing.
+  // A held arrow never switches section again: its repeats only scroll on inside a tall one
+  // — unless this press has just switched section (then nothing more until it's let go).
   if (e.repeat && arrow) {
     e.preventDefault();
-    tap = null;
+    if (switchedBy === e.key) return;
     const span = stepTarget(scroller, scroller.scrollTop, dir);
     if (span !== null && typeof span === 'object') startHold(scroller, e.key, dir, span);
     return;
@@ -276,12 +275,8 @@ document.addEventListener('keydown', (e) => {
   }
   e.preventDefault();
   if (to === null) return; // at the end
-  // An arrow on to another section: only once the key is let go without repeating (a tap,
-  // keyup below) — holding it doesn't switch.
-  if (typeof to === 'number' && arrow && sectionAt(scroller, to) !== sectionAt(scroller, from)) {
-    tap = { key: e.key, dir };
-    return;
-  }
+  // On to another section: at once; holding the key doesn't switch again (above).
+  if (typeof to === 'number' && arrow && sectionAt(scroller, to) !== sectionAt(scroller, from)) switchedBy = e.key;
   if (typeof to === 'number') glideColumn(scroller, to);
   // Inside a tall container: on by a quarter screen (arrows) or most of one (Page / Space),
   // not past its ends — the next press there goes on to the next stop.
@@ -335,24 +330,18 @@ function endHold(scroller: HTMLElement) {
   delete scroller.dataset.wheel;
 }
 
-/** Arrow pressed towards another section, waiting to see if it's a tap (keyup) or a hold. */
-let tap: { key: string; dir: number } | null = null;
+/** The arrow key whose press (still held) has switched section: its repeats do nothing. */
+let switchedBy: string | null = null;
 
 /** Index of the section (container / mobile profile span) a scroll position rests in, or -1. */
 function sectionAt(scroller: HTMLElement, pos: number) {
   return withProfile(scroller, snapSpans(scroller)).findIndex((s) => pos >= s.start - 2 && pos <= s.end + 2);
 }
 
-// A tap: switch section now (from where a running glide is heading).
 document.addEventListener('keyup', (e) => {
-  const scroller = getScroller();
-  if (!tap || e.key !== tap.key || !scroller) return;
-  const { dir } = tap;
-  tap = null;
-  const to = stepTarget(scroller, isGliding(scroller) ? glideTo : scroller.scrollTop, dir);
-  if (typeof to === 'number') glideColumn(scroller, to);
+  if (e.key === switchedBy) switchedBy = null;
 });
-window.addEventListener('blur', () => (tap = null));
+window.addEventListener('blur', () => (switchedBy = null));
 
 /** The held key is let go (or the window loses focus): ease to a stop. */
 const releaseHold = (e?: KeyboardEvent) => {

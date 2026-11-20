@@ -1,6 +1,7 @@
 /**
  * Start hero image slider (StartHero.astro). The slides sit side by side in a track that
- * scrolls and snaps sideways — swipe, and ← / → while the hero is in view. Sideways wheel /
+ * scrolls and snaps sideways — swipe (one slide per swipe, however strong: dom.ts
+ * bindSwipe), and ← / → while the hero is in view (one slide per press). Sideways wheel /
  * trackpad / Shift+wheel input doesn't scroll the track natively: each gesture switches
  * one slide by script (as the indicator lines do), and the rest of the gesture (further
  * notches, trackpad momentum) is ignored until the next gesture (dom.ts wheelGesture).
@@ -28,7 +29,17 @@
  * (data-gliding, StartHero.astro), so it looks the same everywhere. Touching the track
  * stops it.
  */
-import { CHROME_EASE, getRootState, getScroller, mq, onPageLoad, onScrollerScroll, wheelAxis, wheelGesture } from './dom';
+import {
+  bindSwipe,
+  CHROME_EASE,
+  getRootState,
+  getScroller,
+  mq,
+  onPageLoad,
+  onScrollerScroll,
+  wheelAxis,
+  wheelGesture,
+} from './dom';
 
 const INTERVAL_MS = 5000;
 const SETTLE_MS = 90;
@@ -285,6 +296,21 @@ document.addEventListener(
   },
   { capture: true, passive: false },
 );
+// Touch swipes: one slide per swipe, however strong (dom.ts bindSwipe), from the slide the
+// drag began at (a copy past either end goes round, as with the arrows).
+bindSwipe(
+  '[data-slide-track]',
+  (t) => t.clientWidth,
+  (t, dir, startLeft) => {
+    const root = t.closest<HTMLElement>('[data-slider]');
+    if (!root || !looped(root)) return;
+    const n = count(root);
+    const from = Math.min(n, Math.max(-1, Math.round(startLeft / t.clientWidth) - 1));
+    scrollToSlide(root, Math.min(n, Math.max(-1, from + dir)));
+    restart();
+  },
+);
+
 // Finger lifted: settle again (a jump onto the real slide may have been waiting).
 for (const type of ['touchend', 'touchcancel'] as const) {
   document.addEventListener(
@@ -340,6 +366,7 @@ document.addEventListener('keydown', (e) => {
   const el = e.target as HTMLElement;
   if (el.closest('input, textarea, select, [contenteditable], [data-row]')) return;
   e.preventDefault();
+  if (e.repeat) return; // one slide per press: holding the key doesn't run on
   step(root, e.key === 'ArrowRight' ? 1 : -1); // as the arrow buttons
 });
 

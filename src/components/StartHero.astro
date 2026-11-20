@@ -183,6 +183,8 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
   /* Slides side by side, one per screen width, snapping (as the Games rows' tracks); no
      scrollbar — the indicator replaces it. Vertical wheel / swipes go on to the page. */
   .hero__track {
+    /* Sideways touch drags are the script's (one slide per swipe, scripts/dom.ts bindSwipe). */
+    touch-action: pan-y;
     display: flex;
     height: 100%;
     overflow-x: auto;

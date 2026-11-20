@@ -118,6 +118,88 @@ export function glideScroll(el: HTMLElement, to: { left?: number; top?: number }
   frame = requestAnimationFrame(step);
 }
 
+/**
+ * Touch swipes on a sideways track (the Games / explore rows, the hero slider): one item per
+ * swipe, however long or strong — left to the browser, a strong swipe flew past several.
+ * The track only pans vertically by itself (touch-action: pan-y, GameRow.astro /
+ * StartHero.astro); a mostly sideways drag moves it by script instead, following the finger
+ * by at most one item (`stepOf`: the distance between items), snapping paused. Let go, the
+ * swipe goes on to the next / previous item when it was dragged SWIPE_MIN of an item or
+ * flicked (SWIPE_FLICK px/ms), else back: `onSwipe(track, dir, startLeft)` with dir 1 / -1 /
+ * 0 (from the item at startLeft, where the drag began) glides there. Vertical drags are left to the page.
+ */
+const SWIPE_MIN = 0.15;
+const SWIPE_FLICK = 0.35;
+export function bindSwipe(
+  selector: string,
+  stepOf: (track: HTMLElement) => number,
+  onSwipe: (track: HTMLElement, dir: number, startLeft: number) => void,
+) {
+  let drag: {
+    track: HTMLElement;
+    id: number;
+    x0: number;
+    y0: number;
+    left0: number;
+    step: number;
+    axis: 'x' | 'y' | null;
+    lastX: number;
+    lastT: number;
+    v: number;
+  } | null = null;
+  document.addEventListener(
+    'touchstart',
+    (e) => {
+      const track = (e.target as Element | null)?.closest<HTMLElement>(selector);
+      if (!track || e.touches.length !== 1) return;
+      const t = e.touches[0];
+      drag = { track, id: t.identifier, x0: t.clientX, y0: t.clientY, left0: track.scrollLeft, step: 0, axis: null, lastX: t.clientX, lastT: performance.now(), v: 0 };
+    },
+    { capture: true, passive: true },
+  );
+  document.addEventListener(
+    'touchmove',
+    (e) => {
+      if (!drag) return;
+      const t = Array.from(e.touches).find((x) => x.identifier === drag!.id);
+      if (!t) return;
+      const dx = t.clientX - drag.x0;
+      const dy = t.clientY - drag.y0;
+      if (!drag.axis) {
+        if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+        drag.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+        if (drag.axis === 'y') return;
+        stopGlide(drag.track);
+        drag.left0 = drag.track.scrollLeft;
+        drag.x0 = t.clientX;
+        drag.step = stepOf(drag.track);
+        drag.track.dataset.gliding = ''; // snapping paused while it follows the finger
+      }
+      if (drag.axis !== 'x') return;
+      const now = performance.now();
+      if (now > drag.lastT) drag.v = 0.7 * drag.v + 0.3 * ((t.clientX - drag.lastX) / (now - drag.lastT));
+      drag.lastX = t.clientX;
+      drag.lastT = now;
+      const moved = Math.max(-drag.step, Math.min(drag.step, t.clientX - drag.x0));
+      drag.track.scrollTo({ left: drag.left0 - moved, behavior: 'instant' });
+    },
+    { capture: true, passive: true },
+  );
+  const end = (e: TouchEvent) => {
+    if (!drag || Array.from(e.touches).some((x) => x.identifier === drag!.id)) return;
+    const d = drag;
+    drag = null;
+    if (d.axis !== 'x') return;
+    const moved = d.left0 - d.track.scrollLeft; // + when dragged right (towards the previous item)
+    const far = Math.abs(moved) >= d.step * SWIPE_MIN;
+    const flick = Math.abs(d.v) >= SWIPE_FLICK && Math.sign(d.v) === Math.sign(moved || d.v);
+    const dir = far || flick ? -Math.sign(moved || d.v) : 0;
+    onSwipe(d.track, dir, d.left0);
+  };
+  document.addEventListener('touchend', end, { capture: true, passive: true });
+  document.addEventListener('touchcancel', end, { capture: true, passive: true });
+}
+
 /** Stop a running glide of `el` where it is; snapping takes over again. */
 export function stopGlide(el: HTMLElement) {
   const stop = glides.get(el);

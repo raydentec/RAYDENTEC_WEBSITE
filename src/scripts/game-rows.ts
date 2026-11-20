@@ -10,6 +10,9 @@
  * Chrome's own smooth scroll there, a glide by script elsewhere; Safari's own was a quick
  * jump on click).
  *
+ * Touch swipes move one game each too, however strong (dom.ts bindSwipe), as do the ← / →
+ * keys (one per press: holding one doesn't run on).
+ *
  * Sideways wheel / trackpad / Shift+wheel over a track doesn't scroll it natively: each
  * gesture glides one game on, and the rest of the gesture (further notches, trackpad
  * momentum) is swallowed until the next gesture (dom.ts wheelGesture). Left to the
@@ -17,7 +20,17 @@
  * wheel event cut into it (as the column did, wheel.ts). A new gesture during a glide
  * carries on from the game it heads to; touching the track stops it.
  */
-import { ACTIVE_CHANGE, getRootState, getScroller, glideScroll, onPageLoad, stopGlide, wheelAxis, wheelGesture } from './dom';
+import {
+  ACTIVE_CHANGE,
+  bindSwipe,
+  getRootState,
+  getScroller,
+  glideScroll,
+  onPageLoad,
+  stopGlide,
+  wheelAxis,
+  wheelGesture,
+} from './dom';
 
 const SETTLE_MS = 90;
 /** Sideways wheel travel that switches a game. */
@@ -119,6 +132,13 @@ document.addEventListener('keydown', (e) => {
   if (getRootState('mmenu') === 'open') return;
   const target = e.target as HTMLElement;
   if (target.closest('input, textarea, select, [contenteditable]')) return;
+  // One game per press: holding the key doesn't run on through the row (repeats ignored).
+  if (e.repeat) {
+    if (target.closest('[data-row]') || getScroller()?.querySelector('[data-row].is-active, [data-row][data-arriving]')) {
+      e.preventDefault();
+    }
+    return;
+  }
   // A vertical glide decides at once (dom.ts markArriving): the row it's heading to takes
   // the keys already; heading to something else (the Start hero, hero-slider.ts), no row does.
   const arriving = getScroller()?.querySelector<HTMLElement>('[data-arriving]');
@@ -167,6 +187,24 @@ document.addEventListener(
     if (next >= 0 && next < games(row).length) show(row, next);
   },
   { capture: true, passive: false },
+);
+
+// Touch swipes: one game per swipe (dom.ts bindSwipe), from the game the drag began at.
+bindSwipe(
+  '[data-row-track]',
+  (t) => {
+    const g = t.querySelectorAll<HTMLElement>('[data-cf]');
+    return g.length > 1 ? g[1].getBoundingClientRect().left - g[0].getBoundingClientRect().left : t.clientWidth;
+  },
+  (t, dir, startLeft) => {
+    const row = t.closest<HTMLElement>('[data-row]');
+    if (!row) return;
+    const max = t.scrollWidth - t.clientWidth;
+    const at = games(row).map((g) => Math.min(max, Math.max(0, t.scrollLeft + g.getBoundingClientRect().left - snapLine(t))));
+    const from = at.reduce((best, x, i) => (Math.abs(x - startLeft) < Math.abs(at[best] - startLeft) ? i : best), 0);
+    const to = from + dir;
+    show(row, to >= 0 && to < at.length ? to : from);
+  },
 );
 
 // The user takes over (touch on a track): stop the glide. (Clicks don't: a click on a
