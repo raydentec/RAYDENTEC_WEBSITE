@@ -1,8 +1,9 @@
 /**
  * Start hero image slider (StartHero.astro). The slides sit side by side in a track that
  * scrolls and snaps sideways — swipe (stopping at the next slide, scroll-snap-stop), and
- * ← / → while the hero is in view (one slide per press). Every switch counts at once: its
- * line lights and the next input goes on from its slide (quick swipes add up, `swipe`). Sideways wheel /
+ * ← / → while the hero is in view (one slide per press). A touch swipe moves one slide,
+ * decided when let go (`swipe`). Every switch counts at once: its line lights and the next
+ * input goes on from its slide (quick swipes add up). Sideways wheel /
  * trackpad / Shift+wheel input doesn't scroll the track natively: each gesture switches
  * one slide by script (as the indicator lines do), and the rest of the gesture (further
  * notches, trackpad momentum) is ignored until the next gesture (dom.ts wheelGesture).
@@ -32,6 +33,8 @@
  */
 import {
   CHROME_EASE,
+  stopMomentum,
+  touchedRecently,
   getRootState,
   getScroller,
   mq,
@@ -62,28 +65,15 @@ let target: number | null = null;
 /** A finger is on the track. */
 let touching = false;
 /**
- * A touch swipe (native scrolling): the slide it counts from — the one a switch still under
- * way heads to, else the current one — and, once the finger or the track has moved
- * SWIPE_DECIDE_PX sideways, its direction (phones may hold back touch moves while a fling
- * scrolls; the track can't snap back meanwhile: at rest it isn't moving, mid-switch its
- * snapping is paused): from then its
- * slide (`swipeTarget`, -1 / count = a copy) is the one the next input goes on from, its
- * line lit at once. Begun while a switch was under way (`chained`), the track's snapping
- * stays paused (it would snap back meanwhile) and it glides to its slide when let go (or
- * back, not swiped); from rest it's left to the browser (scroll-snap-stop). Cleared once
- * the track rests (settle).
+ * Touch (phones): the track follows the finger natively (its snapping paused meanwhile, its
+ * line left as it is); let go, it moves one slide at most — to the next or previous one of
+ * the slide it counts from (`base`: the one a switch still under way heads to, else the
+ * current one), or back to it for a short drag — by script, the browser's own fling
+ * stopped first (dom.ts stopMomentum). Its line changes then.
  */
-const SWIPE_DECIDE_PX = 10;
-let swipe: { base: number; x0: number; y0: number; left0: number; chained: boolean; dir: number } | null = null;
+const SWIPE_MIN_PX = 24;
+let swipe: { base: number; x0: number; y0: number; left0: number } | null = null;
 
-/** The touch swipe's direction is known (finger or track moved, see swipe): its slide. */
-function decideSwipe(root: HTMLElement, dir: number) {
-  if (!swipe || swipe.dir) return;
-  swipe.dir = dir;
-  swipeTarget = swipe.base + dir;
-  lightDot(root, (swipeTarget + count(root)) % count(root));
-}
-let swipeTarget: number | null = null;
 /** Presses (±1 each) waiting to go on past the copy a glide is heading to (step). */
 let pending = 0;
 /** Current wheel gesture: sideways travel so far, and whether it has switched a slide. */
@@ -119,11 +109,15 @@ const left = (t: HTMLElement, index: number) => (index + 1) * t.clientWidth;
 function scrollToSlide(root: HTMLElement, index: number) {
   const t = track(root);
   if (!t || !looped(root)) return;
+  // After touch (a swipe let go, a tapped line / arrow): a fling still under way is stopped
+  // first, or it fought the glide (jumpy).
+  if (touchedRecently()) stopMomentum(t);
   // A running glide hands over where it is, snapping still paused (resuming it here would
   // pull the track back to a slide first).
   cancelAnimationFrame(glideFrame);
   glideFrame = 0;
   target = index;
+  lightDot(root, ((index % count(root)) + count(root)) % count(root)); // the switch counts at once
   const to = left(t, index);
   const from = t.scrollLeft;
   if (mq.reducedMotion.matches || Math.abs(to - from) < 1) {
@@ -175,7 +169,6 @@ function settle(root: HTMLElement) {
     if (Math.abs(t.scrollLeft - left(t, index)) > 2) return; // still snapping: more scroll events follow
   }
   const byHand = target === null;
-  swipeTarget = null;
   target = null;
   pending = 0;
   // Scrolled by hand: the timer starts again now that the track rests (also on the same slide).
@@ -198,8 +191,6 @@ function settle(root: HTMLElement) {
  * there. Presses that come before the track gets that far wait (pending) until it does.
  */
 function step(root: HTMLElement, by: number) {
-  // A touch swipe still settling counts as a switch under way (see swipe above).
-  if (target === null && swipeTarget !== null) target = swipeTarget;
   const from = target ?? current;
   if (from < 0 || from >= count(root)) {
     pending += by;
@@ -256,13 +247,9 @@ document.addEventListener(
     // Scrolled by hand: no timer until the track rests (settle).
     if (target === null) window.clearInterval(timer);
     const n = count(root);
-    // A touch swipe the track has followed far enough: its direction (see swipe).
-    if (swipe && touching && !swipe.dir && Math.abs(t.scrollLeft - swipe.left0) >= SWIPE_DECIDE_PX) {
-      decideSwipe(root, Math.sign(t.scrollLeft - swipe.left0));
-    }
+    if (touching) return; // its line changes when let go (see swipe)
     // The line of the slide a switch heads to (it counts at once), else the one under way.
-    const heading = target ?? swipeTarget;
-    lightDot(root, ((heading ?? position(t)) + n) % n);
+    lightDot(root, ((target ?? position(t)) + n) % n);
     window.clearTimeout(settleTimer);
     if (glideFrame) return; // the glide settles when it arrives
     settleTimer = window.setTimeout(() => settle(root), SETTLE_MS);
@@ -296,17 +283,20 @@ for (const type of ['touchstart', 'pointerdown'] as const) {
     type,
     (e) => {
       if (!(e.target as Element | null)?.closest('[data-slide-track]')) return;
+      // A touch also fires pointerdown (first): touchstart handles it, with the target intact.
+      if (type === 'pointerdown' && (e as PointerEvent).pointerType === 'touch') return;
       const root = slider();
-      const heading = target ?? swipeTarget;
+      const heading = target;
       stopGlide();
       target = null;
       if (type === 'touchstart' && root) {
         touching = true;
         const n = count(root);
         const base = heading === null ? current : (heading + n) % n;
-        if (heading !== null) track(root)?.setAttribute('data-gliding', ''); // snapping stays paused
+        const t = track(root);
+        t?.setAttribute('data-gliding', ''); // snapping paused until let go (see swipe)
         const f = (e as TouchEvent).touches[0];
-        swipe = { base, x0: f.clientX, y0: f.clientY, left0: track(root)?.scrollLeft ?? 0, chained: heading !== null, dir: 0 };
+        swipe = { base, x0: f.clientX, y0: f.clientY, left0: t?.scrollLeft ?? 0 };
       }
     },
     { capture: true, passive: true },
@@ -337,20 +327,6 @@ document.addEventListener(
   },
   { capture: true, passive: false },
 );
-// The finger has moved far enough sideways: the swipe's slide is the next one that way.
-document.addEventListener(
-  'touchmove',
-  (e) => {
-    if (!swipe || swipe.dir) return;
-    const f = e.touches[0];
-    const dx = f.clientX - swipe.x0;
-    if (Math.abs(dx) < SWIPE_DECIDE_PX || Math.abs(dx) < Math.abs(f.clientY - swipe.y0)) return;
-    const root = slider();
-    if (root) decideSwipe(root, dx < 0 ? 1 : -1); // finger to the left: on to the next slide
-  },
-  { capture: true, passive: true },
-);
-
 // Finger lifted: settle again (a jump onto the real slide may have been waiting).
 for (const type of ['touchend', 'touchcancel'] as const) {
   document.addEventListener(
@@ -359,16 +335,25 @@ for (const type of ['touchend', 'touchcancel'] as const) {
       if (!touching || (e as TouchEvent).touches.length) return;
       touching = false;
       const root = slider();
-      const s = swipe;
+      const sw = swipe;
       swipe = null;
-      if (!root) return;
-      // Swiped while a switch was under way: on to its slide (the browser would stop at the
-      // earlier one). From rest, or not swiped: the browser's snapping settles it.
-      if (s?.chained) {
-        scrollToSlide(root, swipeTarget ?? s.base);
+      const t = root && track(root);
+      if (!root || !t || !sw) return;
+      const f = (e as TouchEvent).changedTouches[0];
+      const dx = f ? f.clientX - sw.x0 : 0;
+      const dy = f ? f.clientY - sw.y0 : 0;
+      const moved = t.scrollLeft - sw.left0;
+      // Moved sideways, or a switch was under way: one slide at most (see swipe).
+      if (Math.abs(moved) >= 1 || sw.base !== current) {
+        let dir = 0;
+        if (Math.abs(dx) >= SWIPE_MIN_PX && Math.abs(dx) > Math.abs(dy)) dir = dx < 0 ? 1 : -1;
+        else if (Math.abs(moved) >= SWIPE_MIN_PX) dir = Math.sign(moved);
+        stopMomentum(t);
+        scrollToSlide(root, sw.base + dir);
         restart();
         return;
       }
+      delete t.dataset.gliding; // a tap / vertical drag: as it was
       window.clearTimeout(settleTimer);
       settleTimer = window.setTimeout(() => settle(root), SETTLE_MS);
     },
@@ -446,7 +431,6 @@ onPageLoad(() => {
   target = null;
   touching = false;
   swipe = null;
-  swipeTarget = null;
   const root = slider();
   if (!root) return;
   place(root);

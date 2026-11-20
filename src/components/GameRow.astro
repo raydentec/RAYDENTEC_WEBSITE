@@ -177,7 +177,8 @@ const headingId = `games-${index}`;
   .grow__track {
     overflow-x: auto;
     overflow-y: hidden;
-    overscroll-behavior-x: contain;
+    /* No rubber-band bounce at either end (iOS: it jerked under repeated swipes). */
+    overscroll-behavior-x: none;
     scroll-snap-type: x mandatory;
     scroll-padding-left: var(--row-left);
     scrollbar-width: none;
@@ -197,7 +198,14 @@ const headingId = `games-${index}`;
     align-items: flex-start;
     gap: var(--games-gap);
     width: max-content;
-    padding: 0 calc(100vw - var(--row-left) - var(--game-w)) 0 var(--row-left);
+    padding-left: var(--row-left);
+  }
+  /* The room after the last game, so it can snap to the left edge too: a spacer, not right
+     padding — WebKit (Safari, Chrome on iOS) left the padding out of the scrollable width,
+     and the last game stopped short, against the right edge. Less the gap before it. */
+  .grow__list::after {
+    content: '';
+    flex: 0 0 calc(100vw - var(--row-left) - var(--game-w) - var(--games-gap));
   }
   .grow__list > :global(.cf) {
     flex: 0 0 var(--game-w);

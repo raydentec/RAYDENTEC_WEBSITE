@@ -187,7 +187,8 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
     height: 100%;
     overflow-x: auto;
     overflow-y: hidden;
-    overscroll-behavior-x: contain;
+    /* No rubber-band bounce at either end (iOS: it jerked under repeated swipes). */
+    overscroll-behavior-x: none;
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
   }

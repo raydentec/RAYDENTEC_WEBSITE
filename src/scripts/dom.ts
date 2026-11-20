@@ -126,6 +126,22 @@ export function glideScroll(
   frame = requestAnimationFrame(step);
 }
 
+/**
+ * Stop the browser's own scrolling of `el` where it is (a touch fling still under way):
+ * briefly not scrollable by the user. Before a glide by script, so the two don't fight.
+ */
+export function stopMomentum(el: HTMLElement) {
+  el.style.overflowX = 'hidden';
+  void el.offsetWidth;
+  el.style.overflowX = '';
+}
+
+/** A touch came in the last TOUCH_RECENT_MS (any touch: a swipe, a tapped indicator line). */
+const TOUCH_RECENT_MS = 1500;
+let lastTouch = -Infinity;
+document.addEventListener('touchstart', () => (lastTouch = performance.now()), { capture: true, passive: true });
+export const touchedRecently = () => performance.now() - lastTouch < TOUCH_RECENT_MS;
+
 /** Stop a running glide of `el` where it is; snapping takes over again. */
 export function stopGlide(el: HTMLElement) {
   const stop = glides.get(el);
