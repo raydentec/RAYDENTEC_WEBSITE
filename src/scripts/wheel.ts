@@ -55,6 +55,7 @@ import {
   getScroller,
   glideScroll,
   isGliding,
+  markArriving,
   mq,
   snapOffset,
   snapSpans,
@@ -138,6 +139,7 @@ function withProfile(scroller: HTMLElement, spans: { start: number; end: number 
  */
 function glideColumn(scroller: HTMLElement, to: number) {
   glideTo = to;
+  markArriving(scroller, to);
   if (snapSpans(scroller).some((s) => Math.abs(s.start - to) <= 2)) glideScroll(scroller, { top: to });
   else scrollToTop(scroller, to);
 }

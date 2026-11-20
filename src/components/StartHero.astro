@@ -149,6 +149,17 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
   .hero:not(.is-active) {
     pointer-events: none;
   }
+  /* On its way in (a glide back up is heading to it, scripts/dom.ts markArriving): what
+     switches slides already works — swiping the slides (the track only), the indicator
+     lines and the arrows; the lower third's links wait until it's selected. */
+  .hero[data-arriving]:not(.is-active) .hero__track,
+  .hero[data-arriving]:not(.is-active) .hero__dots,
+  .hero[data-arriving]:not(.is-active) .hero__arrow {
+    pointer-events: auto;
+  }
+  .hero[data-arriving]:not(.is-active) .hero__track * {
+    pointer-events: none;
+  }
 
   /* Viewport-tall, so it runs on under the explore row's peek; masked out below the lower third. */
   .hero__art {

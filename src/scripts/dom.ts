@@ -292,6 +292,23 @@ export function snapSpans(scroller: HTMLElement) {
   });
 }
 
+/**
+ * The container a vertical glide (wheel / keys, click, SCROLL) is heading to, marked
+ * [data-arriving] from the moment it starts: a sideways row's track (GameRow.astro) or the
+ * Start hero's slides (StartHero.astro) take sideways swipes / ← → keys (game-rows.ts) at
+ * once, instead of only once snap.ts has made it active when the glide has settled. Nothing
+ * else about it changes until then (its games, buttons, selected look). Cleared by snap.ts
+ * when the column settles, and by the next glide.
+ */
+export function markArriving(scroller: HTMLElement, top: number) {
+  const all = containers(scroller);
+  all.forEach((cf) => cf.removeAttribute('data-arriving'));
+  const i = snapSpans(scroller).findIndex((s) => Math.abs(s.start - top) <= 2);
+  if (i >= 0 && !all[i].classList.contains('is-active')) all[i].setAttribute('data-arriving', '');
+}
+export const clearArriving = (scroller: HTMLElement) =>
+  scroller.querySelectorAll('[data-arriving]').forEach((cf) => cf.removeAttribute('data-arriving'));
+
 /** Fired on document by snap.ts when the active container changes; detail = its index. */
 export const ACTIVE_CHANGE = 'raydentec:active-change';
 export type ActiveChangeEvent = CustomEvent<{ index: number }>;

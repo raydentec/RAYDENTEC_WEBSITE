@@ -87,6 +87,14 @@ const headingId = `games-${index}`;
   .grow:not(.is-active) > * {
     pointer-events: none;
   }
+  /* On its way in (a vertical glide is heading to it, scripts/dom.ts markArriving): the track
+     already takes sideways swipes — the track only, not its games / buttons. */
+  .grow[data-arriving]:not(.is-active) .grow__track {
+    pointer-events: auto;
+  }
+  .grow[data-arriving]:not(.is-active) .grow__track * {
+    pointer-events: none;
+  }
   .grow.is-active .grow__title,
   .grow:focus-within .grow__title {
     opacity: 1;

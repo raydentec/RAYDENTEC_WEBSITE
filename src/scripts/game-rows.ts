@@ -119,8 +119,16 @@ document.addEventListener('keydown', (e) => {
   if (getRootState('mmenu') === 'open') return;
   const target = e.target as HTMLElement;
   if (target.closest('input, textarea, select, [contenteditable]')) return;
+  // A vertical glide decides at once (dom.ts markArriving): the row it's heading to takes
+  // the keys already; heading to something else (the Start hero, hero-slider.ts), no row does.
+  const arriving = getScroller()?.querySelector<HTMLElement>('[data-arriving]');
   const row =
-    target.closest<HTMLElement>('[data-row]') ?? getScroller()?.querySelector<HTMLElement>('[data-row].is-active');
+    target.closest<HTMLElement>('[data-row]') ??
+    (arriving
+      ? arriving.matches('[data-row]')
+        ? arriving
+        : null
+      : (getScroller()?.querySelector<HTMLElement>('[data-row].is-active') ?? null));
   if (!row) return;
   e.preventDefault();
   const next = (targets.get(row) ?? currentIndex(row)) + (e.key === 'ArrowRight' ? 1 : -1);

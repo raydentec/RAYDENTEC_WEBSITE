@@ -326,15 +326,19 @@ document.addEventListener('click', (e) => {
 });
 
 // ← / → while the hero is in view (the Games rows' keys, scripts/game-rows.ts, act on the
-// explore row once that is selected). Past either end they run on via the copies.
+// explore row once that is selected). Past either end they run on via the copies. A glide
+// decides at once (dom.ts markArriving): heading back to the hero, they switch slides
+// already; heading away from it (to the explore row), they're the row's already.
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
   if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
-  if (getRootState('mmenu') === 'open' || getRootState('heroActive') === null) return;
-  const el = e.target as HTMLElement;
-  if (el.closest('input, textarea, select, [contenteditable], [data-row]')) return;
+  if (getRootState('mmenu') === 'open') return;
   const root = slider();
   if (!root || !looped(root)) return;
+  const arriving = getScroller()?.querySelector('[data-arriving]');
+  if (arriving ? arriving !== root : getRootState('heroActive') === null) return;
+  const el = e.target as HTMLElement;
+  if (el.closest('input, textarea, select, [contenteditable], [data-row]')) return;
   e.preventDefault();
   step(root, e.key === 'ArrowRight' ? 1 : -1); // as the arrow buttons
 });

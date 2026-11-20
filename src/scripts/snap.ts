@@ -17,9 +17,11 @@
  */
 import {
   ACTIVE_CHANGE,
+  clearArriving,
   containers,
   getScroller,
   glideScroll,
+  markArriving,
   mq,
   onPageLoad,
   onScrollerScroll,
@@ -78,6 +80,8 @@ function settle(scroller: HTMLElement, align: boolean) {
   const target = containerAtSnapLine(scroller) ?? nearestToSnapLine(scroller);
   if (!target) return;
   setActive(scroller, target);
+  // Come to rest: no container is on its way in any more (dom.ts markArriving).
+  if (!('gliding' in scroller.dataset)) clearArriving(scroller);
   // Wheel input forwarded from outside the column settles itself (wheel.ts).
   if (!align || 'wheel' in scroller.dataset || 'gliding' in scroller.dataset) return;
   if (scroller.dataset.snap === 'off' || holdTo !== null) {
@@ -117,7 +121,9 @@ document.addEventListener('click', (e) => {
   const head = target.closest('[data-cf-head]')?.nextElementSibling;
   const cf = containers(scroller).find((c) => c.contains(target) || c === head);
   if (!cf || cf.classList.contains('is-active')) return;
-  glideScroll(scroller, { top: scroller.scrollTop + snapTop(cf) - snapLine(scroller) });
+  const top = scroller.scrollTop + snapTop(cf) - snapLine(scroller);
+  markArriving(scroller, top);
+  glideScroll(scroller, { top });
 });
 
 /** Re-measure after the column's contents change (Projects filter, project-filter.ts). */
