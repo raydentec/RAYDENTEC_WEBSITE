@@ -211,6 +211,11 @@ const headingId = `games-${index}`;
     content: '';
     flex: 0 0 calc(100vw - var(--row-left) - var(--game-w) - var(--games-gap));
   }
+  /* Not Chromium (WebKit): a game's width more room, so dragging past the last game never
+     reaches the edge (no rubber-band; the release glides back — scripts/dom.ts stopEdgeBounce). */
+  :global(html[data-glide-script]) .grow__list::after {
+    flex-basis: calc(100vw - var(--row-left) - var(--games-gap));
+  }
   .grow__list > :global(.cf) {
     flex: 0 0 var(--game-w);
     /* A swipe, however strong, stops at the next game (as the hero's slides). */

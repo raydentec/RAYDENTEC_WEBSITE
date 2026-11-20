@@ -33,6 +33,7 @@
  */
 import {
   CHROME_EASE,
+  SCRIPT_GLIDES,
   stopEdgeBounce,
   releaseEase,
   releaseMomentum,
@@ -315,7 +316,8 @@ for (const type of ['touchstart', 'pointerdown'] as const) {
         // Mid-switch: snapping paused until let go (it would snap back meanwhile); from rest it
         // stays on, so Chrome's own fling (a frame before the release glide) aims at the next
         // slide instead of flying past it.
-        if (heading !== null) t?.setAttribute('data-gliding', '');
+        // (WebKit: always paused — its own snapping interfered from the drag's start.)
+        if (heading !== null || SCRIPT_GLIDES) t?.setAttribute('data-gliding', '');
         swipe = { base, left0: t?.scrollLeft ?? 0 };
       }
     },

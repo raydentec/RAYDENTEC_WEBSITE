@@ -24,6 +24,7 @@
  */
 import {
   ACTIVE_CHANGE,
+  SCRIPT_GLIDES,
   getRootState,
   stopEdgeBounce,
   releaseSpeed,
@@ -237,10 +238,11 @@ document.addEventListener(
     const moving = targets.has(row);
     const base = targets.get(row) ?? currentIndex(row);
     stopGlide(t);
-    // Mid-switch: snapping paused (it would snap the track back meanwhile). From rest it
-    // stays on: Chrome's own fling, which gets a frame in before the release glide takes
-    // over, then aims at the next game (scroll-snap-stop) instead of flying past it.
-    if (moving) t.dataset.gliding = '';
+    // Mid-switch: snapping paused (it would snap the track back meanwhile). From rest, in
+    // Chromium it stays on: its own fling, which gets a frame in before the release glide
+    // takes over, then aims at the next game (scroll-snap-stop) instead of flying past it.
+    // Elsewhere (WebKit) always paused: its own snapping interfered from the drag's start.
+    if (moving || SCRIPT_GLIDES) t.dataset.gliding = '';
     touch = { row, base, left0: t.scrollLeft };
   },
   { capture: true, passive: true },

@@ -47,6 +47,8 @@ export const CHROME_EASE = cubicBezier(0.4, 0, 0, 1);
 
 /** Chromium (Chrome, Edge, Opera…): only it has navigator.userAgentData. */
 const NATIVE_SMOOTH = 'userAgentData' in navigator;
+/** Not Chromium (WebKit, Firefox): glides by script, and touch tweaks of their own (game-rows.ts, hero-slider.ts). */
+export const SCRIPT_GLIDES = !NATIVE_SMOOTH;
 /** Default glide length (≈ Chrome's own smooth scroll over a screen). */
 export const GLIDE_MS = 625;
 
@@ -150,6 +152,9 @@ export function glideScroll(
  * Scrolling it by script still works meanwhile.
  */
 export function stopMomentum(el: HTMLElement) {
+  // Chromium only: in WebKit it made the track jump straight to a snap point (and the glide,
+  // writing the position every frame, stops the fling there by itself).
+  if (!NATIVE_SMOOTH) return;
   el.style.overflowX = 'hidden';
   el.dataset.held = '';
 }
@@ -250,12 +255,13 @@ export function swipeDirection(end: Touch | undefined, moved: number, step: numb
 }
 
 /**
- * No rubber-band at the ends of a sideways track (the rows, the hero): WebKit still stretched
- * one past its end while the finger dragged on, overscroll-behavior notwithstanding. While
- * the track is at an end and the finger pushes further out, its move is cancelled (nothing
- * to stretch); the release logic then glides as usual. Not in Chromium: no rubber-band
- * there, and a listener that can cancel touch moves holds up its scrolling. Bound on each
- * track itself (not the document, for the same reason), once.
+ * No rubber-band at the start of a sideways track in WebKit (iOS), overscroll-behavior
+ * notwithstanding. The far end has room to spare there instead (html[data-glide-script]:
+ * GameRow.astro, StartHero.astro) — dragging past the last item never reaches an edge, and
+ * the release glides back. At the start (scroll position 0) that can't be done, so a drag
+ * that begins there has its moves back past the start cancelled. Only for such drags: a
+ * listener that can cancel moves makes the track's scrolling wait for the script (it
+ * jittered at the start of every drag). Not in Chromium (no rubber-band; untouched).
  */
 export function stopEdgeBounce(track: HTMLElement) {
   if (NATIVE_SMOOTH || track.dataset.noBounce) return;
@@ -264,33 +270,33 @@ export function stopEdgeBounce(track: HTMLElement) {
   let x0 = 0;
   let y0 = 0;
   let sideways: boolean | null = null; // decided by the drag's first clear move
+  const guard = (e: TouchEvent) => {
+    const f = e.touches[0];
+    if (!f) return;
+    if (sideways === null && Math.max(Math.abs(f.clientX - x0), Math.abs(f.clientY - y0)) >= 6) {
+      sideways = Math.abs(f.clientX - x0) > Math.abs(f.clientY - y0);
+    }
+    const towardsStart = f.clientX > lastX; // finger to the right: the track would scroll back
+    lastX = f.clientX;
+    if (sideways && towardsStart && track.scrollLeft <= 1 && e.cancelable) e.preventDefault();
+  };
+  const unguard = () => {
+    track.removeEventListener('touchmove', guard);
+    track.removeEventListener('touchend', unguard);
+    track.removeEventListener('touchcancel', unguard);
+  };
   track.addEventListener(
     'touchstart',
     (e) => {
+      if (track.scrollLeft > 1) return; // not at the start: nothing to guard
       lastX = x0 = e.touches[0]?.clientX ?? 0;
       y0 = e.touches[0]?.clientY ?? 0;
       sideways = null;
+      track.addEventListener('touchmove', guard, { passive: false });
+      track.addEventListener('touchend', unguard);
+      track.addEventListener('touchcancel', unguard);
     },
     { passive: true },
-  );
-  track.addEventListener(
-    'touchmove',
-    (e) => {
-      const f = e.touches[0];
-      if (!f) return;
-      if (sideways === null && Math.max(Math.abs(f.clientX - x0), Math.abs(f.clientY - y0)) >= 6) {
-        sideways = Math.abs(f.clientX - x0) > Math.abs(f.clientY - y0);
-      }
-      const x = f.clientX;
-      const towardsStart = x > lastX; // finger to the right: the track would scroll back
-      lastX = x;
-      if (!sideways) return; // a vertical drag scrolls the page
-      const max = track.scrollWidth - track.clientWidth;
-      if ((towardsStart && track.scrollLeft <= 0) || (!towardsStart && track.scrollLeft >= max - 1)) {
-        if (e.cancelable) e.preventDefault();
-      }
-    },
-    { passive: false },
   );
 }
 
@@ -495,3 +501,7 @@ export function activeIndex() {
   const scroller = getScroller();
   return scroller ? containers(scroller).findIndex((cf) => cf.classList.contains('is-active')) : -1;
 }
+
+// html[data-glide-script]: not Chromium — CSS gives the sideways tracks room to spare at their
+// far end there (no rubber-band, see stopEdgeBounce).
+setRootState('glideScript', SCRIPT_GLIDES ? '' : null);

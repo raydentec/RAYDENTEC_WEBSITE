@@ -197,6 +197,12 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
   .hero__track[data-gliding] {
     scroll-snap-type: none;
   }
+  /* Not Chromium (WebKit): room past the last copy, so dragging on from it never reaches the
+     edge (no rubber-band; the release glides back — scripts/dom.ts stopEdgeBounce). */
+  :global(html[data-glide-script]) .hero__track::after {
+    content: '';
+    flex: 0 0 50%;
+  }
   .hero__track::-webkit-scrollbar {
     display: none;
   }
