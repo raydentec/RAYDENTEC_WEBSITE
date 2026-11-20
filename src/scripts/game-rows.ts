@@ -12,16 +12,14 @@
  *
  * Sideways wheel / trackpad / Shift+wheel over a track doesn't scroll it natively: each
  * gesture glides one game on, and the rest of the gesture (further notches, trackpad
- * momentum) is swallowed until the input has stopped for INPUT_REST_MS. Left to the
+ * momentum) is swallowed until the next gesture (dom.ts wheelGesture). Left to the
  * browser, Chrome switched in a quick jerk and Safari's glide stuttered as each further
  * wheel event cut into it (as the column did, wheel.ts). A new gesture during a glide
  * carries on from the game it heads to; touching the track stops it.
  */
-import { ACTIVE_CHANGE, getRootState, getScroller, glideScroll, onPageLoad, stopGlide, wheelAxis } from './dom';
+import { ACTIVE_CHANGE, getRootState, getScroller, glideScroll, onPageLoad, stopGlide, wheelAxis, wheelGesture } from './dom';
 
 const SETTLE_MS = 90;
-/** A wheel gesture (incl. trackpad momentum) has ended when no event came for this long. */
-const INPUT_REST_MS = 200;
 /** Sideways wheel travel that switches a game. */
 const WHEEL_STEP_PX = 30;
 const settleTimers = new WeakMap<HTMLElement, number>();
@@ -134,7 +132,8 @@ document.addEventListener('keydown', (e) => {
 // ---------- Wheel: one game per gesture (see top) ----------
 let wheelSum = 0;
 let wheelDone = false;
-let wheelRestTimer = 0;
+/** The wheel gesture (dom.ts wheelGesture) wheelSum / wheelDone belong to. */
+let wheelOf = -1;
 
 document.addEventListener(
   'wheel',
@@ -147,11 +146,11 @@ document.addEventListener(
     e.preventDefault();
     const dx = e.deltaX || (e.shiftKey ? e.deltaY : 0);
     if (!dx) return;
-    window.clearTimeout(wheelRestTimer);
-    wheelRestTimer = window.setTimeout(() => {
+    if (wheelGesture() !== wheelOf) {
+      wheelOf = wheelGesture();
       wheelSum = 0;
       wheelDone = false;
-    }, INPUT_REST_MS);
+    }
     if (wheelDone) return;
     wheelSum += e.deltaMode === WheelEvent.DOM_DELTA_LINE ? dx * 16 : dx;
     if (Math.abs(wheelSum) < WHEEL_STEP_PX) return;

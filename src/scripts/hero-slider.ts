@@ -3,7 +3,7 @@
  * scrolls and snaps sideways — swipe, and ← / → while the hero is in view. Sideways wheel /
  * trackpad / Shift+wheel input doesn't scroll the track natively: each gesture switches
  * one slide by script (as the indicator lines do), and the rest of the gesture (further
- * notches, trackpad momentum) is ignored until the input has stopped for INPUT_REST_MS.
+ * notches, trackpad momentum) is ignored until the next gesture (dom.ts wheelGesture).
  * (Natively, the browser's wheel snapping could carry on after the jump off a copy below
  * and switch a second time.) The track holds a copy of the last slide before the first and a copy of the
  * first after the last: scrolling on to a copy jumps to the real slide it shows, so the
@@ -28,14 +28,12 @@
  * (data-gliding, StartHero.astro), so it looks the same everywhere. Touching the track
  * stops it.
  */
-import { CHROME_EASE, getRootState, getScroller, mq, onPageLoad, onScrollerScroll, wheelAxis } from './dom';
+import { CHROME_EASE, getRootState, getScroller, mq, onPageLoad, onScrollerScroll, wheelAxis, wheelGesture } from './dom';
 
 const INTERVAL_MS = 5000;
 const SETTLE_MS = 90;
 /** Page scrolling has stopped when no scroll event came for this long (no `scrollend`). */
 const PAGE_REST_MS = 150;
-/** A wheel / trackpad gesture (incl. momentum) has ended when no event came for this long. */
-const INPUT_REST_MS = 200;
 /** Sideways wheel travel that switches a slide. */
 const WHEEL_STEP_PX = 30;
 /** Script glide: duration (Chrome's smooth scroll takes ~625ms) and easing (cubic-bezier 0.4, 0, 0, 1, as Chrome's). */
@@ -57,7 +55,8 @@ let pending = 0;
 /** Current wheel gesture: sideways travel so far, and whether it has switched a slide. */
 let wheelSum = 0;
 let wheelDone = false;
-let wheelRestTimer = 0;
+/** The wheel gesture (dom.ts wheelGesture) wheelSum / wheelDone belong to. */
+let wheelOf = -1;
 /** Running script glide (requestAnimationFrame id), 0 when none. */
 let glideFrame = 0;
 let glideTrack: HTMLElement | null = null;
@@ -273,11 +272,11 @@ document.addEventListener(
     e.preventDefault();
     const dx = e.deltaX || (e.shiftKey ? e.deltaY : 0);
     if (!dx) return;
-    window.clearTimeout(wheelRestTimer);
-    wheelRestTimer = window.setTimeout(() => {
+    if (wheelGesture() !== wheelOf) {
+      wheelOf = wheelGesture();
       wheelSum = 0;
       wheelDone = false;
-    }, INPUT_REST_MS);
+    }
     if (wheelDone) return;
     wheelSum += e.deltaMode === WheelEvent.DOM_DELTA_LINE ? dx * 16 : dx;
     if (Math.abs(wheelSum) < WHEEL_STEP_PX) return;

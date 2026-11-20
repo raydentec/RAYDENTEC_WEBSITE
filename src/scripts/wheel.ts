@@ -11,8 +11,9 @@
  * glideScroll), as when a container is clicked or SCROLL is used. Left to the browser,
  * wheel snapping differs a lot: Chrome switched in a quick jerk, and in Safari every
  * further wheel event cut into the running glide (stutter). The rest of the gesture
- * (further notches, trackpad momentum) is swallowed until the input has stopped for
- * INPUT_REST_MS; a new gesture during a glide carries on from where that glide is heading.
+ * (further notches, trackpad momentum) is swallowed until the next gesture (dom.ts
+ * wheelGesture: after a pause, or a fresh swipe during the last one's momentum); a new
+ * gesture during a glide carries on from where that glide is heading.
  * A click, key or touch stops the glide and snapping takes over again.
  *
  * A container a little taller than the visible area (by up to half of it; short windows,
@@ -60,14 +61,13 @@ import {
   stopGlide,
   visibleBottom,
   wheelAxis,
+  wheelGesture,
 } from './dom';
 import { scrollToTop } from './snap';
 
 const SETTLE_MS = 140;
 /** Moving at least this far commits to the next container in that direction. */
 const COMMIT_PX = 30;
-/** A wheel gesture (incl. trackpad momentum) has ended when no event came for this long. */
-const INPUT_REST_MS = 200;
 /** A container this much taller than the visible area or less counts as fitting (one stop). */
 const TALL_IGNORE_PX = 32;
 
@@ -80,7 +80,8 @@ let gestureStart: number | null = null;
  * between gestures.
  */
 let gesture: 'step' | 'free' | 'native' | null = null;
-let gestureTimer = 0;
+/** The wheel gesture (dom.ts wheelGesture) `gesture` belongs to. */
+let gestureOf = -1;
 /** Where the running wheel glide is heading. */
 let glideTo = 0;
 
@@ -206,14 +207,13 @@ document.addEventListener(
     }
 
     // A new gesture: glide one container, or scroll freely (see top).
-    if (gesture === null) {
+    if (wheelGesture() !== gestureOf) {
+      gestureOf = wheelGesture();
       const from = isGliding(scroller) ? glideTo : scroller.scrollTop;
       const to = stepTarget(scroller, from, Math.sign(dy));
       gesture = to === null || typeof to === 'number' ? 'step' : to === 'free' ? 'native' : 'free';
       if (typeof to === 'number') glideColumn(scroller, to);
     }
-    window.clearTimeout(gestureTimer);
-    gestureTimer = window.setTimeout(() => (gesture = null), INPUT_REST_MS);
 
     if (gesture === 'step') {
       e.preventDefault(); // the rest of the gesture is swallowed

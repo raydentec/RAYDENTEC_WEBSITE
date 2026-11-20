@@ -163,28 +163,59 @@ window.addEventListener('resize', () => {
 });
 
 /**
- * Axis of the current wheel / trackpad gesture: decided by its first event (mostly sideways,
- * or Shift+wheel → 'x'; else 'y') and kept until the input has rested for GESTURE_REST_MS
- * (trackpad momentum included). The column (wheel.ts) only moves on 'y' gestures, the
- * sideways rows and the hero slider (game-rows.ts, hero-slider.ts) only on 'x' ones — so a
- * diagonal swipe never switches both. Bound here, before their listeners (dom.ts is
- * evaluated first), so they read it for the event at hand.
+ * Wheel / trackpad gestures, shared by the column (wheel.ts), the sideways rows
+ * (game-rows.ts) and the hero slider (hero-slider.ts), which each move one step per gesture
+ * and swallow the rest of it (further notches, trackpad momentum).
+ *
+ * A gesture ends once the input has rested for GESTURE_REST_MS — or a new one starts while
+ * the last one's momentum is still coming in: a fresh swipe speeds up again (momentum only
+ * slows down). Without that, swiping again before the momentum had died away was swallowed
+ * as part of the first gesture, and the controls seemed stuck until the trackpad went quiet.
+ * A swipe's own start (it speeds up over its first events) doesn't count: only once the
+ * gesture is REACCEL_AFTER_MS old, and only a clear jump (REACCEL_RATIO × the last few
+ * events, at least REACCEL_MIN_PX).
+ *
+ * Its axis is decided by its first event (mostly sideways, or Shift+wheel → 'x'; else 'y')
+ * and kept for all of it: the column only moves on 'y' gestures, the rows and the hero only
+ * on 'x' ones — a diagonal swipe never switches both. Bound here, before their listeners
+ * (dom.ts is evaluated first), so they read the state for the event at hand.
  */
 const GESTURE_REST_MS = 200;
+const REACCEL_AFTER_MS = 150;
+const REACCEL_RATIO = 1.6;
+const REACCEL_MIN_PX = 10;
 let axis: 'x' | 'y' = 'y';
+let gestureId = 0;
 let lastWheel = -Infinity;
+let gestureStart = -Infinity;
+let recent: number[] = [];
 document.addEventListener(
   'wheel',
   (e) => {
     const now = performance.now();
-    const dx = Math.abs(e.deltaX);
-    const dy = Math.abs(e.deltaY);
-    if (now - lastWheel > GESTURE_REST_MS && (dx || dy)) axis = dx > dy || (e.shiftKey && !dx) ? 'x' : 'y';
+    const unit = e.deltaMode === WheelEvent.DOM_DELTA_LINE ? 16 : 1;
+    const dx = Math.abs(e.deltaX) * unit;
+    const dy = Math.abs(e.deltaY) * unit;
+    const size = Math.max(dx, dy);
+    const before = recent.length ? recent.reduce((a, b) => a + b, 0) / recent.length : 0;
+    const rested = now - lastWheel > GESTURE_REST_MS;
+    const reaccel =
+      now - gestureStart > REACCEL_AFTER_MS && recent.length >= 3 && size >= REACCEL_MIN_PX && size > before * REACCEL_RATIO;
+    if ((rested || reaccel) && size) {
+      gestureId++;
+      gestureStart = now;
+      recent = [];
+      axis = dx > dy || (e.shiftKey && !dx) ? 'x' : 'y';
+    }
+    if (size) recent = [...recent.slice(-2), size];
     lastWheel = now;
   },
   { capture: true, passive: true },
 );
+/** Axis of the current wheel / trackpad gesture (see above). */
 export const wheelAxis = () => axis;
+/** Number of the current wheel / trackpad gesture: a new one when it changes (see above). */
+export const wheelGesture = () => gestureId;
 
 /** Scroll events don't bubble; one capturing listener fans out scroller scrolls. */
 type ScrollHandler = (scroller: HTMLElement) => void;
