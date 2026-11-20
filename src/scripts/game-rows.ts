@@ -26,6 +26,7 @@ import {
   ACTIVE_CHANGE,
   getRootState,
   stopMomentum,
+  swipeDirection,
   touchedRecently,
   getScroller,
   glideScroll,
@@ -71,12 +72,12 @@ function currentIndex(row: HTMLElement) {
  * Touch (phones): the track follows the finger natively (its snapping paused meanwhile, and
  * its line left as it is); let go, the row moves one game at most — to the next or previous
  * one of the game it counts from (`base`: the one a switch still under way heads to, else
- * the one at rest), or back to it for a short / vertical drag — by script, the browser's own
+ * the one at rest) when swiped far enough for its speed (a fast swipe a little, a slow drag
+ * past half a game: dom.ts swipeDirection), else back to it — by script, the browser's own
  * fling stopped first (dom.ts stopMomentum). Its line changes then. So a swipe never runs
  * on past one game, and quick swipes add up.
  */
-const SWIPE_MIN_PX = 24;
-let touch: { row: HTMLElement; base: number; x0: number; y0: number; left0: number } | null = null;
+let touch: { row: HTMLElement; base: number; left0: number } | null = null;
 
 /**
  * Light a game as the row's current one: its indicator line, and (`select`, once the row
@@ -233,8 +234,7 @@ document.addEventListener(
     const base = targets.get(row) ?? currentIndex(row);
     stopGlide(t);
     t.dataset.gliding = '';
-    const f = e.touches[0];
-    touch = { row, base, x0: f.clientX, y0: f.clientY, left0: t.scrollLeft };
+    touch = { row, base, left0: t.scrollLeft };
   },
   { capture: true, passive: true },
 );
@@ -243,24 +243,22 @@ for (const type of ['touchend', 'touchcancel'] as const) {
     type,
     (e) => {
       if (!touch || (e as TouchEvent).touches.length) return;
-      const { row, base, x0, y0, left0 } = touch;
+      const { row, base, left0 } = touch;
       touch = null;
       const t = track(row);
       if (!t) return;
       const f = (e as TouchEvent).changedTouches[0];
-      const dx = f ? f.clientX - x0 : 0;
-      const dy = f ? f.clientY - y0 : 0;
       const moved = t.scrollLeft - left0;
       // Not moved sideways (a tap, a vertical drag) and nothing under way: as it was.
       if (Math.abs(moved) < 1 && !targets.has(row)) {
         delete t.dataset.gliding;
         return;
       }
-      // One game at most: the way the finger went (or the track, if its moves were held back).
-      let dir = 0;
-      if (Math.abs(dx) >= SWIPE_MIN_PX && Math.abs(dx) > Math.abs(dy)) dir = dx < 0 ? 1 : -1;
-      else if (Math.abs(moved) >= SWIPE_MIN_PX) dir = Math.sign(moved);
-      show(row, Math.max(0, Math.min(games(row).length - 1, base + dir)));
+      // One game at most, if swiped far enough for its speed (dom.ts swipeDirection).
+      const g = games(row);
+      const step = g.length > 1 ? g[1].getBoundingClientRect().left - g[0].getBoundingClientRect().left : t.clientWidth;
+      const dir = swipeDirection(f, moved, step);
+      show(row, Math.max(0, Math.min(g.length - 1, base + dir)));
     },
     { capture: true, passive: true },
   );

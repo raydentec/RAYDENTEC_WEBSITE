@@ -34,6 +34,7 @@
 import {
   CHROME_EASE,
   stopMomentum,
+  swipeDirection,
   touchedRecently,
   getRootState,
   getScroller,
@@ -68,11 +69,11 @@ let touching = false;
  * Touch (phones): the track follows the finger natively (its snapping paused meanwhile, its
  * line left as it is); let go, it moves one slide at most — to the next or previous one of
  * the slide it counts from (`base`: the one a switch still under way heads to, else the
- * current one), or back to it for a short drag — by script, the browser's own fling
+ * current one) when swiped far enough for its speed (a fast swipe a little, a slow drag past
+ * half the slide: dom.ts swipeDirection), else back to it — by script, the browser's own fling
  * stopped first (dom.ts stopMomentum). Its line changes then.
  */
-const SWIPE_MIN_PX = 24;
-let swipe: { base: number; x0: number; y0: number; left0: number } | null = null;
+let swipe: { base: number; left0: number } | null = null;
 
 /** Presses (±1 each) waiting to go on past the copy a glide is heading to (step). */
 let pending = 0;
@@ -295,8 +296,7 @@ for (const type of ['touchstart', 'pointerdown'] as const) {
         const base = heading === null ? current : (heading + n) % n;
         const t = track(root);
         t?.setAttribute('data-gliding', ''); // snapping paused until let go (see swipe)
-        const f = (e as TouchEvent).touches[0];
-        swipe = { base, x0: f.clientX, y0: f.clientY, left0: t?.scrollLeft ?? 0 };
+        swipe = { base, left0: t?.scrollLeft ?? 0 };
       }
     },
     { capture: true, passive: true },
@@ -340,14 +340,12 @@ for (const type of ['touchend', 'touchcancel'] as const) {
       const t = root && track(root);
       if (!root || !t || !sw) return;
       const f = (e as TouchEvent).changedTouches[0];
-      const dx = f ? f.clientX - sw.x0 : 0;
-      const dy = f ? f.clientY - sw.y0 : 0;
       const moved = t.scrollLeft - sw.left0;
       // Moved sideways, or a switch was under way: one slide at most (see swipe).
       if (Math.abs(moved) >= 1 || sw.base !== current) {
-        let dir = 0;
-        if (Math.abs(dx) >= SWIPE_MIN_PX && Math.abs(dx) > Math.abs(dy)) dir = dx < 0 ? 1 : -1;
-        else if (Math.abs(moved) >= SWIPE_MIN_PX) dir = Math.sign(moved);
+        // Far enough for its speed (dom.ts swipeDirection): a fast swipe a little, a slow
+        // drag past half the slide.
+        const dir = swipeDirection(f, moved, t.clientWidth);
         stopMomentum(t);
         scrollToSlide(root, sw.base + dir);
         restart();

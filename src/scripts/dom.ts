@@ -142,6 +142,63 @@ let lastTouch = -Infinity;
 document.addEventListener('touchstart', () => (lastTouch = performance.now()), { capture: true, passive: true });
 export const touchedRecently = () => performance.now() - lastTouch < TOUCH_RECENT_MS;
 
+/**
+ * Where a touch swipe on a sideways track goes when let go (game-rows.ts, hero-slider.ts):
+ * 1 / -1 to the next / previous item, 0 back to the one it started on. A fast swipe (the
+ * finger moving at least SWIPE_FAST px/ms over its last SWIPE_SPEED_MS) needs only
+ * SWIPE_FAST_SHARE of an item (`step`: the distance between items); a slow drag has to get
+ * past SWIPE_SLOW_SHARE of one, or it springs back. The distance is the finger's sideways
+ * travel — or the track's (`moved`) where that is more (touch moves held back while a
+ * fling scrolls). Finger positions are kept from touchstart (all touches, see below).
+ */
+const SWIPE_FAST = 0.5;
+const SWIPE_SPEED_MS = 100;
+const SWIPE_FAST_SHARE = 0.15;
+const SWIPE_SLOW_SHARE = 0.5;
+let fingerAt: { x: number; y: number; t: number }[] = [];
+document.addEventListener(
+  'touchstart',
+  (e) => {
+    const f = e.touches[0];
+    fingerAt = f ? [{ x: f.clientX, y: f.clientY, t: performance.now() }] : [];
+  },
+  { capture: true, passive: true },
+);
+document.addEventListener(
+  'touchmove',
+  (e) => {
+    const f = e.touches[0];
+    if (!f) return;
+    fingerAt.push({ x: f.clientX, y: f.clientY, t: performance.now() });
+    if (fingerAt.length > 24) fingerAt.splice(1, fingerAt.length - 24); // keep the start
+  },
+  { capture: true, passive: true },
+);
+export function swipeDirection(end: Touch | undefined, moved: number, step: number) {
+  const start = fingerAt[0];
+  if (!start || step <= 0) return 0;
+  const now = performance.now();
+  const last = fingerAt[fingerAt.length - 1];
+  const x = end?.clientX ?? last.x;
+  const y = end?.clientY ?? last.y;
+  const dx = x - start.x;
+  // + towards the next item (finger to the left; the track scrolling on).
+  let dist = Math.abs(dx) > Math.abs(y - start.y) ? -dx : 0;
+  if (Math.abs(moved) > Math.abs(dist)) dist = moved;
+  // Speed as it was let go: over the finger's last SWIPE_SPEED_MS of movement — none if it
+  // had rested longer than that before lifting; with no moves seen (held back while a fling
+  // scrolled), over the whole drag.
+  let speed: number;
+  if (fingerAt.length < 2) speed = Math.abs(dist) / Math.max(1, now - start.t);
+  else if (now - last.t > SWIPE_SPEED_MS) speed = 0;
+  else {
+    const ref = fingerAt.find((p) => last.t - p.t <= SWIPE_SPEED_MS && p !== last) ?? start;
+    speed = Math.abs(last.x - ref.x) / Math.max(1, last.t - ref.t);
+  }
+  const need = step * (speed >= SWIPE_FAST ? SWIPE_FAST_SHARE : SWIPE_SLOW_SHARE);
+  return Math.abs(dist) >= need ? Math.sign(dist) : 0;
+}
+
 /** Stop a running glide of `el` where it is; snapping takes over again. */
 export function stopGlide(el: HTMLElement) {
   const stop = glides.get(el);
