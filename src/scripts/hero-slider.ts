@@ -33,6 +33,10 @@
  */
 import {
   CHROME_EASE,
+  stopEdgeBounce,
+  releaseEase,
+  releaseMomentum,
+  releaseSpeed,
   stopMomentum,
   swipeDirection,
   touchedRecently,
@@ -89,6 +93,7 @@ let glideTrack: HTMLElement | null = null;
 /** Stop a running glide where it is; snapping takes over again. */
 function stopGlide() {
   pending = 0;
+  releaseMomentum(slider()?.querySelector<HTMLElement>('[data-slide-track]')); // scrollable by the user again
   if (!glideFrame) return;
   cancelAnimationFrame(glideFrame);
   glideFrame = 0;
@@ -107,7 +112,8 @@ const position = (t: HTMLElement) => (t.clientWidth ? Math.round(t.scrollLeft / 
 /** Track offset of a slide (the copy of the last comes first). */
 const left = (t: HTMLElement, index: number) => (index + 1) * t.clientWidth;
 
-function scrollToSlide(root: HTMLElement, index: number) {
+/** `v0`: the speed the track is moving at (a touch swipe let go), carried on smoothly (dom.ts releaseEase). */
+function scrollToSlide(root: HTMLElement, index: number, v0 = 0) {
   const t = track(root);
   if (!t || !looped(root)) return;
   // After touch (a swipe let go, a tapped line / arrow): a fling still under way is stopped
@@ -125,15 +131,25 @@ function scrollToSlide(root: HTMLElement, index: number) {
     delete t.dataset.gliding;
     glideTrack = null;
     t.scrollTo({ left: to, behavior: 'instant' });
+    releaseMomentum(t);
     return;
   }
   // Glide by script (see top); settle once it has arrived.
   t.dataset.gliding = '';
   glideTrack = t;
-  const start = performance.now();
+  // From where it is on the first frame (a touch swipe's fling gets one frame in first, see
+  // dom.ts glideScroll): no jump back.
+  let start = 0;
+  let sx = from;
+  let glide = { ms: GLIDE_MS, ease: GLIDE_EASE };
   const frame = (now: number) => {
-    const p = Math.min(1, (now - start) / GLIDE_MS);
-    t.scrollTo({ left: from + (to - from) * GLIDE_EASE(p), behavior: 'instant' });
+    if (!start) {
+      start = now;
+      sx = t.scrollLeft;
+      if (v0) glide = releaseEase(to - sx, v0, GLIDE_MS);
+    }
+    const p = Math.min(1, (now - start) / glide.ms);
+    t.scrollTo({ left: sx + (to - sx) * glide.ease(p), behavior: 'instant' });
     // Presses waiting to go on past the copy: the track is close enough to it now.
     if (pending && canLeaveCopy(root)) {
       flushPending(root);
@@ -146,6 +162,7 @@ function scrollToSlide(root: HTMLElement, index: number) {
     glideFrame = 0;
     glideTrack = null;
     delete t.dataset.gliding;
+    releaseMomentum(t); // arrived: the user can scroll it again
     window.clearTimeout(settleTimer);
     settle(root);
   };
@@ -295,7 +312,10 @@ for (const type of ['touchstart', 'pointerdown'] as const) {
         const n = count(root);
         const base = heading === null ? current : (heading + n) % n;
         const t = track(root);
-        t?.setAttribute('data-gliding', ''); // snapping paused until let go (see swipe)
+        // Mid-switch: snapping paused until let go (it would snap back meanwhile); from rest it
+        // stays on, so Chrome's own fling (a frame before the release glide) aims at the next
+        // slide instead of flying past it.
+        if (heading !== null) t?.setAttribute('data-gliding', '');
         swipe = { base, left0: t?.scrollLeft ?? 0 };
       }
     },
@@ -347,7 +367,7 @@ for (const type of ['touchend', 'touchcancel'] as const) {
         // drag past half the slide.
         const dir = swipeDirection(f, moved, t.clientWidth);
         stopMomentum(t);
-        scrollToSlide(root, sw.base + dir);
+        scrollToSlide(root, sw.base + dir, releaseSpeed());
         restart();
         return;
       }
@@ -424,6 +444,8 @@ document.addEventListener('astro:before-swap', () => {
 
 onPageLoad(() => {
   window.clearInterval(timer);
+  const heroTrack = slider()?.querySelector<HTMLElement>('[data-slide-track]');
+  if (heroTrack) stopEdgeBounce(heroTrack); // no rubber-band at the ends (dom.ts)
   current = 0;
   held = false;
   target = null;

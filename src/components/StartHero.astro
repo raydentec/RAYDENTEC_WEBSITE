@@ -310,8 +310,12 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
     opacity: 0.35;
     transition: opacity var(--t-state) ease;
   }
-  .hero__dot:hover::before {
-    opacity: 0.7;
+  /* Only where there's a real pointer to hover with: Chrome on Android kept a tapped line
+     "hovered" (lit) after the slider had moved on, until something else was tapped. */
+  @media (hover: hover) {
+    .hero__dot:hover::before {
+      opacity: 0.7;
+    }
   }
   .hero__dot[aria-current='true']::before {
     opacity: 1;

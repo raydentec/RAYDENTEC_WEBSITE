@@ -161,8 +161,12 @@ const headingId = `games-${index}`;
       background-color var(--t-state) ease,
       opacity var(--t-state) ease;
   }
-  .grow__dot:hover::before {
-    opacity: 0.7;
+  /* Only where there's a real pointer to hover with: Chrome on Android kept a tapped line
+     "hovered" (lit) after the row had moved on, until something else was tapped. */
+  @media (hover: hover) {
+    .grow__dot:hover::before {
+      opacity: 0.7;
+    }
   }
   .grow__dot[aria-current='true']::before {
     background: var(--c-red);

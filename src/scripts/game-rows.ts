@@ -25,6 +25,8 @@
 import {
   ACTIVE_CHANGE,
   getRootState,
+  stopEdgeBounce,
+  releaseSpeed,
   stopMomentum,
   swipeDirection,
   touchedRecently,
@@ -104,7 +106,8 @@ function sync(row: HTMLElement) {
 const syncAll = () => rows().forEach(sync);
 
 /** Glide the row's track to a game (as far as the track scrolls), then sync the row. */
-function show(row: HTMLElement, index: number) {
+/** `v0`: the speed it's moving at (a touch swipe let go), carried on smoothly (dom.ts releaseEase). */
+function show(row: HTMLElement, index: number, v0 = 0) {
   const t = track(row);
   const game = games(row)[index];
   if (!t || !game) return;
@@ -118,7 +121,7 @@ function show(row: HTMLElement, index: number) {
   // browser's own scrolling / snapping fought a native smooth scroll there (jumpy).
   const touched = touchedRecently();
   if (touched) stopMomentum(t);
-  glideScroll(t, { left: to }, () => sync(row), undefined, touched);
+  glideScroll(t, { left: to }, () => sync(row), undefined, touched, v0);
 }
 
 // Track scrolls (scroll events don't bubble): update the row once it pauses / ends.
@@ -231,9 +234,13 @@ document.addEventListener(
     const t = (e.target as Element | null)?.closest<HTMLElement>('[data-row-track]');
     const row = t?.closest<HTMLElement>('[data-row]');
     if (!t || !row || e.touches.length !== 1) return;
+    const moving = targets.has(row);
     const base = targets.get(row) ?? currentIndex(row);
     stopGlide(t);
-    t.dataset.gliding = '';
+    // Mid-switch: snapping paused (it would snap the track back meanwhile). From rest it
+    // stays on: Chrome's own fling, which gets a frame in before the release glide takes
+    // over, then aims at the next game (scroll-snap-stop) instead of flying past it.
+    if (moving) t.dataset.gliding = '';
     touch = { row, base, left0: t.scrollLeft };
   },
   { capture: true, passive: true },
@@ -258,7 +265,7 @@ for (const type of ['touchend', 'touchcancel'] as const) {
       const g = games(row);
       const step = g.length > 1 ? g[1].getBoundingClientRect().left - g[0].getBoundingClientRect().left : t.clientWidth;
       const dir = swipeDirection(f, moved, step);
-      show(row, Math.max(0, Math.min(g.length - 1, base + dir)));
+      show(row, Math.max(0, Math.min(g.length - 1, base + dir)), releaseSpeed());
     },
     { capture: true, passive: true },
   );
@@ -269,4 +276,10 @@ document.addEventListener('astro:before-swap', () => {
 
 document.addEventListener(ACTIVE_CHANGE, syncAll);
 window.addEventListener('resize', syncAll);
-onPageLoad(syncAll);
+onPageLoad(() => {
+  syncAll();
+  rows().forEach((row) => {
+    const t = track(row);
+    if (t) stopEdgeBounce(t); // no rubber-band at the ends (dom.ts)
+  });
+});

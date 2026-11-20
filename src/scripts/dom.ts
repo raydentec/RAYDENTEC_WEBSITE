@@ -73,6 +73,9 @@ export function glideScroll(
   /** By script even in Chromium: while the browser's own snapping of a touch swipe is
       still pending there, it pulled the track back after a native smooth scroll. */
   byScript = false,
+  /** Speed (px/ms, along the scroll; + = increasing) it is already moving at — a touch swipe
+      let go: the glide carries it on smoothly (releaseEase), by script. */
+  v0 = 0,
 ) {
   glides.get(el)?.(); // hand over: stop the running one, keep data-gliding for now
   const x0 = el.scrollLeft;
@@ -93,6 +96,7 @@ export function glideScroll(
     if (over) return;
     cleanUp();
     delete el.dataset.gliding;
+    releaseMomentum(el);
     onDone?.();
   };
   const onEnd = () => {
@@ -107,7 +111,7 @@ export function glideScroll(
     finish();
     return;
   }
-  if (NATIVE_SMOOTH && !byScript) {
+  if (NATIVE_SMOOTH && !byScript && !v0) {
     delete el.dataset.gliding;
     el.addEventListener('scrollend', onEnd);
     fallback = window.setTimeout(finish, ms + 1000); // in case no scrollend comes
@@ -115,11 +119,23 @@ export function glideScroll(
     return;
   }
   el.dataset.gliding = '';
-  const start = performance.now();
+  // From where it is on the glide's first frame: after a touch swipe Chrome's own fling gets
+  // one frame in first (it can't be cancelled from the page); starting from before it, the
+  // glide jumped back. That frame becomes part of the motion instead.
+  let start = 0;
+  let sx = x0;
+  let sy = y0;
+  let glide = releaseEase(0, 0, ms);
   const step = (now: number) => {
-    const p = Math.min(1, (now - start) / ms);
-    const e = CHROME_EASE(p);
-    el.scrollTo({ left: x0 + (x1 - x0) * e, top: y0 + (y1 - y0) * e, behavior: 'instant' });
+    if (!start) {
+      start = now;
+      sx = el.scrollLeft;
+      sy = el.scrollTop;
+      glide = releaseEase(Math.abs(x1 - sx) > Math.abs(y1 - sy) ? x1 - sx : y1 - sy, v0, ms);
+    }
+    const p = Math.min(1, (now - start) / glide.ms);
+    const e = glide.ease(p);
+    el.scrollTo({ left: sx + (x1 - sx) * e, top: sy + (y1 - sy) * e, behavior: 'instant' });
     if (p < 1) frame = requestAnimationFrame(step);
     else finish();
   };
@@ -127,12 +143,19 @@ export function glideScroll(
 }
 
 /**
- * Stop the browser's own scrolling of `el` where it is (a touch fling still under way):
- * briefly not scrollable by the user. Before a glide by script, so the two don't fight.
+ * Stop the browser's own scrolling of `el` (a touch fling still under way) for a glide by
+ * script: not scrollable by the user until releaseMomentum — the glide's end, or a new touch
+ * (stopGlide). Only for a moment wasn't enough in Chrome on Android: the fling ran on under
+ * the glide (jerky) and, snapping back on at its end, carried the track on to the item after.
+ * Scrolling it by script still works meanwhile.
  */
 export function stopMomentum(el: HTMLElement) {
   el.style.overflowX = 'hidden';
-  void el.offsetWidth;
+  el.dataset.held = '';
+}
+export function releaseMomentum(el: HTMLElement | null | undefined) {
+  if (!el || !('held' in el.dataset)) return;
+  delete el.dataset.held;
   el.style.overflowX = '';
 }
 
@@ -174,6 +197,30 @@ document.addEventListener(
   },
   { capture: true, passive: true },
 );
+/**
+ * Easing for a glide over `distance` px that starts at `v0` px/ms (a touch swipe let go,
+ * along the glide: + = towards its end): a cubic (Hermite) curve leaving at that speed and
+ * coming smoothly to rest — so letting go doesn't drop the motion to a standstill for a
+ * frame before the glide picks it up again (CHROME_EASE starts from rest). Its length is
+ * what easing out from that speed takes, within RELEASE_MIN_MS…`maxMs`. Slow or backwards
+ * releases (springing back) use CHROME_EASE over `maxMs`.
+ */
+const RELEASE_MIN_MS = 220;
+const RELEASE_SLOW = 0.05;
+export function releaseEase(distance: number, v0: number, maxMs: number) {
+  const d = Math.abs(distance);
+  const v = v0 * Math.sign(distance); // speed towards the glide's end
+  if (d < 1 || v < RELEASE_SLOW) return { ms: maxMs, ease: CHROME_EASE };
+  // Leaving at m0 × the average speed: 1.6 gives an ease-out with no overshoot (< 3).
+  const ms = Math.min(maxMs, Math.max(RELEASE_MIN_MS, (1.6 * d) / v));
+  const m0 = Math.min(3, (v * ms) / d);
+  return { ms, ease: (u: number) => (u * u * u - 2 * u * u + u) * m0 + (3 * u * u - 2 * u * u * u) };
+}
+
+/** Speed (px/ms) a sideways track was moving at as the last touch swipe was let go (+ = scrolling on). */
+let lastReleaseSpeed = 0;
+export const releaseSpeed = () => lastReleaseSpeed;
+
 export function swipeDirection(end: Touch | undefined, moved: number, step: number) {
   const start = fingerAt[0];
   if (!start || step <= 0) return 0;
@@ -189,18 +236,67 @@ export function swipeDirection(end: Touch | undefined, moved: number, step: numb
   // had rested longer than that before lifting; with no moves seen (held back while a fling
   // scrolled), over the whole drag.
   let speed: number;
+  let velocity = 0; // the track's, signed (+ = scrolling on: finger to the left)
   if (fingerAt.length < 2) speed = Math.abs(dist) / Math.max(1, now - start.t);
   else if (now - last.t > SWIPE_SPEED_MS) speed = 0;
   else {
     const ref = fingerAt.find((p) => last.t - p.t <= SWIPE_SPEED_MS && p !== last) ?? start;
-    speed = Math.abs(last.x - ref.x) / Math.max(1, last.t - ref.t);
+    velocity = -(last.x - ref.x) / Math.max(1, last.t - ref.t);
+    speed = Math.abs(velocity);
   }
+  lastReleaseSpeed = velocity;
   const need = step * (speed >= SWIPE_FAST ? SWIPE_FAST_SHARE : SWIPE_SLOW_SHARE);
   return Math.abs(dist) >= need ? Math.sign(dist) : 0;
 }
 
+/**
+ * No rubber-band at the ends of a sideways track (the rows, the hero): WebKit still stretched
+ * one past its end while the finger dragged on, overscroll-behavior notwithstanding. While
+ * the track is at an end and the finger pushes further out, its move is cancelled (nothing
+ * to stretch); the release logic then glides as usual. Not in Chromium: no rubber-band
+ * there, and a listener that can cancel touch moves holds up its scrolling. Bound on each
+ * track itself (not the document, for the same reason), once.
+ */
+export function stopEdgeBounce(track: HTMLElement) {
+  if (NATIVE_SMOOTH || track.dataset.noBounce) return;
+  track.dataset.noBounce = '';
+  let lastX = 0;
+  let x0 = 0;
+  let y0 = 0;
+  let sideways: boolean | null = null; // decided by the drag's first clear move
+  track.addEventListener(
+    'touchstart',
+    (e) => {
+      lastX = x0 = e.touches[0]?.clientX ?? 0;
+      y0 = e.touches[0]?.clientY ?? 0;
+      sideways = null;
+    },
+    { passive: true },
+  );
+  track.addEventListener(
+    'touchmove',
+    (e) => {
+      const f = e.touches[0];
+      if (!f) return;
+      if (sideways === null && Math.max(Math.abs(f.clientX - x0), Math.abs(f.clientY - y0)) >= 6) {
+        sideways = Math.abs(f.clientX - x0) > Math.abs(f.clientY - y0);
+      }
+      const x = f.clientX;
+      const towardsStart = x > lastX; // finger to the right: the track would scroll back
+      lastX = x;
+      if (!sideways) return; // a vertical drag scrolls the page
+      const max = track.scrollWidth - track.clientWidth;
+      if ((towardsStart && track.scrollLeft <= 0) || (!towardsStart && track.scrollLeft >= max - 1)) {
+        if (e.cancelable) e.preventDefault();
+      }
+    },
+    { passive: false },
+  );
+}
+
 /** Stop a running glide of `el` where it is; snapping takes over again. */
 export function stopGlide(el: HTMLElement) {
+  releaseMomentum(el); // scrollable by the user again (a new touch)
   const stop = glides.get(el);
   if (!stop) return;
   stop();
