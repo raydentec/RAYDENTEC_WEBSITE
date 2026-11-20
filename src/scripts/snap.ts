@@ -17,6 +17,7 @@
  */
 import {
   ACTIVE_CHANGE,
+  isStartPage,
   clearArriving,
   containers,
   getScroller,
@@ -214,9 +215,43 @@ window.addEventListener('resize', () => {
  * and then jump.
  */
 let positionedOnSwap = false;
+
+/*
+ * Arriving at Start: it opens at the very top (the hero) and stays there until the visitor
+ * scrolls. On real phones (not in the desktop emulator) it sometimes opened somewhere in
+ * About me instead — something moved the new column after it was put at the top (the
+ * address bar resizing the window, images / fonts arriving, the browser re-snapping). So it
+ * is put at the top on swap, on page-load and once the page change is over, and for
+ * HOLD_TOP_MS after arriving any scroll the visitor didn't make is undone; touching,
+ * scrolling, clicking or a key lets go at once.
+ */
+const HOLD_TOP_MS = 1500;
+let holdTopUntil = 0;
+const releaseTop = () => (holdTopUntil = 0);
+for (const type of ['touchstart', 'wheel', 'pointerdown', 'keydown'] as const) {
+  document.addEventListener(type, releaseTop, { capture: true, passive: true });
+}
+function toTop(scroller: HTMLElement) {
+  if (performance.now() > holdTopUntil || scroller.scrollTop === 0) return;
+  scroller.scrollTop = 0;
+}
+document.addEventListener('astro:before-swap', (e) => {
+  if (!isStartPage(e.newDocument)) return;
+  holdTopUntil = Infinity; // until the page change is over, then HOLD_TOP_MS more
+  void e.viewTransition.finished.finally(() => {
+    const scroller = getScroller();
+    if (holdTopUntil === Infinity) holdTopUntil = performance.now() + HOLD_TOP_MS;
+    if (scroller) toTop(scroller);
+  });
+});
+onScrollerScroll((scroller) => {
+  if (scroller.dataset.page === 'start') toTop(scroller);
+});
+
 document.addEventListener('astro:after-swap', () => {
   positionedOnSwap = false;
   const scroller = getScroller();
+  if (scroller?.dataset.page === 'start') scroller.scrollTop = 0; // see above
   const first = scroller ? containers(scroller)[0] : undefined;
   if (!scroller || !first || !mq.mobile.matches || scroller.dataset.page === 'start') return;
   holdTo = null;
