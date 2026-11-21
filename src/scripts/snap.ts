@@ -80,6 +80,7 @@ function settle(scroller: HTMLElement, align: boolean) {
   const target = containerAtSnapLine(scroller) ?? nearestToSnapLine(scroller);
   if (!target) return;
   setActive(scroller, target);
+  rememberRest(scroller, target);
   // Come to rest: no container is on its way in any more (dom.ts markArriving).
   if (!('gliding' in scroller.dataset)) clearArriving(scroller);
   // Resting exactly on a container's top (a glide's end, mid-way through it): that's where
@@ -212,11 +213,35 @@ document.addEventListener(
   { capture: true },
 );
 
+/*
+ * Where the column rests, by its content: the container at the snap line and how far into it
+ * (`restAt`, kept by settle). A resize — a phone turned sideways (rotate note) and back — moves
+ * the content under a scroll position that stays put in pixels, so once the window has settled
+ * the column is put back on that container, as far into it. Not kept meanwhile (data-resizing,
+ * the rotate note): the passing layouts would overwrite it.
+ */
+let restAt: { cf: HTMLElement; offset: number } | null = null;
+let restoreTimer = 0;
+const RESTORE_MS = 250; // after the last resize (dom.ts clears data-resizing after 150ms)
+const keepingRest = () => !document.documentElement.hasAttribute('data-resizing') && !mq.rotateNote.matches;
+function rememberRest(scroller: HTMLElement, cf: HTMLElement) {
+  if (keepingRest()) restAt = { cf, offset: snapLine(scroller) - snapTop(cf) };
+}
+function restoreRest() {
+  const scroller = getScroller();
+  if (!scroller || !restAt || !restAt.cf.isConnected || mq.rotateNote.matches) return;
+  const max = scroller.scrollHeight - scroller.clientHeight;
+  const top = scroller.scrollTop + snapTop(restAt.cf) - snapLine(scroller) + restAt.offset;
+  scroller.scrollTo({ top: Math.max(0, Math.min(max, top)), behavior: 'instant' });
+}
+
 window.addEventListener('resize', () => {
   const scroller = getScroller();
   if (!scroller) return;
   updateTail(scroller);
   updateSnapping(scroller);
+  window.clearTimeout(restoreTimer);
+  restoreTimer = window.setTimeout(restoreRest, RESTORE_MS);
 });
 
 /**

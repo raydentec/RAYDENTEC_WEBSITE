@@ -24,6 +24,7 @@
  */
 import {
   ACTIVE_CHANGE,
+  mq,
   SCRIPT_GLIDES,
   getRootState,
   stopEdgeBounce,
@@ -279,16 +280,22 @@ document.addEventListener('astro:before-swap', () => {
 });
 
 document.addEventListener(ACTIVE_CHANGE, syncAll);
+// Resized (a phone turned sideways — rotate note — and back, a window dragged): once it has
+// settled, each row back on the game it showed (its lit line; the layouts on the way moved
+// the games under its scroll position, and on iOS nothing snaps them back), then synced.
+let resizeTimer = 0;
 window.addEventListener('resize', () => {
-  // iOS: no snapping on the tracks (ios-swipe.ts) — put each back on its game.
-  if (IOS_TOUCH) {
+  window.clearTimeout(resizeTimer);
+  resizeTimer = window.setTimeout(() => {
+    if (mq.rotateNote.matches) return; // covered: when it's turned back
     rows().forEach((row) => {
       const t = track(row);
-      const g = games(row)[targets.get(row) ?? currentIndex(row)];
+      const lit = dots(row).findIndex((d) => d.hasAttribute('aria-current'));
+      const g = games(row)[targets.get(row) ?? (lit >= 0 ? lit : currentIndex(row))];
       if (t && g) t.scrollTo({ left: t.scrollLeft + g.getBoundingClientRect().left - snapLine(t), behavior: 'instant' });
     });
-  }
-  syncAll();
+    syncAll();
+  }, 250);
 });
 
 // iOS touch: the drag by script, one game at most (ios-swipe.ts); let go, the glide (show).

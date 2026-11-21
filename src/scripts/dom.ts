@@ -10,6 +10,8 @@
 export const mq = {
   /** A phone (narrow, touch): vertical touch moves the column by script (wheel.ts "Touch on phones"). */
   touchColumn: matchMedia('(max-width: 767px) and (pointer: coarse)'),
+  /** A phone turned sideways: the page is covered by the rotate note (Shell.astro .rotate-note). */
+  rotateNote: matchMedia('(orientation: landscape) and (pointer: coarse) and (max-height: 540px)'),
   desktop: matchMedia('(min-width: 1280px)'),
   mobile: matchMedia('(max-width: 767px)'),
   reducedMotion: matchMedia('(prefers-reduced-motion: reduce)'),
