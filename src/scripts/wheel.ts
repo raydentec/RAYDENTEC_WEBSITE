@@ -405,15 +405,17 @@ document.addEventListener('astro:before-swap', () => {
  *   - Let go within that section (one taller than the screen): it coasts on at the finger's
  *     speed, within the section (COAST_MS of it).
  *   - Let go past its end / start: on to the next / previous section's start when it went
- *     far enough for its speed — a fast swipe (dom.ts SWIPE_FAST_SPEED) SWIPE share 15 %, a
- *     slow one 50 % of the way (dom.ts swipeShare) — else back; gliding from the finger's
- *     speed (dom.ts releaseEase).
+ *     far enough for its speed — a fast swipe (dom.ts SWIPE_FAST_SPEED) 7.5 %, a slow one
+ *     25 % of the way: half the sideways shares (dom.ts swipeShare × VERTICAL_SHARE) — else
+ *     back; gliding from the finger's speed (dom.ts releaseEase).
  *   - Begun while a switch was still gliding: it counts from that switch's target, and a
  *     drag of CHAIN_PX that way goes one further (quick swipes add up).
  */
 const DECIDE_PX = 6;
 const CHAIN_PX = 10;
 const COAST_MS = 300;
+/** Vertical swipes switch sooner than sideways ones: this share of theirs (half: 7.5 % fast, 25 % slow). */
+const VERTICAL_SHARE = 0.5;
 let vdrag: {
   scroller: HTMLElement;
   id: number;
@@ -557,7 +559,7 @@ function releaseColumn(d: NonNullable<typeof vdrag>) {
     return;
   }
   const fast = Math.abs(v) >= SWIPE_FAST_SPEED && Math.sign(v) === (down ? 1 : -1);
-  const far = Math.abs(pos - from) >= Math.abs(next - from) * swipeShare(fast);
+  const far = Math.abs(pos - from) >= Math.abs(next - from) * swipeShare(fast) * VERTICAL_SHARE;
   glideColumn(scroller, far ? next : from, v);
 }
 document.addEventListener('touchend', touchEnd, { capture: true, passive: true });
