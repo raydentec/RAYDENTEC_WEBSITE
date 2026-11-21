@@ -514,12 +514,25 @@ function releaseColumn(d: NonNullable<typeof vdrag>) {
   const v = touchVelocity('y');
   const spans = withProfile(scroller, snapSpans(scroller));
   if (!spans.length) return;
-  // Begun mid-switch: on from that switch's target, one further if dragged that way.
+  // Begun mid-switch: on from that switch's target, one further if dragged that way — when
+  // that is a switch (swiped against it: from where it is, see below). Where that way leads into a tall section's free scrolling instead (up
+  // from its bottom edge, down from its top), it's a fresh drag from where the column is:
+  // carrying on to the old target bounced it back.
   if (d.chained) {
     const dir = Math.abs(pos - d.top0) >= CHAIN_PX ? Math.sign(pos - d.top0) : 0;
-    const to = dir ? stepTarget(scroller, d.anchor, dir) : d.anchor;
-    glideColumn(scroller, typeof to === 'number' ? to : d.anchor, v);
-    return;
+    // Against the glide it interrupted (it was heading the other way): turned round — on to
+    // the next stop that way from where the column is, not from the old target.
+    const against = dir !== 0 && Math.sign(d.anchor - d.top0) === -dir;
+    const to = dir ? stepTarget(scroller, against ? d.top0 : d.anchor, dir) : d.anchor;
+    if (typeof to === 'number' || !dir) {
+      glideColumn(scroller, typeof to === 'number' ? to : d.anchor, v);
+      return;
+    }
+    if (to === null) {
+      glideColumn(scroller, d.anchor, v); // at the end of the column
+      return;
+    }
+    // Free scrolling that way: as an unchained drag (below), in the anchor's section.
   }
   const i = sectionFrom(spans, d.anchor);
   const span = spans[i];
