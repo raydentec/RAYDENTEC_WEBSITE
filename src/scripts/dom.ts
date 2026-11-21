@@ -226,6 +226,21 @@ export function releaseEase(distance: number, v0: number, maxMs: number) {
 let lastReleaseSpeed = 0;
 export const releaseSpeed = () => lastReleaseSpeed;
 
+/**
+ * The scroll speed (px/ms; + = scrolling on: the finger going left / up) a touch drag had as
+ * it was let go, along `axis`: over the finger's last SWIPE_SPEED_MS of movement, 0 if it had
+ * rested longer than that before lifting. (Vertical touch on phones, wheel.ts.)
+ */
+export function touchVelocity(axis: 'x' | 'y') {
+  const last = fingerAt[fingerAt.length - 1];
+  if (!last || fingerAt.length < 2 || performance.now() - last.t > SWIPE_SPEED_MS) return 0;
+  const ref = fingerAt.find((p) => last.t - p.t <= SWIPE_SPEED_MS && p !== last) ?? fingerAt[0];
+  return -(axis === 'x' ? last.x - ref.x : last.y - ref.y) / Math.max(1, last.t - ref.t);
+}
+/** A fast release (|touchVelocity| at least SWIPE_FAST) needs this share of an item to switch; a slow one the other. */
+export const swipeShare = (fast: boolean) => (fast ? SWIPE_FAST_SHARE : SWIPE_SLOW_SHARE);
+export const SWIPE_FAST_SPEED = SWIPE_FAST;
+
 export function swipeDirection(end: Touch | undefined, moved: number, step: number) {
   const start = fingerAt[0];
   if (!start || step <= 0) return 0;

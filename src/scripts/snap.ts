@@ -172,11 +172,11 @@ function updateSnapping(scroller: HTMLElement) {
  * Snapping is held off for the whole trip, or the browser would snap the target onto a
  * container's top (and in Chrome, switching it off on the way cut the glide short).
  */
-export function scrollToTop(scroller: HTMLElement, top = 0) {
+export function scrollToTop(scroller: HTMLElement, top = 0, v0 = 0) {
   if (Math.abs(scroller.scrollTop - top) < 1) return;
   holdTo = top;
   scroller.dataset.snap = 'off';
-  glideScroll(scroller, { top });
+  glideScroll(scroller, { top }, undefined, undefined, false, v0);
 }
 
 onScrollerScroll((scroller) => {

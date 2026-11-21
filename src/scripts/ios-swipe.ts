@@ -96,7 +96,8 @@ export function bindIosSwipe(selector: string, owner: IosSwipeOwner) {
         drag.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
       }
       if (drag.axis !== 'x') return; // the page scrolls (natively)
-      drag.track.scrollLeft = Math.max(drag.min, Math.min(drag.max, drag.left0 - dx));
+      // Instant (never a smooth scroll-behavior trailing the finger).
+      drag.track.scrollTo({ left: Math.max(drag.min, Math.min(drag.max, drag.left0 - dx)), behavior: 'instant' });
     },
     { capture: true, passive: true },
   );

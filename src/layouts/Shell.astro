@@ -354,6 +354,13 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
      * Profile area: scrolls freely (no snap point; data-snap="off", below). At the top
      * only the profile shows: it fills the scroll area down to the footer.
      */
+    /* Phones (touch): vertical swipes move the column by script, one section at a time
+       (scripts/wheel.ts "Touch on phones"); sideways ones stay the rows'. */
+    @media (pointer: coarse) {
+      .scroller {
+        touch-action: pan-x;
+      }
+    }
     .mprofile {
       display: flex;
       flex-direction: column;

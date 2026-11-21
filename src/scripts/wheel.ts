@@ -61,6 +61,9 @@ import {
   snapSpans,
   stopGlide,
   visibleBottom,
+  SWIPE_FAST_SPEED,
+  swipeShare,
+  touchVelocity,
   wheelAxis,
   wheelGesture,
 } from './dom';
@@ -139,11 +142,13 @@ function withProfile(scroller: HTMLElement, spans: { start: number; end: number 
  * profile, partway into a tall container) via snap.ts scrollToTop, which keeps snapping off
  * for the trip (see top).
  */
-function glideColumn(scroller: HTMLElement, to: number) {
+function glideColumn(scroller: HTMLElement, to: number, v0 = 0) {
   glideTo = to;
   markArriving(scroller, to);
-  if (snapSpans(scroller).some((s) => Math.abs(s.start - to) <= 2)) glideScroll(scroller, { top: to });
-  else scrollToTop(scroller, to);
+  // v0: a touch swipe's speed, carried on (dom.ts releaseEase; touch below).
+  if (snapSpans(scroller).some((s) => Math.abs(s.start - to) <= 2)) {
+    glideScroll(scroller, { top: to }, undefined, undefined, false, v0);
+  } else scrollToTop(scroller, to, v0);
 }
 
 /** Something between `el` and the column scrolls sideways by itself (a wide Legal table). */
@@ -373,3 +378,162 @@ document.addEventListener('astro:before-swap', () => {
   stopColumnGlide();
   gesture = null;
 });
+
+/*
+ * ---------- Touch on phones: vertical swipes as the sideways ones ----------
+ * On a phone (narrow, touch: TOUCH_COLUMN) the column doesn't scroll vertically by itself
+ * on touch (touch-action pan-x, Shell.astro) — the browsers' own flinging and snapping ran
+ * past sections and settled unevenly on real phones. Sideways swipes stay as they are (the
+ * rows: native, or ios-swipe.ts on iOS); wheel, keys and clicks aren't touch.
+ *   - A mostly vertical drag (decided by its first DECIDE_PX) moves the column with the
+ *     finger, 1:1: freely within the section it counts from (the hero, a tall container,
+ *     the mobile info area), and on at most to the start of the next / previous one — one
+ *     gesture never crosses more than one section.
+ *   - Let go within that section (one taller than the screen): it coasts on at the finger's
+ *     speed, within the section (COAST_MS of it).
+ *   - Let go past its end / start: on to the next / previous section's start when it went
+ *     far enough for its speed — a fast swipe (dom.ts SWIPE_FAST_SPEED) SWIPE share 15 %, a
+ *     slow one 50 % of the way (dom.ts swipeShare) — else back; gliding from the finger's
+ *     speed (dom.ts releaseEase).
+ *   - Begun while a switch was still gliding: it counts from that switch's target, and a
+ *     drag of CHAIN_PX that way goes one further (quick swipes add up).
+ */
+const TOUCH_COLUMN = matchMedia('(max-width: 767px) and (pointer: coarse)');
+const DECIDE_PX = 6;
+const CHAIN_PX = 10;
+const COAST_MS = 300;
+let vdrag: {
+  scroller: HTMLElement;
+  id: number;
+  x0: number;
+  y0: number;
+  top0: number;
+  anchor: number;
+  chained: boolean;
+  lo: number;
+  hi: number;
+  axis: 'x' | 'y' | null;
+} | null = null;
+
+/** Index of the section (mobile info area / container span) a scroll position counts in. */
+const sectionFrom = (spans: Span[], pos: number) => {
+  let i = 0;
+  spans.forEach((s, k) => {
+    if (s.start <= pos + 2) i = k;
+  });
+  return i;
+};
+
+document.addEventListener(
+  'touchstart',
+  (e) => {
+    const scroller = getScroller();
+    if (vdrag || !scroller || !TOUCH_COLUMN.matches || e.touches.length !== 1) return;
+    const target = e.target as Element | null;
+    if (!target || !scroller.contains(target) || getRootState('mmenu') === 'open') return;
+    const chained = isGliding(scroller);
+    const top0 = scroller.scrollTop;
+    const anchor = chained ? glideTo : top0;
+    const spans = withProfile(scroller, snapSpans(scroller));
+    if (!spans.length) return;
+    const i = sectionFrom(spans, anchor);
+    const max = scroller.scrollHeight - scroller.clientHeight;
+    const lo = i > 0 ? spans[i - 1].start : 0;
+    const hi = i < spans.length - 1 ? spans[i + 1].start : max;
+    const f = e.touches[0];
+    vdrag = {
+      scroller,
+      id: f.identifier,
+      x0: f.clientX,
+      y0: f.clientY,
+      top0,
+      anchor,
+      chained,
+      // Always taking in where it is (mid-glide it can lie outside): no jump on the first move.
+      lo: Math.min(lo, top0),
+      hi: Math.min(max, Math.max(hi, top0)),
+      axis: null,
+    };
+  },
+  { capture: true, passive: true },
+);
+
+document.addEventListener(
+  'touchmove',
+  (e) => {
+    if (!vdrag) return;
+    const d = vdrag;
+    const f = Array.from(e.touches).find((t) => t.identifier === d.id);
+    if (!f) return;
+    const dx = f.clientX - d.x0;
+    const dy = f.clientY - d.y0;
+    if (!d.axis) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < DECIDE_PX) return;
+      d.axis = Math.abs(dy) >= Math.abs(dx) ? 'y' : 'x';
+      if (d.axis === 'y') {
+        stopGlide(d.scroller);
+        d.scroller.dataset.wheel = ''; // snapping paused while it follows the finger
+      }
+    }
+    if (d.axis !== 'y') return; // a sideways swipe: the row's
+    // Instant: the column has scroll-behavior smooth, which made it trail the finger.
+    d.scroller.scrollTo({ top: Math.max(d.lo, Math.min(d.hi, d.top0 - dy)), behavior: 'instant' });
+  },
+  { capture: true, passive: true },
+);
+
+const touchEnd = (e: TouchEvent) => {
+  const d = vdrag;
+  if (!d || Array.from(e.touches).some((t) => t.identifier === d.id)) return;
+  vdrag = null;
+  if (d.axis !== 'y') return; // a tap / a sideways swipe: nothing changed here
+  const { scroller } = d;
+  // Snapping comes back on only after the glide has started (it's still paused: reading the
+  // position with it on snapped the column straight back to the nearest section).
+  try {
+    releaseColumn(d);
+  } finally {
+    delete scroller.dataset.wheel;
+  }
+};
+function releaseColumn(d: NonNullable<typeof vdrag>) {
+  const { scroller } = d;
+  const pos = scroller.scrollTop;
+  const v = touchVelocity('y');
+  const spans = withProfile(scroller, snapSpans(scroller));
+  if (!spans.length) return;
+  // Begun mid-switch: on from that switch's target, one further if dragged that way.
+  if (d.chained) {
+    const dir = Math.abs(pos - d.top0) >= CHAIN_PX ? Math.sign(pos - d.top0) : 0;
+    const to = dir ? stepTarget(scroller, d.anchor, dir) : d.anchor;
+    glideColumn(scroller, typeof to === 'number' ? to : d.anchor, v);
+    return;
+  }
+  const i = sectionFrom(spans, d.anchor);
+  const span = spans[i];
+  // A section barely taller than the screen (TALL_IGNORE_PX) counts as fitting: just its top.
+  const sec = span.end - span.start > TALL_IGNORE_PX ? span : { start: span.start, end: span.start };
+  // Within its section: coast on at the finger's speed, staying inside it.
+  if (pos >= sec.start - 1 && pos <= sec.end + 1) {
+    if (sec.end - sec.start <= 2) {
+      if (Math.abs(pos - sec.start) > 1) glideColumn(scroller, sec.start);
+      return;
+    }
+    const to = Math.max(sec.start, Math.min(sec.end, pos + v * COAST_MS));
+    if (Math.abs(to - pos) > 1) glideColumn(scroller, to, v);
+    return;
+  }
+  // Past its end / start: on to the next / previous section if far enough for its speed.
+  const down = pos > sec.end;
+  const from = down ? sec.end : sec.start;
+  const next = down ? spans[i + 1]?.start : i > 0 ? spans[i - 1].start : 0;
+  if (next === undefined) {
+    glideColumn(scroller, from, v);
+    return;
+  }
+  const fast = Math.abs(v) >= SWIPE_FAST_SPEED && Math.sign(v) === (down ? 1 : -1);
+  const far = Math.abs(pos - from) >= Math.abs(next - from) * swipeShare(fast);
+  glideColumn(scroller, far ? next : from, v);
+}
+document.addEventListener('touchend', touchEnd, { capture: true, passive: true });
+document.addEventListener('touchcancel', touchEnd, { capture: true, passive: true });
