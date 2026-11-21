@@ -172,10 +172,15 @@ const groups = [
   .ltitle:first-child {
     margin-top: 0;
   }
+  /* Lit with its container (ContainerFrame.astro: hover with a real pointer, keyboard focus). */
   .ltitle:has(+ :global(.cf.is-active)),
-  .ltitle:has(+ :global(.cf:hover)),
-  .ltitle:has(+ :global(.cf:focus-within)) {
+  .ltitle:has(+ :global(.cf:has(:focus-visible))) {
     opacity: 1;
+  }
+  @media (hover: hover) {
+    .ltitle:has(+ :global(.cf:hover)) {
+      opacity: 1;
+    }
   }
   .ltitle:has(+ :global(.cf:not(.is-active))) {
     cursor: pointer;

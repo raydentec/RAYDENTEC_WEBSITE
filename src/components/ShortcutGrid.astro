@@ -106,10 +106,15 @@ const FILLERS = 8;
     opacity: var(--o-inactive);
     transition: opacity var(--t-state) ease;
   }
+  /* Lit with its container (ContainerFrame.astro: hover with a real pointer, keyboard focus). */
   :global(.cf.is-active) .sc,
-  :global(.cf:hover) .sc,
-  :global(.cf:focus-within) .sc {
+  :global(.cf:has(:focus-visible)) .sc {
     opacity: 1;
+  }
+  @media (hover: hover) {
+    :global(.cf:hover) .sc {
+      opacity: 1;
+    }
   }
   .sc__link {
     display: flex;
@@ -138,9 +143,13 @@ const FILLERS = 8;
     color: var(--c-white);
     transition: background-color var(--t-state) ease;
   }
-  a.sc__link:hover .sc__tile,
   a.sc__link:focus-visible .sc__tile {
     background: var(--brand);
+  }
+  @media (hover: hover) {
+    a.sc__link:hover .sc__tile {
+      background: var(--brand);
+    }
   }
   .sc__tile :global(svg) {
     width: 40%;

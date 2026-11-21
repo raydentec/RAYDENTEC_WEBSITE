@@ -71,10 +71,15 @@ const tileEdge = platform === 'x' || platform === 'github';
     opacity: var(--o-inactive);
     transition: opacity var(--t-state) ease;
   }
+  /* Lit with its container (ContainerFrame.astro: hover with a real pointer, keyboard focus). */
   :global(.cf.is-active) .card__inner,
-  :global(.cf:hover) .card__inner,
-  :global(.cf:focus-within) .card__inner {
+  :global(.cf:has(:focus-visible)) .card__inner {
     opacity: 1;
+  }
+  @media (hover: hover) {
+    :global(.cf:hover) .card__inner {
+      opacity: 1;
+    }
   }
   .card__head {
     display: flex;

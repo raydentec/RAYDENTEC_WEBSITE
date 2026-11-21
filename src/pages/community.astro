@@ -65,10 +65,15 @@ const shortcuts = links.slice(0, 10);
     transition: opacity var(--t-state) ease;
     animation: c-fade-in 600ms var(--ease-out) 180ms backwards;
   }
+  /* Lit with its container (ContainerFrame.astro: hover with a real pointer, keyboard focus). */
   .ctitle:has(+ :global(.cf.is-active)),
-  .ctitle:has(+ :global(.cf:hover)),
-  .ctitle:has(+ :global(.cf:focus-within)) {
+  .ctitle:has(+ :global(.cf:has(:focus-visible))) {
     opacity: 1;
+  }
+  @media (hover: hover) {
+    .ctitle:has(+ :global(.cf:hover)) {
+      opacity: 1;
+    }
   }
   .ctitle + :global(.cf) {
     scroll-margin-top: calc(30px + 12px);

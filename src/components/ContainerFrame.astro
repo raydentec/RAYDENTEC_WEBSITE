@@ -174,10 +174,16 @@ const heightVars = [height && `--cf-h: ${height}px`, tabletHeight && `--cf-h-tab
   .cf.is-active .cf__body {
     border: 2px solid var(--c-red);
   }
+  /* Hovered: only with a real pointer (on phones a touched button stayed "hovered" after its item
+     was left); lit for keyboard focus only (a tapped link kept it lit through :focus-within). */
   .cf.is-active .cf__content,
-  .cf:hover .cf__content,
-  .cf:focus-within .cf__content {
+  .cf:has(:focus-visible) .cf__content {
     opacity: 1;
+  }
+  @media (hover: hover) {
+    .cf:hover .cf__content {
+      opacity: 1;
+    }
   }
 
   @media (max-width: 1279px) {

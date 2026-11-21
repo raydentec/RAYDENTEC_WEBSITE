@@ -96,7 +96,7 @@ const headingId = `games-${index}`;
     pointer-events: none;
   }
   .grow.is-active .grow__title,
-  .grow:focus-within .grow__title {
+  .grow:has(:focus-visible) .grow__title {
     opacity: 1;
   }
 
@@ -173,7 +173,7 @@ const headingId = `games-${index}`;
     opacity: 1;
   }
   .grow.is-active .grow__dot,
-  .grow:focus-within .grow__dot {
+  .grow:has(:focus-visible) .grow__dot {
     opacity: 1;
   }
 

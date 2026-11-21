@@ -97,7 +97,11 @@ function normalizedDelta(e: WheelEvent, scroller: HTMLElement) {
   return e.deltaY;
 }
 
-type Span = { start: number; end: number };
+/** `exact`: its overflow is meant to be scrolled however small (the mobile info area, see
+    withProfile) — no TALL_IGNORE_PX allowance. */
+type Span = { start: number; end: number; exact?: boolean };
+/** A span with room to scroll (to its end stop): past TALL_IGNORE_PX, or any for an exact one. */
+const hasRoom = (s: Span) => s.end - s.start > (s.exact ? 2 : TALL_IGNORE_PX);
 
 /** Height of the area containers show in, from the snap line (dom.ts visibleBottom). */
 const visibleHeight = (scroller: HTMLElement) =>
@@ -118,7 +122,7 @@ function stepTarget(scroller: HTMLElement, pos: number, dir: number): number | S
   if (tall) return tall;
   // Going down, a container a little taller than the screen also stops at its bottom edge;
   // going up, at its top only (the visitor scrolls on down through it from there).
-  const points = spans.flatMap((s) => (dir > 0 && s.end - s.start > TALL_IGNORE_PX ? [s.start, s.end] : [s.start]));
+  const points = spans.flatMap((s) => (dir > 0 && hasRoom(s) ? [s.start, s.end] : [s.start]));
   const ahead = points.filter((p) => (dir > 0 ? p > pos + 2 : p < pos - 2));
   if (!ahead.length) return null;
   return dir > 0 ? Math.min(...ahead) : Math.max(...ahead);
@@ -136,7 +140,9 @@ function withProfile(scroller: HTMLElement, spans: { start: number; end: number 
   }
   const bottom = scroller.scrollTop + profile.getBoundingClientRect().bottom - scroller.getBoundingClientRect().top;
   const end = Math.min(spans[0].start, Math.max(0, bottom - scroller.clientHeight));
-  return [{ start: 0, end }, ...spans];
+  // Exact: however little it overflows, that's its last button not yet clear of the controls
+  // (its bottom space, .mprofile__spacer, is what brings it clear) — scrollable.
+  return [{ start: 0, end, exact: true }, ...spans];
 }
 
 /**
@@ -538,8 +544,9 @@ function releaseColumn(d: NonNullable<typeof vdrag>) {
   }
   const i = sectionFrom(spans, d.anchor);
   const span = spans[i];
-  // A section barely taller than the screen (TALL_IGNORE_PX) counts as fitting: just its top.
-  const sec = span.end - span.start > TALL_IGNORE_PX ? span : { start: span.start, end: span.start };
+  // A section barely taller than the screen (TALL_IGNORE_PX) counts as fitting: just its top
+  // (not the info area: its little overflow brings its last button clear of the controls).
+  const sec = hasRoom(span) ? span : { start: span.start, end: span.start };
   // Within its section: coast on at the finger's speed, staying inside it.
   if (pos >= sec.start - 1 && pos <= sec.end + 1) {
     if (sec.end - sec.start <= 2) {

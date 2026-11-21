@@ -41,10 +41,15 @@ const { links } = Astro.props;
     opacity: var(--o-inactive);
     transition: opacity var(--t-state) ease;
   }
+  /* Lit with its container (ContainerFrame.astro: hover with a real pointer, keyboard focus). */
   :global(.cf.is-active) .lg,
-  :global(.cf:hover) .lg,
-  :global(.cf:focus-within) .lg {
+  :global(.cf:has(:focus-visible)) .lg {
     opacity: 1;
+  }
+  @media (hover: hover) {
+    :global(.cf:hover) .lg {
+      opacity: 1;
+    }
   }
   .lg__grid {
     display: grid;
@@ -75,10 +80,15 @@ const { links } = Astro.props;
       background-color var(--t-fade),
       border-color var(--t-fade);
   }
-  .lg__link:hover,
   .lg__link:focus-visible {
     background: var(--c-link-tile-hover);
     border-color: var(--c-white);
+  }
+  @media (hover: hover) {
+    .lg__link:hover {
+      background: var(--c-link-tile-hover);
+      border-color: var(--c-white);
+    }
   }
   .lg__link :global(svg) {
     flex-shrink: 0;

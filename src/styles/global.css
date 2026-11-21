@@ -187,13 +187,11 @@ dd {
   background: var(--c-red);
   color: var(--c-black);
 }
-.btn--outline:hover,
 .btn--outline:focus-visible {
   background: var(--c-red);
   color: var(--c-black);
 }
 /* Red-filled buttons turn white on hover. */
-.btn--primary:hover,
 .btn--primary:focus-visible {
   background: var(--c-white);
   border-color: var(--c-white);
@@ -203,9 +201,22 @@ dd {
   opacity: 0.45;
   cursor: not-allowed;
 }
-.btn[aria-disabled='true']:hover {
-  background: transparent;
-  color: var(--c-red);
+/* Hover looks only where there's a real pointer: on phones a touched button stayed
+   "hovered" (lit) after its row had moved on, until something else was touched. */
+@media (hover: hover) {
+  .btn--outline:hover {
+    background: var(--c-red);
+    color: var(--c-black);
+  }
+  .btn--primary:hover {
+    background: var(--c-white);
+    border-color: var(--c-white);
+    color: var(--c-black);
+  }
+  .btn[aria-disabled='true']:hover {
+    background: transparent;
+    color: var(--c-red);
+  }
 }
 
 /* Glass control: SCROLL / BACK TO TOP, EXPAND, ← collapse. */
