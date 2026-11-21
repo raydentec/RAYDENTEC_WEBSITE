@@ -82,8 +82,15 @@ function settle(scroller: HTMLElement, align: boolean) {
   setActive(scroller, target);
   // Come to rest: no container is on its way in any more (dom.ts markArriving).
   if (!('gliding' in scroller.dataset)) clearArriving(scroller);
-  // Wheel input forwarded from outside the column settles itself (wheel.ts).
-  if (!align || 'wheel' in scroller.dataset || 'gliding' in scroller.dataset) return;
+  // Resting exactly on a container's top (a glide's end, mid-way through it): that's where
+  // it rests — even if no later settle comes to say so (a glide's last frames may not move
+  // the column, so no scroll / scrollend follows). Left stale, the first scroll after
+  // returning to a container (the Start hero) was "aligned" back to its top.
+  if (Math.abs(snapTop(target) - snapLine(scroller)) <= 2) home = target;
+  // Wheel input forwarded from outside the column settles itself (wheel.ts); a glide by
+  // script ends where it should. Phones: the touch handling (wheel.ts) decides where the
+  // column rests — nothing to align (it only fought it: the bounce back above).
+  if (!align || 'wheel' in scroller.dataset || 'gliding' in scroller.dataset || mq.touchColumn.matches) return;
   // The free-scrolling mobile profile area (or a trip to it, scrollToTop): nothing to align.
   const firstStart = snapSpans(scroller)[0]?.start ?? 0;
   if (holdTo !== null || (mq.mobile.matches && scroller.scrollTop < firstStart - 2)) {

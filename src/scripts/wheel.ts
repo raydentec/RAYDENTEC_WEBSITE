@@ -71,7 +71,7 @@ import { scrollToTop } from './snap';
 
 const SETTLE_MS = 140;
 /** A phone (narrow, touch): vertical touch is handled by script (see "Touch on phones"). */
-const TOUCH_COLUMN = matchMedia('(max-width: 767px) and (pointer: coarse)');
+const TOUCH_COLUMN = mq.touchColumn;
 /** Moving at least this far commits to the next container in that direction. */
 const COMMIT_PX = 30;
 /** A container this much taller than the visible area or less counts as fitting (one stop). */

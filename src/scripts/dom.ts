@@ -8,6 +8,8 @@
  */
 
 export const mq = {
+  /** A phone (narrow, touch): vertical touch moves the column by script (wheel.ts "Touch on phones"). */
+  touchColumn: matchMedia('(max-width: 767px) and (pointer: coarse)'),
   desktop: matchMedia('(min-width: 1280px)'),
   mobile: matchMedia('(max-width: 767px)'),
   reducedMotion: matchMedia('(prefers-reduced-motion: reduce)'),
