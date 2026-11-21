@@ -197,6 +197,12 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
   .hero__track[data-gliding] {
     scroll-snap-type: none;
   }
+  /* iPhone / iPad: sideways touch is the script's alone (scripts/ios-swipe.ts), as the rows'. */
+  :global(html[data-ios-touch]) .hero__track {
+    touch-action: pan-y;
+    overflow-x: hidden;
+    scroll-snap-type: none;
+  }
   /* Not Chromium (WebKit): room past the last copy, so dragging on from it never reaches the
      edge (no rubber-band; the release glides back — scripts/dom.ts stopEdgeBounce). */
   :global(html[data-glide-script]) .hero__track::after {

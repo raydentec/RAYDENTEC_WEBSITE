@@ -211,6 +211,14 @@ const headingId = `games-${index}`;
     content: '';
     flex: 0 0 calc(100vw - var(--row-left) - var(--game-w) - var(--games-gap));
   }
+  /* iPhone / iPad: sideways touch is the script's alone (scripts/ios-swipe.ts) — no native
+     sideways scrolling (momentum, snapping, rubber-band fought it), vertical drags still
+     scroll the page; the script sets the position (works without overflow). */
+  :global(html[data-ios-touch]) .grow__track {
+    touch-action: pan-y;
+    overflow-x: hidden;
+    scroll-snap-type: none;
+  }
   /* Not Chromium (WebKit): a game's width more room, so dragging past the last game never
      reaches the edge (no rubber-band; the release glides back — scripts/dom.ts stopEdgeBounce). */
   :global(html[data-glide-script]) .grow__list::after {

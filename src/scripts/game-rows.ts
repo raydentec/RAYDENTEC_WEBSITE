@@ -38,6 +38,7 @@ import {
   wheelAxis,
   wheelGesture,
 } from './dom';
+import { bindIosSwipe, IOS_TOUCH } from './ios-swipe';
 
 const SETTLE_MS = 90;
 /** Sideways wheel travel that switches a game. */
@@ -232,6 +233,7 @@ document.addEventListener(
 document.addEventListener(
   'touchstart',
   (e) => {
+    if (IOS_TOUCH) return; // iOS: ios-swipe.ts (below)
     const t = (e.target as Element | null)?.closest<HTMLElement>('[data-row-track]');
     const row = t?.closest<HTMLElement>('[data-row]');
     if (!t || !row || e.touches.length !== 1) return;
@@ -277,11 +279,50 @@ document.addEventListener('astro:before-swap', () => {
 });
 
 document.addEventListener(ACTIVE_CHANGE, syncAll);
-window.addEventListener('resize', syncAll);
+window.addEventListener('resize', () => {
+  // iOS: no snapping on the tracks (ios-swipe.ts) — put each back on its game.
+  if (IOS_TOUCH) {
+    rows().forEach((row) => {
+      const t = track(row);
+      const g = games(row)[targets.get(row) ?? currentIndex(row)];
+      if (t && g) t.scrollTo({ left: t.scrollLeft + g.getBoundingClientRect().left - snapLine(t), behavior: 'instant' });
+    });
+  }
+  syncAll();
+});
+
+// iOS touch: the drag by script, one game at most (ios-swipe.ts); let go, the glide (show).
+bindIosSwipe('[data-row-track]', {
+  start(t) {
+    const row = t.closest<HTMLElement>('[data-row]');
+    const g = row ? games(row) : [];
+    if (!row || !g.length) return null;
+    const base = targets.get(row) ?? currentIndex(row);
+    stopGlide(t);
+    t.dataset.gliding = ''; // the row's own scroll handling waits (onTrackScroll)
+    const max = t.scrollWidth - t.clientWidth;
+    const at = (i: number) => Math.min(max, Math.max(0, t.scrollLeft + g[i].getBoundingClientRect().left - snapLine(t)));
+    return {
+      base,
+      min: at(Math.max(0, base - 1)),
+      max: at(Math.min(g.length - 1, base + 1)),
+      step: g.length > 1 ? g[1].getBoundingClientRect().left - g[0].getBoundingClientRect().left : t.clientWidth,
+    };
+  },
+  release(t, base, dir, v0) {
+    const row = t.closest<HTMLElement>('[data-row]');
+    if (row) show(row, Math.max(0, Math.min(games(row).length - 1, base + dir)), v0);
+  },
+  cancel(t, base) {
+    const row = t.closest<HTMLElement>('[data-row]');
+    delete t.dataset.gliding;
+    if (row && targets.has(row)) show(row, base); // a switch it interrupted: on with it
+  },
+});
 onPageLoad(() => {
   syncAll();
   rows().forEach((row) => {
     const t = track(row);
-    if (t) stopEdgeBounce(t); // no rubber-band at the ends (dom.ts)
+    if (t && !IOS_TOUCH) stopEdgeBounce(t); // no rubber-band at the ends (dom.ts; iOS: ios-swipe.ts)
   });
 });

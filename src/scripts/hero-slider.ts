@@ -49,6 +49,7 @@ import {
   wheelAxis,
   wheelGesture,
 } from './dom';
+import { bindIosSwipe, IOS_TOUCH } from './ios-swipe';
 
 const INTERVAL_MS = 5000;
 const SETTLE_MS = 90;
@@ -304,6 +305,7 @@ for (const type of ['touchstart', 'pointerdown'] as const) {
       if (!(e.target as Element | null)?.closest('[data-slide-track]')) return;
       // A touch also fires pointerdown (first): touchstart handles it, with the target intact.
       if (type === 'pointerdown' && (e as PointerEvent).pointerType === 'touch') return;
+      if (type === 'touchstart' && IOS_TOUCH) return; // iOS: ios-swipe.ts (below)
       const root = slider();
       const heading = target;
       stopGlide();
@@ -349,6 +351,37 @@ document.addEventListener(
   },
   { capture: true, passive: false },
 );
+// iOS touch: the drag by script, one slide at most (ios-swipe.ts); let go, the glide.
+let iosHeading: number | null = null;
+bindIosSwipe('[data-slide-track]', {
+  start(t) {
+    const root = t.closest<HTMLElement>('[data-slider]');
+    if (!root || !looped(root)) return null;
+    const n = count(root);
+    iosHeading = target;
+    const base = target === null ? current : ((target % n) + n) % n;
+    stopGlide();
+    target = null;
+    touching = true; // its line stays as it is until let go; no settling meanwhile
+    t.dataset.gliding = '';
+    return { base, min: left(t, base - 1), max: left(t, base + 1), step: t.clientWidth };
+  },
+  release(t, base, dir, v0) {
+    const root = t.closest<HTMLElement>('[data-slider]');
+    touching = false;
+    if (!root) return;
+    scrollToSlide(root, base + dir, v0);
+    restart();
+  },
+  cancel(t, base) {
+    const root = t.closest<HTMLElement>('[data-slider]');
+    touching = false;
+    delete t.dataset.gliding;
+    if (root && iosHeading !== null) scrollToSlide(root, base); // a switch it interrupted: on with it
+    iosHeading = null;
+  },
+});
+
 // Finger lifted: settle again (a jump onto the real slide may have been waiting).
 for (const type of ['touchend', 'touchcancel'] as const) {
   document.addEventListener(
@@ -447,7 +480,7 @@ document.addEventListener('astro:before-swap', () => {
 onPageLoad(() => {
   window.clearInterval(timer);
   const heroTrack = slider()?.querySelector<HTMLElement>('[data-slide-track]');
-  if (heroTrack) stopEdgeBounce(heroTrack); // no rubber-band at the ends (dom.ts)
+  if (heroTrack && !IOS_TOUCH) stopEdgeBounce(heroTrack); // no rubber-band at the ends (dom.ts; iOS: ios-swipe.ts)
   current = 0;
   held = false;
   target = null;
