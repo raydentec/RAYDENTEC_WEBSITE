@@ -360,6 +360,16 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
       .scroller {
         touch-action: pan-x;
       }
+      /* iPhone: WebKit scrolled the column by itself regardless (momentum, snapping,
+         rubber-band — jitter, jumps, half-way stops, several sections per swipe), so there
+         it isn't scrollable by the user at all and has no snapping: the script moves it
+         (sets its position, still possible without overflow), as the sideways tracks
+         (scripts/ios-swipe.ts). Wheel / keys / clicks glide it the same way. */
+      :global(html[data-ios-touch]) .scroller {
+        overflow-y: hidden;
+        scroll-snap-type: none !important;
+        touch-action: none;
+      }
     }
     .mprofile {
       display: flex;

@@ -70,6 +70,8 @@ import {
 import { scrollToTop } from './snap';
 
 const SETTLE_MS = 140;
+/** A phone (narrow, touch): vertical touch is handled by script (see "Touch on phones"). */
+const TOUCH_COLUMN = matchMedia('(max-width: 767px) and (pointer: coarse)');
 /** Moving at least this far commits to the next container in that direction. */
 const COMMIT_PX = 30;
 /** A container this much taller than the visible area or less counts as fitting (one stop). */
@@ -366,7 +368,16 @@ const stopColumnGlide = () => {
   stopGlide(scroller);
   endHold(scroller);
 };
-document.addEventListener('touchstart', stopColumnGlide, { capture: true, passive: true });
+document.addEventListener(
+  'touchstart',
+  () => {
+    // Phones: the vertical touch handling below stops it itself, once a drag turns out to be
+    // vertical (a tap / sideways swipe lets it run on) — and must see it still running, to
+    // count on from its target (quick swipes add up).
+    if (!TOUCH_COLUMN.matches) stopColumnGlide();
+  },
+  { capture: true, passive: true },
+);
 document.addEventListener(
   'keydown',
   (e) => {
@@ -383,7 +394,9 @@ document.addEventListener('astro:before-swap', () => {
  * ---------- Touch on phones: vertical swipes as the sideways ones ----------
  * On a phone (narrow, touch: TOUCH_COLUMN) the column doesn't scroll vertically by itself
  * on touch (touch-action pan-x, Shell.astro) — the browsers' own flinging and snapping ran
- * past sections and settled unevenly on real phones. Sideways swipes stay as they are (the
+ * past sections and settled unevenly on real phones. On iPhone, where WebKit scrolled it
+ * regardless, it isn't scrollable by the user at all and has no snapping
+ * (html[data-ios-touch], as the sideways tracks: ios-swipe.ts) — this sets its position. Sideways swipes stay as they are (the
  * rows: native, or ios-swipe.ts on iOS); wheel, keys and clicks aren't touch.
  *   - A mostly vertical drag (decided by its first DECIDE_PX) moves the column with the
  *     finger, 1:1: freely within the section it counts from (the hero, a tall container,
@@ -398,7 +411,6 @@ document.addEventListener('astro:before-swap', () => {
  *   - Begun while a switch was still gliding: it counts from that switch's target, and a
  *     drag of CHAIN_PX that way goes one further (quick swipes add up).
  */
-const TOUCH_COLUMN = matchMedia('(max-width: 767px) and (pointer: coarse)');
 const DECIDE_PX = 6;
 const CHAIN_PX = 10;
 const COAST_MS = 300;
