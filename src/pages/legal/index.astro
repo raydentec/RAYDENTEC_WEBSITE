@@ -174,7 +174,7 @@ const groups = [
   }
   /* Lit with its container (ContainerFrame.astro: hover with a real pointer, keyboard focus). */
   .ltitle:has(+ :global(.cf.is-active)),
-  .ltitle:has(+ :global(.cf:has(:focus-visible))) {
+  .ltitle:has(+ :global(.cf :focus-visible)) {
     opacity: 1;
   }
   @media (hover: hover) {

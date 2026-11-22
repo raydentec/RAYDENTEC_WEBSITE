@@ -67,7 +67,7 @@ const shortcuts = links.slice(0, 10);
   }
   /* Lit with its container (ContainerFrame.astro: hover with a real pointer, keyboard focus). */
   .ctitle:has(+ :global(.cf.is-active)),
-  .ctitle:has(+ :global(.cf:has(:focus-visible))) {
+  .ctitle:has(+ :global(.cf :focus-visible)) {
     opacity: 1;
   }
   @media (hover: hover) {

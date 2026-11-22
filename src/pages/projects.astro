@@ -97,7 +97,7 @@ const groups = projectCategories
   }
   /* Lit with its container (ContainerFrame.astro: hover with a real pointer, keyboard focus). */
   .pgroup__title:has(+ :global(.cf.is-active)),
-  .pgroup__title:has(+ :global(.cf:has(:focus-visible))) {
+  .pgroup__title:has(+ :global(.cf :focus-visible)) {
     opacity: 1;
   }
   @media (hover: hover) {
