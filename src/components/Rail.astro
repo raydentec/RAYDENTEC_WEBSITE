@@ -123,6 +123,18 @@ const [videos, socials] = site.ctas;
     --icon-top: calc((var(--rail-w) - 4px - 30px) / 2);
     height: var(--rail-w);
   }
+  /* Phones turned sideways (touch, landscape, at most 540px tall): no room for the full-height
+     button — it stays the arrow-only square (the label never shows). */
+  @media (orientation: landscape) and (pointer: coarse) and (max-height: 540px) {
+    .rail__expand {
+      --icon-top: calc((var(--rail-w) - 4px - 30px) / 2);
+      height: var(--rail-w);
+    }
+    .rail__expand-label {
+      opacity: 0;
+      transition: none;
+    }
+  }
   /* Opened instantly when the sidebar closes on container 1 (scripts/sidebar.ts) — it
      still fades in with the rest of the rail. */
   :global(html[data-expand-instant]) .rail__expand {

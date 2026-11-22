@@ -347,6 +347,17 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
     }
   }
 
+  /* Phones turned sideways (touch, landscape, at most 540px tall; the tablet layout): the
+     screen-based height left almost no picture above the lower third and the explore row
+     showing under it. At least as tall as the picture above the lower third being as tall as
+     the lower third (--lt-h, scripts/start.ts): picture + indicator (12px) + gap (12px) +
+     lower third + 16px under it. Taller than the screen: scrolled through, then on. */
+  @media (orientation: landscape) and (pointer: coarse) and (max-height: 540px) {
+    .hero {
+      min-height: calc(var(--lt-h, 200px) * 2 + 12px + 12px + 16px);
+    }
+  }
+
   /* Mobile: the scroller starts under the top bar; the hero reaches out over its gutters. */
   @media (max-width: 767px) {
     /* The whole scroll area (top bar down to the footer), so nothing of the explore row
