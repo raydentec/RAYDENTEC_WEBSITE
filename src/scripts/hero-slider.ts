@@ -33,7 +33,6 @@
  */
 import {
   CHROME_EASE,
-  PLACE_RESTORED,
   SCRIPT_GLIDES,
   stopEdgeBounce,
   releaseEase,
@@ -252,14 +251,10 @@ function restart() {
   if (!root || !looped(root) || mq.reducedMotion.matches) return;
   timer = window.setInterval(() => {
     const r = slider();
-    // Not behind the rotate note either (dom.ts restorePlace: it restarts once that's down).
-    if (!r || held || document.hidden || document.documentElement.hasAttribute('data-rotate-hold')) return;
+    if (!r || held || document.hidden) return;
     scrollToSlide(r, current + 1);
   }, INTERVAL_MS);
 }
-
-// Back on its slide after the portrait reload (dom.ts restorePlace): a full interval on it.
-document.addEventListener(PLACE_RESTORED, restart);
 
 // Track scrolls (scroll events don't bubble): light the line under way, settle once it rests.
 document.addEventListener(

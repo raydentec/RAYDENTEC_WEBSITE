@@ -14,7 +14,6 @@ import Profile from '../components/Profile.astro';
 import Rail from '../components/Rail.astro';
 import ScrollControl from '../components/ScrollControl.astro';
 import BgToggle from '../components/BgToggle.astro';
-import Icon from '../components/Icon.astro';
 import Sidebar from '../components/Sidebar.astro';
 import { getSite, type PageId } from '../lib/content';
 
@@ -56,17 +55,6 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
     <meta name="theme-color" content="#000000" />
     <title>{title}</title>
     <link rel="icon" type="image/png" href="/assets/logo.png" />
-    <!-- Installed as an app (home screen), it opens in portrait only: public/manifest.webmanifest
-         (in the browser a page can't lock the orientation — see .rotate-note below). -->
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <!-- Reloaded after a phone was turned back upright (scripts/dom.ts): the rotate note stays
-         up from the first paint until the page is back on its place. -->
-    <script is:inline>
-      try {
-        if (sessionStorage.getItem('raydentec:place')) document.documentElement.dataset.rotateHold = '';
-      } catch (e) {}
-    </script>
-    <link rel="apple-touch-icon" href="/assets/app-icon-192.png" />
     <link rel="preload" href="/assets/fonts/sora-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/assets/fonts/sora-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/assets/fonts/chakra-petch-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin />
@@ -89,11 +77,6 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
     <!-- Still blue glow shown instead of the video when it's switched off (BgToggle.astro). -->
     <div class="bg-glow" aria-hidden="true" transition:persist="bg-glow"></div>
     <div class="top-bar" aria-hidden="true"></div>
-    <!-- Phones in landscape: the site is made for portrait (.rotate-note below). -->
-    <div class="rotate-note" role="status">
-      <Icon name="rotate" size={56} />
-      <p>Turn your phone to portrait mode to view this site.</p>
-    </div>
 
     <Nav current={menuPage} />
     <Rail />
@@ -423,43 +406,6 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
     }
     :global(html[data-mheader='on']) .track {
       opacity: 1;
-    }
-  }
-
-  /*
-   * Phones turned sideways (touch, landscape, low): the layouts are made for portrait, and a
-   * web page can't lock the orientation (only an installed app can: public/manifest.webmanifest)
-   * — so the page is covered with a note to turn the phone upright; turned back, the page
-   * reloads, laid out afresh for portrait, and the note stays up (html[data-rotate-hold])
-   * until the page is back on the section / item it showed (scripts/dom.ts).
-   * Tablets (taller than 540px in landscape) and desktop never see it.
-   */
-  .rotate-note {
-    position: fixed;
-    inset: 0;
-    z-index: 100;
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 18px;
-    padding: 24px;
-    background: var(--c-black);
-    color: var(--c-white);
-    text-align: center;
-    font-weight: 600;
-    font-size: 22px;
-    letter-spacing: -0.02em;
-  }
-  .rotate-note :global(svg) {
-    color: var(--c-red);
-  }
-  :global(html[data-rotate-hold]) .rotate-note {
-    display: flex;
-  }
-  @media (orientation: landscape) and (pointer: coarse) and (max-height: 540px) {
-    .rotate-note {
-      display: flex;
     }
   }
 </style>
