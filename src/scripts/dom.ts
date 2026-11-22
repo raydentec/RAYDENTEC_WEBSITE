@@ -428,12 +428,79 @@ export const wheelGesture = () => gestureId;
 const PHONE_LANDSCAPE = matchMedia('(orientation: landscape) and (pointer: coarse) and (max-height: 540px)');
 const PHONE_PORTRAIT = matchMedia('(orientation: portrait) and (pointer: coarse) and (max-width: 540px)');
 let wasLandscape = PHONE_LANDSCAPE.matches;
-PHONE_LANDSCAPE.addEventListener('change', () => {
-  if (PHONE_LANDSCAPE.matches) wasLandscape = true;
-});
+// Checked on the first resize of the turn (it comes before the scroll events and the media
+// query change event, so the selection is still the portrait one) — and on the change event.
+function enteredLandscape() {
+  if (!PHONE_LANDSCAPE.matches || wasLandscape) return;
+  wasLandscape = true;
+  savePlace();
+}
+window.addEventListener('resize', enteredLandscape);
+PHONE_LANDSCAPE.addEventListener('change', enteredLandscape);
 PHONE_PORTRAIT.addEventListener('change', () => {
   if (PHONE_PORTRAIT.matches && wasLandscape) location.reload();
 });
+
+/*
+ * The place to come back to after that reload: the page, its selected section (container
+ * index; -1 = the mobile info area above them) and that section's current item (a row's game,
+ * the hero's slide; -1 = none). Saved as the phone turns sideways — read from the selection
+ * (is-active, the lit indicator line), still the portrait one then, not from scroll positions
+ * (the sideways layout has already moved the content) — in sessionStorage (kept through the
+ * reload, per tab). Restored on the reloaded page once its own setup has run: the item put back
+ * and the section brought to the top of the column, at once; the usual scroll handling then
+ * selects / lights them (snap.ts, game-rows.ts, hero-slider.ts).
+ */
+const PLACE_KEY = 'raydentec:place';
+const litIndex = (root: Element, dot: string) =>
+  Array.from(root.querySelectorAll(dot)).findIndex((d) => d.hasAttribute('aria-current'));
+
+function savePlace() {
+  const scroller = getScroller();
+  if (!scroller) return;
+  const all = containers(scroller);
+  let section = all.findIndex((cf) => cf.classList.contains('is-active'));
+  let item = -1;
+  const cf = all[section];
+  if (cf?.matches('[data-row]')) item = litIndex(cf, '[data-row-dot]');
+  else if (cf?.matches('[data-slider]')) item = litIndex(cf, '[data-slide-dot]');
+  // In the mobile info area above the containers: the top of the page. Kept while scrolling
+  // (aboveFirst) — measured now, the sideways layout (already laid out at the first resize)
+  // has no info area above them.
+  if (aboveFirst) section = -1;
+  try {
+    sessionStorage.setItem(PLACE_KEY, JSON.stringify({ path: location.pathname, section, item }));
+  } catch {
+    // Storage unavailable: the reload starts at the top.
+  }
+}
+
+function restorePlace() {
+  let saved: { path: string; section: number; item: number } | null = null;
+  try {
+    saved = JSON.parse(sessionStorage.getItem(PLACE_KEY) ?? 'null');
+    sessionStorage.removeItem(PLACE_KEY);
+  } catch {
+    saved = null;
+  }
+  const scroller = getScroller();
+  if (!saved || !scroller || saved.path !== location.pathname || saved.section < 0) return;
+  const cf = containers(scroller)[saved.section];
+  if (!cf) return;
+  // The item first (its track's own position), then the section to the top of the column.
+  const row = cf.matches('[data-row]') ? cf.querySelector<HTMLElement>('[data-row-track]') : null;
+  const game = row?.querySelectorAll<HTMLElement>('[data-cf]')[saved.item];
+  if (row && game) {
+    const edge = row.getBoundingClientRect().left + (parseFloat(getComputedStyle(row).scrollPaddingLeft) || 0);
+    row.scrollTo({ left: row.scrollLeft + game.getBoundingClientRect().left - edge, behavior: 'instant' });
+  }
+  const slides = cf.matches('[data-slider]') ? cf.querySelector<HTMLElement>('[data-slide-track]') : null;
+  if (slides && saved.item >= 0) slides.scrollTo({ left: (saved.item + 1) * slides.clientWidth, behavior: 'instant' }); // after the copy of the last
+  const line = scroller.getBoundingClientRect().top + snapOffset(scroller);
+  scroller.scrollTo({ top: scroller.scrollTop + snapTop(cf) - line, behavior: 'instant' });
+}
+// Once, on the page as loaded (after its setup: the other page-load handlers run first).
+document.addEventListener('astro:page-load', () => requestAnimationFrame(restorePlace), { once: true });
 
 /** Scroll events don't bubble; one capturing listener fans out scroller scrolls. */
 type ScrollHandler = (scroller: HTMLElement) => void;
@@ -447,6 +514,18 @@ document.addEventListener(
   { capture: true, passive: true },
 );
 export const onScrollerScroll = (handler: ScrollHandler) => scrollHandlers.push(handler);
+
+// Whether the column shows the mobile info area above the first container (savePlace), kept
+// up to date in portrait (sideways the layout differs: the last portrait value stays).
+let aboveFirst = false;
+function updateAboveFirst() {
+  const scroller = getScroller();
+  const first = scroller && containers(scroller)[0];
+  if (!scroller || PHONE_LANDSCAPE.matches) return;
+  aboveFirst = !!first && snapTop(first) - (scroller.getBoundingClientRect().top + snapOffset(scroller)) > 2;
+}
+onScrollerScroll(updateAboveFirst);
+document.addEventListener('astro:page-load', updateAboveFirst);
 
 export const onPageLoad = (handler: () => void) => document.addEventListener('astro:page-load', handler);
 
