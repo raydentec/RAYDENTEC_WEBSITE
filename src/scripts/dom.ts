@@ -438,6 +438,9 @@ PHONE_LANDSCAPE.addEventListener('change', enteredLandscape);
 PHONE_PORTRAIT.addEventListener('change', () => {
   if (!PHONE_PORTRAIT.matches || !wasLandscape) return;
   setRootState('rotateHold', ''); // the note stays up through the reload (Shell.astro)
+  // The reloaded page places itself (restorePlace): the browser's own scroll restoring could
+  // land later and move it.
+  history.scrollRestoration = 'manual';
   location.reload();
 });
 
@@ -453,12 +456,14 @@ PHONE_PORTRAIT.addEventListener('change', () => {
  * it goes to sessionStorage (kept through the reload, per tab).
  *
  * The reloaded page waits for its fonts and images (they move the layout), puts the item back
- * and the section at the top of the column, then checks — after the column has been still
- * for a moment (the usual scroll handling selects / lights it meanwhile: snap.ts,
+ * and the section at the top of the column, then checks — RESTORE_CONFIRMS times in a row,
+ * each after the column has been still for STILL_MS (the usual scroll handling selects / lights it meanwhile: snap.ts,
  * game-rows.ts, hero-slider.ts) — that it's still there, and puts it back if not. Only then
  * is the note taken down (html[data-rotate-hold], set from the first paint by Shell.astro).
  */
 const PLACE_KEY = 'raydentec:place';
+/** Fired on document once the reloaded page is back on its place and the note is down. */
+export const PLACE_RESTORED = 'raydentec:place-restored';
 type Place = { path: string; section: number; item: number };
 let place: Place | null = null;
 const litIndex = (root: Element, dot: string) =>
@@ -522,9 +527,10 @@ function applyPlace(saved: Place) {
   return there && cf.classList.contains('is-active');
 }
 
-const STILL_MS = 350; // the column unmoved this long: settled
-const RESTORE_TRIES = 6;
-const RESTORE_GIVE_UP_MS = 5000;
+const STILL_MS = 1000; // the column unmoved this long: settled
+const RESTORE_TRIES = 10;
+const RESTORE_CONFIRMS = 2; // there, checked this many times in a row (each after STILL_MS)
+const RESTORE_GIVE_UP_MS = 15000;
 
 async function restorePlace() {
   let saved: Place | null = null;
@@ -535,7 +541,10 @@ async function restorePlace() {
     saved = null;
   }
   const done = () => {
+    history.scrollRestoration = 'auto';
+    const held = document.documentElement.hasAttribute('data-rotate-hold');
     setRootState('rotateHold', null);
+    if (held) document.dispatchEvent(new Event(PLACE_RESTORED));
     readPlace();
   };
   if (!saved || saved.path !== location.pathname || saved.section < 0) {
@@ -551,10 +560,11 @@ async function restorePlace() {
       document.fonts?.ready,
       document.readyState === 'complete' ? null : new Promise((r) => window.addEventListener('load', r, { once: true })),
     ]),
-    new Promise((r) => setTimeout(r, 3000)),
+    new Promise((r) => setTimeout(r, 5000)),
   ]);
   const frame = () => new Promise((r) => requestAnimationFrame(r));
-  for (let i = 0; i < RESTORE_TRIES; i++) {
+  let confirmed = 0;
+  for (let i = 0; i < RESTORE_TRIES && confirmed < RESTORE_CONFIRMS; i++) {
     await frame();
     const there = applyPlace(saved);
     // Wait for the column (and the rows) to stay still, then check again.
@@ -569,7 +579,7 @@ async function restorePlace() {
         stillSince = performance.now();
       }
     }
-    if (there && applyPlace(saved)) break;
+    confirmed = there && applyPlace(saved) ? confirmed + 1 : 0;
   }
   window.clearTimeout(giveUp);
   done();
