@@ -32,9 +32,7 @@
  * stops it.
  */
 import {
-  afterRelayout,
   CHROME_EASE,
-  relayouting,
   SCRIPT_GLIDES,
   stopEdgeBounce,
   releaseEase,
@@ -181,7 +179,6 @@ function lightDot(root: HTMLElement, index: number) {
 function settle(root: HTMLElement) {
   const t = track(root);
   if (!t || !looped(root) || touching) return; // settles again on touchend
-  if (relayouting()) return; // the layout is settling: place() puts it back on `current`
   const n = count(root);
   let index = position(t);
   // Scrolling by script: wait until it has arrived.
@@ -270,7 +267,7 @@ document.addEventListener(
     // Scrolled by hand: no timer until the track rests (settle).
     if (target === null) window.clearInterval(timer);
     const n = count(root);
-    if (touching || relayouting()) return; // its line changes when let go (see swipe) / stays while the layout settles
+    if (touching) return; // its line changes when let go (see swipe)
     // The line of the slide a switch heads to (it counts at once), else the one under way.
     lightDot(root, ((target ?? position(t)) + n) % n);
     window.clearTimeout(settleTimer);
@@ -470,11 +467,6 @@ function place(root: HTMLElement) {
 }
 
 window.addEventListener('resize', () => {
-  const root = slider();
-  if (root) place(root);
-});
-// …and once the layout has settled (iOS adjusts it a while after turning).
-afterRelayout(() => {
   const root = slider();
   if (root) place(root);
 });

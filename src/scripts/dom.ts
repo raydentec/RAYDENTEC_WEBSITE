@@ -10,8 +10,6 @@
 export const mq = {
   /** A phone (narrow, touch): vertical touch moves the column by script (wheel.ts "Touch on phones"). */
   touchColumn: matchMedia('(max-width: 767px) and (pointer: coarse)'),
-  /** A phone turned sideways: the page is covered by the rotate note (Shell.astro .rotate-note). */
-  rotateNote: matchMedia('(orientation: landscape) and (pointer: coarse) and (max-height: 540px)'),
   desktop: matchMedia('(min-width: 1280px)'),
   mobile: matchMedia('(max-width: 767px)'),
   reducedMotion: matchMedia('(prefers-reduced-motion: reduce)'),
@@ -362,33 +360,7 @@ window.addEventListener('resize', () => {
   document.documentElement.setAttribute('data-resizing', '');
   window.clearTimeout(resizeTimer);
   resizeTimer = window.setTimeout(() => document.documentElement.removeAttribute('data-resizing'), 150);
-  relayoutUntil = performance.now() + RELAYOUT_MS;
 });
-
-/**
- * The layout is still settling: the rotate note is up (a phone turned sideways), or a resize
- * came in the last RELAYOUT_MS (iOS keeps adjusting the viewport a while after turning). The
- * scroll positions mean nothing meanwhile — the content moves under them — so nothing takes
- * its current container / game / slide from them (snap.ts, game-rows.ts, hero-slider.ts);
- * once it's over they're put back on what they were (relayoutDone).
- */
-const RELAYOUT_MS = 800;
-let relayoutUntil = 0;
-export const relayouting = () => mq.rotateNote.matches || performance.now() < relayoutUntil;
-/** Run `fn` once the layout has settled after a resize (and again a little later: iOS's late viewport changes). */
-export function afterRelayout(fn: () => void) {
-  let timer = 0;
-  let again = 0;
-  window.addEventListener('resize', () => {
-    window.clearTimeout(timer);
-    window.clearTimeout(again);
-    timer = window.setTimeout(() => {
-      if (mq.rotateNote.matches) return; // covered: when it's turned back
-      fn();
-      again = window.setTimeout(() => !mq.rotateNote.matches && fn(), RELAYOUT_MS);
-    }, RELAYOUT_MS + 20);
-  });
-}
 
 /**
  * Wheel / trackpad gestures, shared by the column (wheel.ts), the sideways rows
@@ -444,6 +416,24 @@ document.addEventListener(
 export const wheelAxis = () => axis;
 /** Number of the current wheel / trackpad gesture: a new one when it changes (see above). */
 export const wheelGesture = () => gestureId;
+
+/**
+ * A phone turned sideways (touch, landscape, at most 540px tall): the page is covered by a
+ * note to turn it back (Shell.astro .rotate-note) — and remembered here. Turned back upright
+ * (touch, portrait, at most 540px wide: the same phone), the page is reloaded, so it is laid
+ * out afresh for portrait instead of patching up the scroll positions the sideways layout
+ * left behind (they moved the content under the column / rows / hero). Desktop windows and
+ * tablets never match either, so their resizes are left alone.
+ */
+const PHONE_LANDSCAPE = matchMedia('(orientation: landscape) and (pointer: coarse) and (max-height: 540px)');
+const PHONE_PORTRAIT = matchMedia('(orientation: portrait) and (pointer: coarse) and (max-width: 540px)');
+let wasLandscape = PHONE_LANDSCAPE.matches;
+PHONE_LANDSCAPE.addEventListener('change', () => {
+  if (PHONE_LANDSCAPE.matches) wasLandscape = true;
+});
+PHONE_PORTRAIT.addEventListener('change', () => {
+  if (PHONE_PORTRAIT.matches && wasLandscape) location.reload();
+});
 
 /** Scroll events don't bubble; one capturing listener fans out scroller scrolls. */
 type ScrollHandler = (scroller: HTMLElement) => void;

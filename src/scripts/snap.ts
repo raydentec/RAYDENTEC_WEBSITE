@@ -17,7 +17,6 @@
  */
 import {
   ACTIVE_CHANGE,
-  afterRelayout,
   isStartPage,
   clearArriving,
   containers,
@@ -27,7 +26,6 @@ import {
   mq,
   onPageLoad,
   onScrollerScroll,
-  relayouting,
   snapOffset,
   snapSpans,
   snapTop,
@@ -79,12 +77,9 @@ const SUPPORTS_SCROLLEND = 'onscrollend' in window;
  */
 function settle(scroller: HTMLElement, align: boolean) {
   window.clearTimeout(settleTimer);
-  // The layout is settling (dom.ts relayouting): its scroll position means nothing yet.
-  if (relayouting()) return;
   const target = containerAtSnapLine(scroller) ?? nearestToSnapLine(scroller);
   if (!target) return;
   setActive(scroller, target);
-  rememberRest(scroller, target);
   // Come to rest: no container is on its way in any more (dom.ts markArriving).
   if (!('gliding' in scroller.dataset)) clearArriving(scroller);
   // Resting exactly on a container's top (a glide's end, mid-way through it): that's where
@@ -216,29 +211,6 @@ document.addEventListener(
   },
   { capture: true },
 );
-
-/*
- * Where the column rests, by its content: the container at the snap line (`restAt`, kept by
- * settle — never while the layout settles, dom.ts relayouting). A resize — a phone turned
- * sideways (rotate note) and back — moves the content under a scroll position that stays
- * put in pixels, so once the layout has settled the column is put back on the top of that
- * container (or the very top, from the mobile info area above the containers).
- */
-let restAt: { cf: HTMLElement; above: boolean } | null = null;
-function rememberRest(scroller: HTMLElement, cf: HTMLElement) {
-  restAt = { cf, above: snapLine(scroller) - snapTop(cf) < -2 };
-}
-afterRelayout(() => {
-  const scroller = getScroller();
-  if (!scroller) return;
-  updateTail(scroller);
-  updateSnapping(scroller);
-  if (!restAt || !restAt.cf.isConnected) return;
-  const max = scroller.scrollHeight - scroller.clientHeight;
-  const top = restAt.above ? 0 : scroller.scrollTop + snapTop(restAt.cf) - snapLine(scroller);
-  scroller.scrollTo({ top: Math.max(0, Math.min(max, top)), behavior: 'instant' });
-  home = restAt.above ? null : restAt.cf;
-});
 
 window.addEventListener('resize', () => {
   const scroller = getScroller();

@@ -422,7 +422,8 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
   /*
    * Phones turned sideways (touch, landscape, low): the layouts are made for portrait, and a
    * web page can't lock the orientation (only an installed app can: public/manifest.webmanifest)
-   * — so the page is covered with a note to turn the phone upright; it goes as soon as it is.
+   * — so the page is covered with a note to turn the phone upright; turned back, the page
+   * reloads, laid out afresh for portrait (scripts/dom.ts).
    * Tablets (taller than 540px in landscape) and desktop never see it.
    */
   .rotate-note {
