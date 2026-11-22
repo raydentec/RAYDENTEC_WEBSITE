@@ -372,7 +372,7 @@ window.addEventListener('resize', () => {
  * its current container / game / slide from them (snap.ts, game-rows.ts, hero-slider.ts);
  * once it's over they're put back on what they were (relayoutDone).
  */
-const RELAYOUT_MS = 400;
+const RELAYOUT_MS = 800;
 let relayoutUntil = 0;
 export const relayouting = () => mq.rotateNote.matches || performance.now() < relayoutUntil;
 /** Run `fn` once the layout has settled after a resize (and again a little later: iOS's late viewport changes). */
