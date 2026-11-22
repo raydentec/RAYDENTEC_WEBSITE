@@ -362,7 +362,33 @@ window.addEventListener('resize', () => {
   document.documentElement.setAttribute('data-resizing', '');
   window.clearTimeout(resizeTimer);
   resizeTimer = window.setTimeout(() => document.documentElement.removeAttribute('data-resizing'), 150);
+  relayoutUntil = performance.now() + RELAYOUT_MS;
 });
+
+/**
+ * The layout is still settling: the rotate note is up (a phone turned sideways), or a resize
+ * came in the last RELAYOUT_MS (iOS keeps adjusting the viewport a while after turning). The
+ * scroll positions mean nothing meanwhile — the content moves under them — so nothing takes
+ * its current container / game / slide from them (snap.ts, game-rows.ts, hero-slider.ts);
+ * once it's over they're put back on what they were (relayoutDone).
+ */
+const RELAYOUT_MS = 400;
+let relayoutUntil = 0;
+export const relayouting = () => mq.rotateNote.matches || performance.now() < relayoutUntil;
+/** Run `fn` once the layout has settled after a resize (and again a little later: iOS's late viewport changes). */
+export function afterRelayout(fn: () => void) {
+  let timer = 0;
+  let again = 0;
+  window.addEventListener('resize', () => {
+    window.clearTimeout(timer);
+    window.clearTimeout(again);
+    timer = window.setTimeout(() => {
+      if (mq.rotateNote.matches) return; // covered: when it's turned back
+      fn();
+      again = window.setTimeout(() => !mq.rotateNote.matches && fn(), RELAYOUT_MS);
+    }, RELAYOUT_MS + 20);
+  });
+}
 
 /**
  * Wheel / trackpad gestures, shared by the column (wheel.ts), the sideways rows

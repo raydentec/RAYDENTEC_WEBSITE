@@ -17,6 +17,7 @@
  */
 import {
   ACTIVE_CHANGE,
+  afterRelayout,
   isStartPage,
   clearArriving,
   containers,
@@ -26,6 +27,7 @@ import {
   mq,
   onPageLoad,
   onScrollerScroll,
+  relayouting,
   snapOffset,
   snapSpans,
   snapTop,
@@ -77,6 +79,8 @@ const SUPPORTS_SCROLLEND = 'onscrollend' in window;
  */
 function settle(scroller: HTMLElement, align: boolean) {
   window.clearTimeout(settleTimer);
+  // The layout is settling (dom.ts relayouting): its scroll position means nothing yet.
+  if (relayouting()) return;
   const target = containerAtSnapLine(scroller) ?? nearestToSnapLine(scroller);
   if (!target) return;
   setActive(scroller, target);
@@ -214,34 +218,33 @@ document.addEventListener(
 );
 
 /*
- * Where the column rests, by its content: the container at the snap line and how far into it
- * (`restAt`, kept by settle). A resize — a phone turned sideways (rotate note) and back — moves
- * the content under a scroll position that stays put in pixels, so once the window has settled
- * the column is put back on that container, as far into it. Not kept meanwhile (data-resizing,
- * the rotate note): the passing layouts would overwrite it.
+ * Where the column rests, by its content: the container at the snap line (`restAt`, kept by
+ * settle — never while the layout settles, dom.ts relayouting). A resize — a phone turned
+ * sideways (rotate note) and back — moves the content under a scroll position that stays
+ * put in pixels, so once the layout has settled the column is put back on the top of that
+ * container (or the very top, from the mobile info area above the containers).
  */
-let restAt: { cf: HTMLElement; offset: number } | null = null;
-let restoreTimer = 0;
-const RESTORE_MS = 250; // after the last resize (dom.ts clears data-resizing after 150ms)
-const keepingRest = () => !document.documentElement.hasAttribute('data-resizing') && !mq.rotateNote.matches;
+let restAt: { cf: HTMLElement; above: boolean } | null = null;
 function rememberRest(scroller: HTMLElement, cf: HTMLElement) {
-  if (keepingRest()) restAt = { cf, offset: snapLine(scroller) - snapTop(cf) };
+  restAt = { cf, above: snapLine(scroller) - snapTop(cf) < -2 };
 }
-function restoreRest() {
+afterRelayout(() => {
   const scroller = getScroller();
-  if (!scroller || !restAt || !restAt.cf.isConnected || mq.rotateNote.matches) return;
+  if (!scroller) return;
+  updateTail(scroller);
+  updateSnapping(scroller);
+  if (!restAt || !restAt.cf.isConnected) return;
   const max = scroller.scrollHeight - scroller.clientHeight;
-  const top = scroller.scrollTop + snapTop(restAt.cf) - snapLine(scroller) + restAt.offset;
+  const top = restAt.above ? 0 : scroller.scrollTop + snapTop(restAt.cf) - snapLine(scroller);
   scroller.scrollTo({ top: Math.max(0, Math.min(max, top)), behavior: 'instant' });
-}
+  home = restAt.above ? null : restAt.cf;
+});
 
 window.addEventListener('resize', () => {
   const scroller = getScroller();
   if (!scroller) return;
   updateTail(scroller);
   updateSnapping(scroller);
-  window.clearTimeout(restoreTimer);
-  restoreTimer = window.setTimeout(restoreRest, RESTORE_MS);
 });
 
 /**

@@ -24,7 +24,8 @@
  */
 import {
   ACTIVE_CHANGE,
-  mq,
+  afterRelayout,
+  relayouting,
   SCRIPT_GLIDES,
   getRootState,
   stopEdgeBounce,
@@ -102,6 +103,9 @@ function light(row: HTMLElement, index: number, select = false) {
 
 function sync(row: HTMLElement) {
   if (touch?.row === row) return; // a finger is still on it (touchend decides)
+  // The layout is settling (dom.ts relayouting): its position says nothing about its game —
+  // re-picking it then lit / selected the wrong one (and replayed the tab animation).
+  if (relayouting()) return;
   targets.delete(row);
   light(row, currentIndex(row), true);
 }
@@ -280,22 +284,17 @@ document.addEventListener('astro:before-swap', () => {
 });
 
 document.addEventListener(ACTIVE_CHANGE, syncAll);
-// Resized (a phone turned sideways — rotate note — and back, a window dragged): once it has
-// settled, each row back on the game it showed (its lit line; the layouts on the way moved
-// the games under its scroll position, and on iOS nothing snaps them back), then synced.
-let resizeTimer = 0;
-window.addEventListener('resize', () => {
-  window.clearTimeout(resizeTimer);
-  resizeTimer = window.setTimeout(() => {
-    if (mq.rotateNote.matches) return; // covered: when it's turned back
-    rows().forEach((row) => {
-      const t = track(row);
-      const lit = dots(row).findIndex((d) => d.hasAttribute('aria-current'));
-      const g = games(row)[targets.get(row) ?? (lit >= 0 ? lit : currentIndex(row))];
-      if (t && g) t.scrollTo({ left: t.scrollLeft + g.getBoundingClientRect().left - snapLine(t), behavior: 'instant' });
-    });
-    syncAll();
-  }, 250);
+// Once the layout has settled after a resize (a phone turned sideways — rotate note — and
+// back, a window dragged): each row back on the game it showed (its lit line, kept meanwhile:
+// sync waits), then synced.
+afterRelayout(() => {
+  rows().forEach((row) => {
+    const t = track(row);
+    const lit = dots(row).findIndex((d) => d.hasAttribute('aria-current'));
+    const g = games(row)[targets.get(row) ?? (lit >= 0 ? lit : currentIndex(row))];
+    if (t && g) t.scrollTo({ left: t.scrollLeft + g.getBoundingClientRect().left - snapLine(t), behavior: 'instant' });
+  });
+  syncAll();
 });
 
 // iOS touch: the drag by script, one game at most (ios-swipe.ts); let go, the glide (show).
