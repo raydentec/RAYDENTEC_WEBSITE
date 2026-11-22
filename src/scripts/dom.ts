@@ -428,8 +428,6 @@ export const wheelGesture = () => gestureId;
 const PHONE_LANDSCAPE = matchMedia('(orientation: landscape) and (pointer: coarse) and (max-height: 540px)');
 const PHONE_PORTRAIT = matchMedia('(orientation: portrait) and (pointer: coarse) and (max-width: 540px)');
 let wasLandscape = PHONE_LANDSCAPE.matches;
-// Checked on the first resize of the turn (it comes before the scroll events and the media
-// query change event, so the selection is still the portrait one) — and on the change event.
 function enteredLandscape() {
   if (!PHONE_LANDSCAPE.matches || wasLandscape) return;
   wasLandscape = true;
@@ -438,69 +436,147 @@ function enteredLandscape() {
 window.addEventListener('resize', enteredLandscape);
 PHONE_LANDSCAPE.addEventListener('change', enteredLandscape);
 PHONE_PORTRAIT.addEventListener('change', () => {
-  if (PHONE_PORTRAIT.matches && wasLandscape) location.reload();
+  if (!PHONE_PORTRAIT.matches || !wasLandscape) return;
+  setRootState('rotateHold', ''); // the note stays up through the reload (Shell.astro)
+  location.reload();
 });
 
 /*
  * The place to come back to after that reload: the page, its selected section (container
  * index; -1 = the mobile info area above them) and that section's current item (a row's game,
- * the hero's slide; -1 = none). Saved as the phone turns sideways — read from the selection
- * (is-active, the lit indicator line), still the portrait one then, not from scroll positions
- * (the sideways layout has already moved the content) — in sessionStorage (kept through the
- * reload, per tab). Restored on the reloaded page once its own setup has run: the item put back
- * and the section brought to the top of the column, at once; the usual scroll handling then
- * selects / lights them (snap.ts, game-rows.ts, hero-slider.ts).
+ * the hero's slide; -1 = none).
+ *
+ * Kept (`place`) while the phone is upright — on every selection change and column scroll,
+ * read from the selection (is-active, the lit indicator line) — and only then: as soon as the
+ * phone turns, PHONE_PORTRAIT stops matching (it reads the live viewport), so whatever the
+ * sideways layout re-picks (its scroll events, snapping) never overwrites it. Turned sideways,
+ * it goes to sessionStorage (kept through the reload, per tab).
+ *
+ * The reloaded page waits for its fonts and images (they move the layout), puts the item back
+ * and the section at the top of the column, then checks — after the column has been still
+ * for a moment (the usual scroll handling selects / lights it meanwhile: snap.ts,
+ * game-rows.ts, hero-slider.ts) — that it's still there, and puts it back if not. Only then
+ * is the note taken down (html[data-rotate-hold], set from the first paint by Shell.astro).
  */
 const PLACE_KEY = 'raydentec:place';
+type Place = { path: string; section: number; item: number };
+let place: Place | null = null;
 const litIndex = (root: Element, dot: string) =>
   Array.from(root.querySelectorAll(dot)).findIndex((d) => d.hasAttribute('aria-current'));
 
-function savePlace() {
+function readPlace() {
   const scroller = getScroller();
-  if (!scroller) return;
+  // Upright, settled phones only (and never while the note holds a restore).
+  if (!scroller || !PHONE_PORTRAIT.matches || document.documentElement.hasAttribute('data-rotate-hold')) return;
   const all = containers(scroller);
-  let section = all.findIndex((cf) => cf.classList.contains('is-active'));
-  let item = -1;
+  const first = all[0];
+  const above = !!first && snapTop(first) - (scroller.getBoundingClientRect().top + snapOffset(scroller)) > 2;
+  const section = above ? -1 : all.findIndex((cf) => cf.classList.contains('is-active'));
   const cf = all[section];
+  let item = -1;
   if (cf?.matches('[data-row]')) item = litIndex(cf, '[data-row-dot]');
   else if (cf?.matches('[data-slider]')) item = litIndex(cf, '[data-slide-dot]');
-  // In the mobile info area above the containers: the top of the page. Kept while scrolling
-  // (aboveFirst) — measured now, the sideways layout (already laid out at the first resize)
-  // has no info area above them.
-  if (aboveFirst) section = -1;
+  place = { path: location.pathname, section, item };
+}
+
+function savePlace() {
+  if (!place || place.path !== location.pathname) return;
   try {
-    sessionStorage.setItem(PLACE_KEY, JSON.stringify({ path: location.pathname, section, item }));
+    sessionStorage.setItem(PLACE_KEY, JSON.stringify(place));
   } catch {
     // Storage unavailable: the reload starts at the top.
   }
 }
 
-function restorePlace() {
-  let saved: { path: string; section: number; item: number } | null = null;
+/** Put the column / item on `saved`; true if it was already there. */
+function applyPlace(saved: Place) {
+  const scroller = getScroller();
+  const cf = scroller && containers(scroller)[saved.section];
+  if (!scroller || !cf) return true;
+  let there = true;
+  const row = cf.matches('[data-row]') ? cf.querySelector<HTMLElement>('[data-row-track]') : null;
+  const game = row?.querySelectorAll<HTMLElement>('[data-cf]')[saved.item];
+  if (row && game) {
+    const edge = row.getBoundingClientRect().left + (parseFloat(getComputedStyle(row).scrollPaddingLeft) || 0);
+    const off = game.getBoundingClientRect().left - edge;
+    if (Math.abs(off) > 1) {
+      there = false;
+      row.scrollTo({ left: row.scrollLeft + off, behavior: 'instant' });
+    }
+  }
+  const slides = cf.matches('[data-slider]') ? cf.querySelector<HTMLElement>('[data-slide-track]') : null;
+  if (slides && saved.item >= 0) {
+    const left = (saved.item + 1) * slides.clientWidth; // after the copy of the last
+    if (Math.abs(slides.scrollLeft - left) > 1) {
+      there = false;
+      slides.scrollTo({ left, behavior: 'instant' });
+    }
+  }
+  const off = snapTop(cf) - (scroller.getBoundingClientRect().top + snapOffset(scroller));
+  const max = scroller.scrollHeight - scroller.clientHeight;
+  const top = Math.max(0, Math.min(max, scroller.scrollTop + off));
+  if (Math.abs(scroller.scrollTop - top) > 1) {
+    there = false;
+    scroller.scrollTo({ top, behavior: 'instant' });
+  }
+  return there && cf.classList.contains('is-active');
+}
+
+const STILL_MS = 350; // the column unmoved this long: settled
+const RESTORE_TRIES = 6;
+const RESTORE_GIVE_UP_MS = 5000;
+
+async function restorePlace() {
+  let saved: Place | null = null;
   try {
     saved = JSON.parse(sessionStorage.getItem(PLACE_KEY) ?? 'null');
     sessionStorage.removeItem(PLACE_KEY);
   } catch {
     saved = null;
   }
-  const scroller = getScroller();
-  if (!saved || !scroller || saved.path !== location.pathname || saved.section < 0) return;
-  const cf = containers(scroller)[saved.section];
-  if (!cf) return;
-  // The item first (its track's own position), then the section to the top of the column.
-  const row = cf.matches('[data-row]') ? cf.querySelector<HTMLElement>('[data-row-track]') : null;
-  const game = row?.querySelectorAll<HTMLElement>('[data-cf]')[saved.item];
-  if (row && game) {
-    const edge = row.getBoundingClientRect().left + (parseFloat(getComputedStyle(row).scrollPaddingLeft) || 0);
-    row.scrollTo({ left: row.scrollLeft + game.getBoundingClientRect().left - edge, behavior: 'instant' });
+  const done = () => {
+    setRootState('rotateHold', null);
+    readPlace();
+  };
+  if (!saved || saved.path !== location.pathname || saved.section < 0) {
+    getScroller()?.scrollTo({ top: 0, behavior: 'instant' });
+    done();
+    return;
   }
-  const slides = cf.matches('[data-slider]') ? cf.querySelector<HTMLElement>('[data-slide-track]') : null;
-  if (slides && saved.item >= 0) slides.scrollTo({ left: (saved.item + 1) * slides.clientWidth, behavior: 'instant' }); // after the copy of the last
-  const line = scroller.getBoundingClientRect().top + snapOffset(scroller);
-  scroller.scrollTo({ top: scroller.scrollTop + snapTop(cf) - line, behavior: 'instant' });
+  setRootState('rotateHold', ''); // keep it through ClientRouter's attribute swaps
+  const giveUp = window.setTimeout(done, RESTORE_GIVE_UP_MS);
+  // Fonts and images first: they change the heights the place is measured on.
+  await Promise.race([
+    Promise.all([
+      document.fonts?.ready,
+      document.readyState === 'complete' ? null : new Promise((r) => window.addEventListener('load', r, { once: true })),
+    ]),
+    new Promise((r) => setTimeout(r, 3000)),
+  ]);
+  const frame = () => new Promise((r) => requestAnimationFrame(r));
+  for (let i = 0; i < RESTORE_TRIES; i++) {
+    await frame();
+    const there = applyPlace(saved);
+    // Wait for the column (and the rows) to stay still, then check again.
+    let last = '';
+    let stillSince = performance.now();
+    while (performance.now() - stillSince < STILL_MS) {
+      await frame();
+      const scroller = getScroller();
+      const now = scroller ? `${Math.round(scroller.scrollTop)}` : '';
+      if (now !== last) {
+        last = now;
+        stillSince = performance.now();
+      }
+    }
+    if (there && applyPlace(saved)) break;
+  }
+  window.clearTimeout(giveUp);
+  done();
 }
 // Once, on the page as loaded (after its setup: the other page-load handlers run first).
-document.addEventListener('astro:page-load', () => requestAnimationFrame(restorePlace), { once: true });
+document.addEventListener('astro:page-load', () => requestAnimationFrame(() => void restorePlace()), { once: true });
+
 
 /** Scroll events don't bubble; one capturing listener fans out scroller scrolls. */
 type ScrollHandler = (scroller: HTMLElement) => void;
@@ -515,17 +591,6 @@ document.addEventListener(
 );
 export const onScrollerScroll = (handler: ScrollHandler) => scrollHandlers.push(handler);
 
-// Whether the column shows the mobile info area above the first container (savePlace), kept
-// up to date in portrait (sideways the layout differs: the last portrait value stays).
-let aboveFirst = false;
-function updateAboveFirst() {
-  const scroller = getScroller();
-  const first = scroller && containers(scroller)[0];
-  if (!scroller || PHONE_LANDSCAPE.matches) return;
-  aboveFirst = !!first && snapTop(first) - (scroller.getBoundingClientRect().top + snapOffset(scroller)) > 2;
-}
-onScrollerScroll(updateAboveFirst);
-document.addEventListener('astro:page-load', updateAboveFirst);
 
 export const onPageLoad = (handler: () => void) => document.addEventListener('astro:page-load', handler);
 
@@ -619,3 +684,15 @@ export function activeIndex() {
 // html[data-glide-script]: not Chromium — CSS gives the sideways tracks room to spare at their
 // far end there (no rubber-band, see stopEdgeBounce).
 setRootState('glideScript', SCRIPT_GLIDES ? '' : null);
+
+// Keep the place while the phone is upright (readPlace, with the turn handling above — here
+// at the end, as it needs ACTIVE_CHANGE): on every column scroll, selection change and lit
+// indicator line (rows / hero light theirs as their own tracks scroll).
+onScrollerScroll(() => readPlace());
+document.addEventListener(ACTIVE_CHANGE, () => readPlace());
+document.addEventListener('astro:page-load', () => readPlace());
+new MutationObserver(() => readPlace()).observe(document.documentElement, {
+  subtree: true,
+  attributes: true,
+  attributeFilter: ['aria-current'],
+});
