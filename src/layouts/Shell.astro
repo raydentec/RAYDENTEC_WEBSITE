@@ -195,9 +195,20 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
   }
 
   /* Phones turned sideways (touch, landscape, at most 540px tall; the tablet layout, low):
-     empty space at the end, as on mobile, so the last content scrolls clear of the SCROLL
-     button with 16px above it. */
+     vertical swipes as on phones upright (below, mobile: touch-action pan-x, iPhone not
+     user-scrollable; scripts/wheel.ts "Touch on phones", dom.ts mq.touchColumn) — the
+     browser's own snapping pulled the column back to a tall container's top there. And empty
+     space at the end, as on mobile, so the last content scrolls clear of the SCROLL button
+     with 16px above it. */
   @media (orientation: landscape) and (pointer: coarse) and (max-height: 540px) {
+    .scroller {
+      touch-action: pan-x;
+    }
+    :global(html[data-ios-touch]) .scroller {
+      overflow-y: hidden;
+      scroll-snap-type: none !important;
+      touch-action: none;
+    }
     .column {
       padding-bottom: max(var(--tail, 0px), calc(var(--ctl-bottom) - var(--footer-h) + var(--ctl-h) + 16px));
     }
