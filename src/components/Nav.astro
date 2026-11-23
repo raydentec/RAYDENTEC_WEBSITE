@@ -60,8 +60,16 @@ const site = await getSite();
     color: rgba(255, 255, 255, 0.5);
     transition: color var(--t-fade);
   }
-  .topnav__link:hover {
-    color: rgba(255, 255, 255, 0.8);
+  @media (hover: hover) {
+    .topnav__link:hover {
+      color: rgba(255, 255, 255, 0.8);
+    }
+  }
+  @media (hover: none) {
+    .topnav__link:active {
+      color: rgba(255, 255, 255, 0.8);
+      transition-duration: 0s;
+    }
   }
   /* The current page isn't a link you can follow (scripts/mobile-menu.ts). */
   .topnav__link[aria-current='page'] {

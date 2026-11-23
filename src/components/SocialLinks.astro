@@ -40,8 +40,16 @@ const site = await getSite();
     color: var(--c-white);
     transition: background-color var(--t-fade);
   }
-  .socials__link:hover {
-    background: var(--c-red);
+  @media (hover: hover) {
+    .socials__link:hover {
+      background: var(--c-red);
+    }
+  }
+  @media (hover: none) {
+    .socials__link:active {
+      background: var(--c-red);
+      transition-duration: 0s;
+    }
   }
   @media (max-width: 1279px) {
     .socials {

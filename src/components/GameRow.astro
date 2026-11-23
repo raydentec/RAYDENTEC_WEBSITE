@@ -78,22 +78,11 @@ const headingId = `games-${index}`;
     opacity: var(--o-inactive);
     transition: opacity var(--t-state) ease;
   }
-  /* A row that isn't selected is one click target as a whole: clicking anywhere on it
-     scrolls it into place (snap.ts). Its games, buttons and sideways track stay out of reach
-     until then; wheel / touch input still scrolls the column. */
+  /* A row that isn't selected: clicking it (anywhere but a link / button) scrolls it into
+     place (snap.ts) — and on to the game clicked (game-rows.ts). Its links and buttons work
+     at once, selected or not. */
   .grow:not(.is-active) {
     cursor: pointer;
-  }
-  .grow:not(.is-active) > * {
-    pointer-events: none;
-  }
-  /* On its way in (a vertical glide is heading to it, scripts/dom.ts markArriving): the track
-     already takes sideways swipes — the track only, not its games / buttons. */
-  .grow[data-arriving]:not(.is-active) .grow__track {
-    pointer-events: auto;
-  }
-  .grow[data-arriving]:not(.is-active) .grow__track * {
-    pointer-events: none;
   }
   .grow.is-active .grow__title,
   .grow:has(:focus-visible) .grow__title {
@@ -166,6 +155,12 @@ const headingId = `games-${index}`;
   @media (hover: hover) {
     .grow__dot:hover::before {
       opacity: 0.7;
+    }
+  }
+  @media (hover: none) {
+    .grow__dot:active::before {
+      opacity: 0.7;
+      transition-duration: 0s;
     }
   }
   .grow__dot[aria-current='true']::before {

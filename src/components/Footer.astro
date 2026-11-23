@@ -34,8 +34,16 @@ const site = await getSite();
     min-height: 44px;
     transition: color var(--t-fade);
   }
-  .footer__legal:hover {
-    color: var(--c-white);
+  @media (hover: hover) {
+    .footer__legal:hover {
+      color: var(--c-white);
+    }
+  }
+  @media (hover: none) {
+    .footer__legal:active {
+      color: var(--c-white);
+      transition-duration: 0s;
+    }
   }
   @media (max-width: 767px) {
     .footer {

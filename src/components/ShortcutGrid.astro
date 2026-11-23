@@ -151,6 +151,12 @@ const FILLERS = 8;
       background: var(--brand);
     }
   }
+  @media (hover: none) {
+    a.sc__link:active .sc__tile {
+      background: var(--brand);
+      transition-duration: 0s;
+    }
+  }
   .sc__tile :global(svg) {
     width: 40%;
     height: 40%;

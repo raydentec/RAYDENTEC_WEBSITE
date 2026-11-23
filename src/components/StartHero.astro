@@ -169,8 +169,9 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
       z-index: 2;
     }
   }
-  /* Not selected (the explore row is): no clicks or hovers, as rows on Games — wheel and
-     touch input go to the column underneath. */
+  /* Not selected (the explore row is): it has faded out (--hero-art), so no clicks or hovers
+     on what can't be seen — wheel and touch input go to the column underneath. (Containers
+     that stay visible keep their links working while not selected: GameRow.astro.) */
   .hero:not(.is-active) {
     pointer-events: none;
   }
@@ -288,8 +289,22 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
     width: 100%;
     height: 100%;
   }
-  .hero__arrow:hover {
-    background: var(--c-control-fill);
+  @media (hover: hover) {
+    .hero__arrow:hover {
+      background: var(--c-control-fill);
+    }
+  }
+  @media (hover: none) {
+    .hero__arrow:active {
+      background: var(--c-control-fill);
+      transition-duration: 0s;
+    }
+  }
+  @media (hover: none) {
+    .hero__arrow:active {
+      background: var(--c-control-fill);
+      transition-duration: 0s;
+    }
   }
   .hero__arrow:focus-visible {
     outline: 2px solid var(--c-white);
@@ -352,6 +367,12 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
   @media (hover: hover) {
     .hero__dot:hover::before {
       opacity: 0.7;
+    }
+  }
+  @media (hover: none) {
+    .hero__dot:active::before {
+      opacity: 0.7;
+      transition-duration: 0s;
     }
   }
   .hero__dot[aria-current='true']::before {

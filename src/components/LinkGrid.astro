@@ -90,6 +90,13 @@ const { links } = Astro.props;
       border-color: var(--c-white);
     }
   }
+  @media (hover: none) {
+    .lg__link:active {
+      background: var(--c-link-tile-hover);
+      border-color: var(--c-white);
+      transition-duration: 0s;
+    }
+  }
   .lg__link :global(svg) {
     flex-shrink: 0;
   }

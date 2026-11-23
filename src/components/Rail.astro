@@ -222,15 +222,38 @@ const [videos, socials] = site.ctas;
     background: rgba(0, 0, 0, 0.5);
     color: var(--c-red);
   }
-  .rail__cta--outline:hover {
-    background: var(--c-red);
-    color: var(--c-black);
+  @media (hover: hover) {
+    .rail__cta--outline:hover {
+      background: var(--c-red);
+      color: var(--c-black);
+    }
   }
-  .rail__cta--primary:hover,
+  @media (hover: none) {
+    .rail__cta--outline:active {
+      background: var(--c-red);
+      color: var(--c-black);
+      transition-duration: 0s;
+    }
+  }
   .rail__cta--primary:focus-visible {
     background: var(--c-white);
     border-color: var(--c-white);
     color: var(--c-black);
+  }
+  @media (hover: hover) {
+    .rail__cta--primary:hover {
+      background: var(--c-white);
+      border-color: var(--c-white);
+      color: var(--c-black);
+    }
+  }
+  @media (hover: none) {
+    .rail__cta--primary:active {
+      background: var(--c-white);
+      border-color: var(--c-white);
+      color: var(--c-black);
+      transition-duration: 0s;
+    }
   }
 
   @media (max-width: 1279px) {

@@ -216,6 +216,11 @@ const shareImageAlt = SHARE_IMAGE.alt;
     </div>
 
     <script is:inline>
+      // iOS Safari only shows the pressed look (:active, the buttons' touch feedback) when
+      // the page listens for touches: an empty listener is enough.
+      document.addEventListener('touchstart', function () {}, { passive: true });
+    </script>
+    <script is:inline>
       // Only the clip that matches the layout (portrait below 1024px, as the site:
       // scripts/bg-video.ts); none with reduced motion.
       (function () {
@@ -551,6 +556,40 @@ const shareImageAlt = SHARE_IMAGE.alt;
       color: #fff;
     }
   }
+  @media (hover: none) {
+    .quick a:active {
+      background: var(--red);
+      color: #000;
+      transition-duration: 0s;
+    }
+    a.lk:active .arw {
+      transform: translateX(4px);
+      transition-duration: 0s;
+    }
+    a.lk.pri:active {
+      background: #fff;
+      border-color: #fff;
+      color: #000;
+      transition-duration: 0s;
+    }
+    a.lk.main:active {
+      background: var(--red);
+      color: #000;
+      transition-duration: 0s;
+    }
+    a.lk.main:active .cap {
+      color: #000;
+      transition-duration: 0s;
+    }
+    a.lk.more:active {
+      background: var(--tile-hover);
+      transition-duration: 0s;
+    }
+    a.lk.more:active svg.i {
+      color: #fff;
+      transition-duration: 0s;
+    }
+  }
 
   .footer {
     margin-top: auto;
@@ -649,6 +688,12 @@ const shareImageAlt = SHARE_IMAGE.alt;
     @media (hover: hover) {
       a.lk:hover .arw {
         transform: translateX(6px);
+      }
+    }
+    @media (hover: none) {
+      a.lk:active .arw {
+        transform: translateX(6px);
+        transition-duration: 0s;
       }
     }
     .lk.main .cap {

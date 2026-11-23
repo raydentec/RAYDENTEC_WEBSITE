@@ -147,7 +147,8 @@ function updateTail(scroller: HTMLElement) {
 /**
  * Projects, Games, Start and Community: clicking a container that isn't selected (anywhere but its
  * links / buttons) scrolls it onto the snap line; once scrolling settles it becomes the
- * selected one. (A sideways row takes such clicks as a whole, GameRow.astro.) A headline
+ * selected one — in a sideways row, on to the game clicked (game-rows.ts). Links / buttons
+ * work at once, selected or not (their clicks are left to the browser). A headline
  * marked data-cf-head belongs to the container right after it (Start "About me") and
  * takes such clicks too, as a row's headline does.
  */

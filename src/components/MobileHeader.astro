@@ -113,18 +113,39 @@ const [videos] = site.ctas;
       border-color var(--t-fade),
       color var(--t-fade);
   }
-  .mheader__cta--outline:hover {
-    background: var(--c-red);
-    color: var(--c-black);
+  @media (hover: hover) {
+    .mheader__cta--outline:hover {
+      background: var(--c-red);
+      color: var(--c-black);
+    }
+  }
+  @media (hover: none) {
+    .mheader__cta--outline:active {
+      background: var(--c-red);
+      color: var(--c-black);
+      transition-duration: 0s;
+    }
   }
   .mheader__cta--primary {
     background: var(--c-red);
     color: var(--c-black);
   }
-  .mheader__cta--primary:hover,
   .mheader__cta--primary:focus-visible {
     background: var(--c-white);
     border-color: var(--c-white);
+  }
+  @media (hover: hover) {
+    .mheader__cta--primary:hover {
+      background: var(--c-white);
+      border-color: var(--c-white);
+    }
+  }
+  @media (hover: none) {
+    .mheader__cta--primary:active {
+      background: var(--c-white);
+      border-color: var(--c-white);
+      transition-duration: 0s;
+    }
   }
 
   /* Narrow phones: smaller logo and gaps; the name (about 4.1 × its size wide) scales

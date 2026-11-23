@@ -202,7 +202,11 @@ dd {
   cursor: not-allowed;
 }
 /* Hover looks only where there's a real pointer: on phones a touched button stayed
-   "hovered" (lit) after its row had moved on, until something else was touched. */
+   "hovered" (lit) after its row had moved on, until something else was touched.
+   Touch screens (hover: none) show the same look while a button is pressed (:active) —
+   at once, fading back on release — as feedback for the tap. The same pair (hover: hover /
+   hover: none + :active) is used for every button and link across the components.
+   (iOS Safari only applies :active with a touch listener on the page: the scripts have them.) */
 @media (hover: hover) {
   .btn--outline:hover {
     background: var(--c-red);
@@ -216,6 +220,24 @@ dd {
   .btn[aria-disabled='true']:hover {
     background: transparent;
     color: var(--c-red);
+  }
+}
+@media (hover: none) {
+  .btn--outline:active {
+    background: var(--c-red);
+    color: var(--c-black);
+    transition-duration: 0s;
+  }
+  .btn--primary:active {
+    background: var(--c-white);
+    border-color: var(--c-white);
+    color: var(--c-black);
+    transition-duration: 0s;
+  }
+  .btn[aria-disabled='true']:active {
+    background: transparent;
+    color: var(--c-red);
+    transition-duration: 0s;
   }
 }
 

@@ -72,8 +72,16 @@
     text-decoration-thickness: 1px;
     transition: color var(--t-fade);
   }
-  .prose :global(a:hover) {
-    color: var(--c-white);
+  @media (hover: hover) {
+    .prose :global(a:hover) {
+      color: var(--c-white);
+    }
+  }
+  @media (hover: none) {
+    .prose :global(a:active) {
+      color: var(--c-white);
+      transition-duration: 0s;
+    }
   }
 
   .prose :global(ul),
@@ -107,9 +115,19 @@
     color: var(--c-grey);
     text-decoration: none;
   }
-  .prose :global(#toc + ol a:hover),
   .prose :global(#toc + ol a:focus-visible) {
     color: var(--c-white);
+  }
+  @media (hover: hover) {
+    .prose :global(#toc + ol a:hover) {
+      color: var(--c-white);
+    }
+  }
+  @media (hover: none) {
+    .prose :global(#toc + ol a:active) {
+      color: var(--c-white);
+      transition-duration: 0s;
+    }
   }
 
   /* Wide tables scroll sideways inside the text column. */

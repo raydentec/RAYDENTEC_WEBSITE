@@ -156,8 +156,8 @@ const shortcuts = links.slice(0, 10);
 
   /*
    * More ways to connect: while not selected it works as an unselected Games row — dimmed
-   * (also when hovered), its tiles out of reach, and the whole section, headline included
-   * (data-cf-head, scripts/snap.ts), one click target that scrolls it into place.
+   * (also when hovered), and clicking the section, headline included (data-cf-head,
+   * scripts/snap.ts), anywhere but a tile scrolls it into place; its tiles (links) work at once.
    */
   .ctitle--more:has(+ :global(.cf:not(.is-active))) {
     opacity: var(--o-inactive);
@@ -165,9 +165,6 @@ const shortcuts = links.slice(0, 10);
   }
   .ctitle--more + :global(.cf:not(.is-active)) {
     cursor: pointer;
-  }
-  .ctitle--more + :global(.cf:not(.is-active) > *) {
-    pointer-events: none;
   }
   .ctitle--more + :global(.cf:not(.is-active) .lg) {
     opacity: var(--o-inactive);

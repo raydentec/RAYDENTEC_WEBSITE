@@ -52,10 +52,22 @@ const { class: className, size = 24 } = Astro.props;
     height: 100%;
     transform: scaleX(0.7);
   }
-  .bg-toggle:hover,
   .bg-toggle:focus-visible {
     background: var(--c-white);
     color: var(--c-black);
+  }
+  @media (hover: hover) {
+    .bg-toggle:hover {
+      background: var(--c-white);
+      color: var(--c-black);
+    }
+  }
+  @media (hover: none) {
+    .bg-toggle:active {
+      background: var(--c-white);
+      color: var(--c-black);
+      transition-duration: 0s;
+    }
   }
   /* Off: a line struck across the square, corner to corner (√2 × its side, clipped at the border). */
   .bg-toggle__strike {

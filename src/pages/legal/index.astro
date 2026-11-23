@@ -217,8 +217,16 @@ const groups = [
     text-decoration-thickness: 1px;
     transition: color var(--t-fade);
   }
-  .lsec__text a:hover {
-    color: var(--c-white);
+  @media (hover: hover) {
+    .lsec__text a:hover {
+      color: var(--c-white);
+    }
+  }
+  @media (hover: none) {
+    .lsec__text a:active {
+      color: var(--c-white);
+      transition-duration: 0s;
+    }
   }
 
   /* Company details: label column (mono) and value. */
@@ -263,10 +271,22 @@ const groups = [
       background-color var(--t-fade),
       border-color var(--t-fade);
   }
-  .ldocs__link:hover,
   .ldocs__link:focus-visible {
     background: var(--c-link-tile-hover);
     border-color: var(--c-white);
+  }
+  @media (hover: hover) {
+    .ldocs__link:hover {
+      background: var(--c-link-tile-hover);
+      border-color: var(--c-white);
+    }
+  }
+  @media (hover: none) {
+    .ldocs__link:active {
+      background: var(--c-link-tile-hover);
+      border-color: var(--c-white);
+      transition-duration: 0s;
+    }
   }
   .ldocs__name {
     font-weight: 700;

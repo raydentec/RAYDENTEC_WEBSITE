@@ -187,18 +187,37 @@ import { projectCategories } from '../lib/project-categories';
       color var(--t-state) ease,
       opacity var(--t-fade);
   }
-  .fpanel__head .fpanel__clear:hover {
-    border-color: rgba(255, 255, 255, 0);
-    background: rgba(255, 255, 255, 0.25);
-    color: var(--c-white);
+  @media (hover: hover) {
+    .fpanel__head .fpanel__clear:hover {
+      border-color: rgba(255, 255, 255, 0);
+      background: rgba(255, 255, 255, 0.25);
+      color: var(--c-white);
+    }
+  }
+  @media (hover: none) {
+    .fpanel__head .fpanel__clear:active {
+      border-color: rgba(255, 255, 255, 0);
+      background: rgba(255, 255, 255, 0.25);
+      color: var(--c-white);
+      transition-duration: 0s;
+    }
   }
   .fpanel__head .fpanel__clear:disabled {
     opacity: 0.35;
     cursor: default;
   }
-  .fpanel__head .fpanel__clear:disabled:hover {
-    border-color: rgba(255, 255, 255, 0.5);
-    background: rgba(255, 255, 255, 0);
+  @media (hover: hover) {
+    .fpanel__head .fpanel__clear:disabled:hover {
+      border-color: rgba(255, 255, 255, 0.5);
+      background: rgba(255, 255, 255, 0);
+    }
+  }
+  @media (hover: none) {
+    .fpanel__head .fpanel__clear:disabled:active {
+      border-color: rgba(255, 255, 255, 0.5);
+      background: rgba(255, 255, 255, 0);
+      transition-duration: 0s;
+    }
   }
 
   /* Bottom: one row of buttons scrolling sideways within the panel's padding; buttons are
@@ -238,9 +257,18 @@ import { projectCategories } from '../lib/project-categories';
       border-color var(--t-state) ease,
       color var(--t-state) ease;
   }
-  .pfilter__btn:hover {
-    border-color: var(--c-white);
-    background: rgba(255, 255, 255, 0.25);
+  @media (hover: hover) {
+    .pfilter__btn:hover {
+      border-color: var(--c-white);
+      background: rgba(255, 255, 255, 0.25);
+    }
+  }
+  @media (hover: none) {
+    .pfilter__btn:active {
+      border-color: var(--c-white);
+      background: rgba(255, 255, 255, 0.25);
+      transition-duration: 0s;
+    }
   }
   .pfilter__btn[aria-pressed='true'] {
     border-color: var(--c-white);
