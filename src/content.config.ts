@@ -176,6 +176,9 @@ const community = defineCollection({
       title: z.string(),
       description: z.string(),
       caption: z.string(),
+      /** Short address shown under its button on the /links page (pages/links.astro), e.g.
+          "@raydentec"; else that page shows `caption`. */
+      handle: z.string().optional(),
       /** null = not published yet → button renders disabled (HANDOFF §11). */
       href: href.nullable(),
       image: assetPath,

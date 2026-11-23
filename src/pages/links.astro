@@ -1,0 +1,651 @@
+---
+/**
+ * /links — a plain link-in-bio page (from the former standalone links_page/): profile, quick
+ * icons, the main links and more links, on the lightning video. Not part of the site's shell
+ * (no Shell.astro, no nav / column / scroll scripts): one static page of its own.
+ *
+ * Everything shown comes from the site's content, so it can't drift from the rest of the site:
+ *   - name, tagline, handle, the quick icons (sidebarSocials) and footer: content/site.json;
+ *   - the main links: the Community page's link items (the Social Accounts tiles),
+ *     content/community.json, with their `handle` (else `caption`) under the label;
+ *     a link without an href yet (Discord) shows disabled (lib/content.ts isPlaceholder);
+ *   - "More Links": the Community page's "More ways to connect" grid.
+ * Fonts: the site's (public/assets/fonts/fonts.css); video: public/assets/video (the clip
+ * picked as in scripts/bg-video.ts: portrait below 1024px); icons: public/assets/icons.
+ * The site's own address ("Website") links to / (same tab); the others open in a new tab
+ * (linkAttrs).
+ */
+import Icon from '../components/Icon.astro';
+import { getItems, getSite, isPlaceholder, linkAttrs, SHARE_IMAGE, SITE_URL } from '../lib/content';
+
+const site = await getSite();
+const community = await getItems('community');
+const links = community.map((e) => e.data).filter((d) => d.type === 'link');
+const more = community.map((e) => e.data).find((d) => d.type === 'linkGrid');
+
+// The site itself: on this site, the Start page.
+const own = (href: string) => (href.replace(/\/$/, '') === SITE_URL ? '/' : href);
+const attrs = (href: string) => (own(href) === '/' ? { href: '/' } : linkAttrs(href));
+const quick = site.sidebarSocials;
+const website = quick.find((q) => own(q.href) === '/');
+
+const title = `${site.name} — ${site.tagline} ${site.handle}`;
+const description = `${site.name} — ${site.tagline} ${site.handle}. Links to ${links
+  .slice(0, 8)
+  .map((l) => l.title)
+  .join(', ')} and more.`;
+const shareTitle = `${site.name} — ${site.tagline}`;
+const shareDescription = `${links
+  .slice(0, 8)
+  .map((l) => l.title)
+  .join(', ')} and more from ${site.name} ${site.handle}.`;
+const shareImageAlt = SHARE_IMAGE.alt;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#000000" />
+    <link rel="icon" href="/assets/logo.svg" type="image/svg+xml" />
+    <link rel="canonical" href={`${SITE_URL}/links`} />
+    <!-- Share preview (Open Graph + X/Twitter). URLs must stay absolute. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="RAYDENTEC" />
+    <meta property="og:title" content={shareTitle} />
+    <meta property="og:description" content={shareDescription} />
+    <meta property="og:url" content={`${SITE_URL}/links`} />
+    <meta property="og:image" content={`${SITE_URL}${SHARE_IMAGE.path}`} />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content={String(SHARE_IMAGE.width)} />
+    <meta property="og:image:height" content={String(SHARE_IMAGE.height)} />
+    <meta property="og:image:alt" content={shareImageAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@raydentec" />
+    <meta name="twitter:title" content={shareTitle} />
+    <meta name="twitter:description" content={shareDescription} />
+    <meta name="twitter:image" content={`${SITE_URL}${SHARE_IMAGE.path}`} />
+    <meta name="twitter:image:alt" content={shareImageAlt} />
+    <link rel="preload" href="/assets/fonts/russo-one-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/assets/fonts/chakra-petch-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/assets/fonts/sora-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/assets/fonts/sora-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="/assets/fonts/fonts.css" />
+  </head>
+  <body>
+    <video class="bg-video" id="bgVideo" autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>
+
+    <div class="page">
+      <div class="topbar" aria-hidden="true"></div>
+
+      <main class="layout">
+        <section class="profile">
+          <div class="id">
+            <div class="logo"><img src="/assets/logo.svg" alt="RAYDENTEC logo" width="100" height="100" /></div>
+            <div>
+              <h1 class="name">{site.name}</h1>
+              <p class="tagline">{site.tagline} <b>{site.handle}</b></p>
+            </div>
+          </div>
+          <nav class="quick" aria-label="Quick links">
+            {
+              quick.map((q) => (
+                <a {...attrs(q.href)} aria-label={q.label}>
+                  <Icon name={q.icon} size={22} class="i" />
+                </a>
+              ))
+            }
+          </nav>
+        </section>
+
+        <div class="links">
+          <section class="sec" aria-labelledby="h-links">
+            <div class="sec-h"><h2 id="h-links">Links</h2></div>
+
+            {
+              website && (
+                <a class="lk pri" href="/">
+                  <Icon name={website.icon} class="i" />
+                  <span class="txt">
+                    <span class="lbl">{website.label}</span>
+                    <span class="cap">{SITE_URL.replace(/^https?:\/\/(www\.)?/, '')}</span>
+                  </span>
+                  <span class="arw">
+                    <Icon name="arrowRight" class="i" />
+                  </span>
+                </a>
+              )
+            }
+
+            <div class="grid">
+              {
+                links.map((l) => {
+                  const inner = (
+                    <>
+                      <Icon name={l.icon} class="i" />
+                      <span class="txt">
+                        <span class="lbl">{l.title}</span>
+                        <span class="cap">{l.handle ?? l.caption}</span>
+                      </span>
+                      <span class="arw">
+                        <Icon name="arrowRight" class="i" />
+                      </span>
+                    </>
+                  );
+                  return isPlaceholder(l.href) ? (
+                    <span class="lk main is-disabled" aria-disabled="true">
+                      {inner}
+                    </span>
+                  ) : (
+                    <a class="lk main" {...attrs(l.href)}>
+                      {inner}
+                    </a>
+                  );
+                })
+              }
+            </div>
+          </section>
+
+          {
+            more && (
+              <section class="sec" aria-labelledby="h-more">
+                <div class="sec-h">
+                  <h2 id="h-more">More Links</h2>
+                </div>
+                <div class="grid more">
+                  {more.links.map((m) =>
+                    isPlaceholder(m.href) ? (
+                      <span class="lk more is-disabled" aria-disabled="true">
+                        {m.icon && <Icon name={m.icon} size={20} class="i" />}
+                        <span class="lbl">{m.label}</span>
+                      </span>
+                    ) : (
+                      <a class="lk more" {...attrs(m.href)}>
+                        {m.icon && <Icon name={m.icon} size={20} class="i" />}
+                        <span class="lbl">{m.label}</span>
+                      </a>
+                    ),
+                  )}
+                </div>
+              </section>
+            )
+          }
+        </div>
+      </main>
+
+      <footer class="footer"><p>{site.footer.copyright}</p></footer>
+    </div>
+
+    <script is:inline>
+      // Only the clip that matches the layout (portrait below 1024px, as the site:
+      // scripts/bg-video.ts); none with reduced motion.
+      (function () {
+        var v = document.getElementById('bgVideo');
+        if (!v || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        var mq = matchMedia('(min-width: 1024px)');
+        function pick() {
+          var src = mq.matches ? '/assets/video/lightning-desktop.mp4' : '/assets/video/lightning-mobile.mp4';
+          if (v.getAttribute('src') !== src) {
+            v.src = src;
+            v.play().catch(function () {});
+          }
+        }
+        pick();
+        mq.addEventListener('change', pick);
+      })();
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  /* The links page's own look (it has none of the site's shell styles); the site's red. */
+  :root {
+    --red: #cc181e;
+    --red-accent: #ff2b34;
+    --line: #5a0d11;
+    --bg: #000000;
+    --text: #ece6de;
+    --name: #f4efe8;
+    --tagline: #cfc8c0;
+    --muted: #8c8680;
+    --tile: #1e1e1e;
+    --tile-hover: #2c2c2c;
+    --font-name: 'Russo One', system-ui, sans-serif;
+    --font-head: 'Sora', system-ui, sans-serif;
+    --font-ui: 'Chakra Petch', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  html {
+    background: var(--bg);
+  }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    color: var(--text);
+    font-family: var(--font-ui);
+    background:
+      linear-gradient(180deg, #2a0406 0%, #0e0102 20%, #000 36%, #000 84%, #1a0204 100%) fixed,
+      #000;
+    -webkit-font-smoothing: antialiased;
+  }
+  a {
+    color: inherit;
+  }
+  svg.i {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  /* Lightning video (screen-blended, black drops out). */
+  .bg-video {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    mix-blend-mode: screen;
+    opacity: 0.9;
+    pointer-events: none;
+    z-index: 0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bg-video {
+      display: none;
+    }
+  }
+
+  .page {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .topbar {
+    height: 4px;
+    background: var(--red);
+  }
+
+  /* Layout: mobile first. */
+  .layout {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 36px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+  .profile {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+  .id {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    text-align: center;
+  }
+  .logo {
+    width: 156px;
+    height: 156px;
+    padding: 28px;
+    background: #000;
+  }
+  .logo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .name {
+    margin: 0;
+    font-family: var(--font-name);
+    font-weight: 400;
+    font-size: 58px;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    color: var(--name);
+  }
+  .tagline {
+    margin: 8px 0 0;
+    font-family: var(--font-head);
+    font-weight: 500;
+    font-size: 15px;
+    line-height: 1.35;
+    color: var(--tagline);
+  }
+  .tagline b {
+    color: var(--red);
+    font-weight: 600;
+  }
+
+  .quick {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+  .quick a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    background: var(--tile);
+    color: var(--text);
+    transition:
+      background 0.15s,
+      color 0.15s;
+  }
+  .quick svg.i {
+    width: 22px;
+    height: 22px;
+  }
+
+  .links {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    min-width: 0;
+  }
+  .sec {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .sec-h {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .sec-h::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: var(--red-accent);
+    flex-shrink: 0;
+  }
+  .sec-h::after {
+    content: '';
+    flex-grow: 1;
+    height: 2px;
+    background: var(--line);
+  }
+  .sec-h h2 {
+    margin: 0;
+    font-family: var(--font-head);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .grid.more {
+    gap: 8px;
+  }
+
+  /* Buttons. */
+  .lk {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    min-height: 44px;
+    padding: 12px 14px;
+    text-decoration: none;
+    transition:
+      background 0.15s,
+      border-color 0.15s,
+      color 0.15s;
+  }
+  .lk .txt {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex-grow: 1;
+    min-width: 0;
+  }
+  .lbl {
+    font-weight: 600;
+    font-size: 15px;
+    line-height: 1.1;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .cap {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .arw {
+    display: flex;
+    transition: transform 0.15s;
+  }
+  .lk:focus-visible,
+  .quick a:focus-visible {
+    outline: 2px solid var(--red-accent);
+    outline-offset: 3px;
+  }
+
+  .lk.pri {
+    gap: 14px;
+    padding: 12px 16px;
+    background: var(--red);
+    border: 2px solid var(--red);
+    color: #000;
+  }
+  .lk.pri .lbl {
+    font-size: 17px;
+  }
+  .lk.pri .cap {
+    font-weight: 500;
+  }
+
+  .lk.main {
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid var(--red);
+    color: var(--red);
+  }
+  .lk.main .cap {
+    color: var(--muted);
+  }
+  /* Mobile: icon + label only. */
+  .lk.main .cap,
+  .lk.main .arw {
+    display: none;
+  }
+
+  .lk.more {
+    background: var(--tile);
+    border: 0;
+    color: var(--text);
+  }
+
+  /* Not published yet (no href): shown, but not a link. */
+  .lk.is-disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  /* Hover: only with a real pointer (on phones a tapped link stayed "hovered"). */
+  @media (hover: hover) {
+    .quick a:hover {
+      background: var(--red);
+      color: #000;
+    }
+    a.lk:hover .arw {
+      transform: translateX(4px);
+    }
+    a.lk.pri:hover {
+      background: #fff;
+      border-color: #fff;
+      color: #000;
+    }
+    a.lk.main:hover {
+      background: var(--red);
+      color: #000;
+    }
+    a.lk.main:hover .cap {
+      color: #000;
+    }
+    a.lk.more:hover {
+      background: var(--tile-hover);
+    }
+    a.lk.more:hover svg.i {
+      color: #fff;
+    }
+  }
+
+  .footer {
+    margin-top: auto;
+    border-top: 2px solid var(--line);
+    background: rgba(0, 0, 0, 0.55);
+  }
+  .footer p {
+    margin: 0 auto;
+    max-width: 480px;
+    padding: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+  }
+
+  /* Tablet + desktop sizing (stacked below 1360px so the link buttons keep room). */
+  @media (min-width: 1024px) {
+    body {
+      background:
+        linear-gradient(180deg, #2a0406 0%, #0e0102 28%, #000 50%, #000 78%, #1a0204 100%) fixed,
+        #000;
+    }
+    .topbar {
+      height: 5px;
+    }
+    .layout {
+      max-width: 960px;
+      gap: 56px;
+      padding: 56px 64px 40px;
+    }
+    .profile {
+      gap: 28px;
+    }
+    .id {
+      align-items: flex-start;
+      text-align: left;
+      gap: 28px;
+    }
+    .logo {
+      width: 232px;
+      height: 232px;
+      padding: 40px;
+    }
+    .name {
+      font-size: 94px;
+    }
+    .tagline {
+      font-size: 22px;
+      letter-spacing: 0.02em;
+      margin-top: 12px;
+    }
+    .quick {
+      justify-content: flex-start;
+      gap: 12px;
+    }
+    .quick a {
+      width: 56px;
+      height: 56px;
+    }
+    .sec {
+      gap: 12px;
+    }
+    .sec-h {
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .sec-h::before {
+      width: 9px;
+      height: 9px;
+    }
+    .sec-h h2 {
+      font-size: 15px;
+    }
+    .grid {
+      gap: 12px;
+    }
+    .grid.more {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    svg.i {
+      width: 22px;
+      height: 22px;
+    }
+    .lk {
+      gap: 16px;
+      padding: 14px 20px;
+    }
+    .lbl,
+    .lk.pri .lbl {
+      font-size: 20px;
+    }
+    .cap {
+      font-size: 13px;
+    }
+    @media (hover: hover) {
+      a.lk:hover .arw {
+        transform: translateX(6px);
+      }
+    }
+    .lk.main .cap {
+      display: block;
+    }
+    .lk.main .arw {
+      display: flex;
+    }
+    .lk.more {
+      padding: 16px 18px;
+    }
+    .lk.more .lbl {
+      font-size: 16px;
+    }
+    .lk.more svg.i {
+      width: 20px;
+      height: 20px;
+    }
+    .footer p {
+      max-width: 960px;
+      padding: 20px 64px;
+    }
+  }
+
+  /* Desktop: two columns. */
+  @media (min-width: 1360px) {
+    .layout {
+      max-width: 1440px;
+      display: grid;
+      grid-template-columns: 480px minmax(0, 1fr);
+      gap: 80px;
+      padding: 56px 96px 40px;
+    }
+    .footer p {
+      max-width: 1440px;
+      padding: 20px 96px;
+    }
+  }
+</style>

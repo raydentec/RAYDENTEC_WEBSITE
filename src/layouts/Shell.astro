@@ -15,7 +15,7 @@ import Rail from '../components/Rail.astro';
 import ScrollControl from '../components/ScrollControl.astro';
 import BgToggle from '../components/BgToggle.astro';
 import Sidebar from '../components/Sidebar.astro';
-import { getSite, type PageId } from '../lib/content';
+import { getSite, SHARE_IMAGE, SITE_URL, type PageId } from '../lib/content';
 
 interface Props {
   /** A menu page, or one outside the menu ('not-found': 404.astro, 'legal': pages/legal) —
@@ -39,6 +39,11 @@ const site = await getSite();
 const menuPage = page === 'not-found' || page === 'legal' ? undefined : page;
 const pageLabel = site.pages.find((p) => p.id === page)?.label ?? label ?? '';
 const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabel} · ${site.name}`;
+// Share preview (Open Graph + X): this page's title and address, the site bio, and the
+// share image (lib/content.ts SHARE_IMAGE — the same as /links). URLs must be absolute.
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const pageUrl = `${SITE_URL}${path === '/' ? '/' : path}`;
+const shareImage = `${SITE_URL}${SHARE_IMAGE.path}`;
 ---
 
 <!doctype html>
@@ -55,6 +60,22 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
     <meta name="theme-color" content="#000000" />
     <title>{title}</title>
     <link rel="icon" type="image/png" href="/assets/logo.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="RAYDENTEC" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={site.bio} />
+    <meta property="og:url" content={pageUrl} />
+    <meta property="og:image" content={shareImage} />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content={String(SHARE_IMAGE.width)} />
+    <meta property="og:image:height" content={String(SHARE_IMAGE.height)} />
+    <meta property="og:image:alt" content={SHARE_IMAGE.alt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@raydentec" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={site.bio} />
+    <meta name="twitter:image" content={shareImage} />
+    <meta name="twitter:image:alt" content={SHARE_IMAGE.alt} />
     <link rel="preload" href="/assets/fonts/sora-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/assets/fonts/sora-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/assets/fonts/chakra-petch-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin />

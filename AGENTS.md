@@ -45,7 +45,8 @@ src/
   layouts/Shell.astro      html/head, bg video + glow, nav, rail, sidebar, mobile header/menu,
                            #scroller (the content column), track, scroll control, footer, all scripts
   components/              ContainerFrame (the core frame), *Card, GameRow, Start*, Sidebar, Rail, …
-  pages/                   index (Start), games, projects, community, 404, legal/index, legal/[slug]
+  pages/                   index (Start), games, projects, community, 404, legal/index, legal/[slug],
+                           links (/links: a plain link-in-bio page, no Shell, its own styles)
   scripts/                 behaviour modules (see below); dom.ts = shared helpers
   styles/tokens.css        design tokens per breakpoint; global.css = base, buttons, page transitions
 public/assets/             logo, images, icons/*.svg, video/, fonts/ (self-hosted woff2)
@@ -86,6 +87,8 @@ clips at 1024, which is a separate breakpoint).
 - Projects: `category` must be one of `projectCategoryOrder` in `lib/project-categories.ts`.
   To add a category, add it there.
 - Community: link items + `type: "linkGrid"` items. The first 10 link items become the Social Accounts tiles.
+  The `/links` page (`pages/links.astro`) lists the same link items (with their optional `handle`, e.g.
+  `"@raydentec"`, under the label; else `caption`), the linkGrid's links and `site.json` sidebarSocials.
 - Games/Projects entries and most images are still **placeholders** (`placeholder-render.jpg`).
 - Legal docs: add a `.md` file to `src/content/legal/` and it gets the page `/legal/<filename>`.
 

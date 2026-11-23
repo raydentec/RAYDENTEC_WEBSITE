@@ -9,6 +9,7 @@
       "title": "YouTube",
       "description": "Starting from nothing, link into the creative process, as I fire up new worlds, games and tech.",
       "caption": "Watch videos on my channel",
+      "handle": "@raydentec",
       "href": "https://www.youtube.com/@raydentec",
       "image": "assets/placeholder-render.jpg",
       "buttonLabel": "OPEN LINK"
@@ -20,6 +21,7 @@
       "title": "Twitch",
       "description": "Go live with me while new worlds, games and tech take shape in real time.",
       "caption": "Join the live streams",
+      "handle": "twitch.tv/raydentec",
       "href": "https://www.twitch.tv/raydentec",
       "image": "assets/placeholder-render.jpg",
       "buttonLabel": "OPEN LINK"
@@ -31,6 +33,7 @@
       "title": "Instagram",
       "description": "Renders, stills and behind-the-scenes looks at the worlds in progress.",
       "caption": "See the latest renders",
+      "handle": "@raydentec",
       "href": "https://www.instagram.com/raydentec/",
       "image": "assets/placeholder-render.jpg",
       "buttonLabel": "OPEN LINK"
@@ -42,6 +45,7 @@
       "title": "Facebook",
       "description": "News, updates and behind-the-scenes posts as the worlds take shape.",
       "caption": "Follow on Facebook",
+      "handle": "facebook.com/raydentec",
       "href": "https://www.facebook.com/raydentec",
       "image": "assets/placeholder-render.jpg",
       "buttonLabel": "OPEN LINK"
@@ -53,6 +57,7 @@
       "title": "X",
       "description": "Quick updates, devlog notes and announcements as things ship.",
       "caption": "Follow for updates",
+      "handle": "@raydentec",
       "href": "https://x.com/raydentec",
       "image": "assets/placeholder-render.jpg",
       "buttonLabel": "OPEN LINK"
@@ -64,6 +69,7 @@
       "title": "Reddit",
       "description": "Discussions, devlog threads and questions about the games and tools.",
       "caption": "Join the discussion",
+      "handle": "u/raydentec",
       "href": "https://www.reddit.com/user/raydentec",
       "image": "assets/placeholder-render.jpg",
       "buttonLabel": "OPEN LINK"
@@ -75,6 +81,7 @@
       "title": "GitHub",
       "description": "Code, tools and experiments behind the games and projects.",
       "caption": "Browse the repositories",
+      "handle": "github.com/raydentec",
       "href": "https://github.com/raydentec",
       "image": "assets/placeholder-render.jpg",
       "buttonLabel": "OPEN LINK"
@@ -86,6 +93,7 @@
       "title": "ArtStation",
       "description": "Portfolio of characters, environments and concept art.",
       "caption": "View the portfolio",
+      "handle": "artstation.com/raydentec",
       "href": "https://www.artstation.com/raydentec",
       "image": "assets/placeholder-render.jpg",
       "buttonLabel": "OPEN LINK"
@@ -109,6 +117,7 @@
       "title": "E-mail",
       "description": "For collaborations, press and business inquiries.",
       "caption": "Get in touch",
+      "handle": "info@raydentec.com",
       "href": "mailto:info@raydentec.com",
       "image": "assets/placeholder-render.jpg",
       "buttonLabel": "SEND EMAIL"
