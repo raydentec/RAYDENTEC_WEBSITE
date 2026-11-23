@@ -97,6 +97,19 @@ function settle(scroller: HTMLElement, align: boolean) {
     home = null;
     return;
   }
+  // Phones turned sideways: no CSS snapping there (Shell.astro) — a container that fits the
+  // visible area is aligned to whichever top is nearest the snap line (as snapping would);
+  // within a tall one scrolling is free, all the way to its bottom.
+  if (mq.phoneLandscape.matches) {
+    const all = containers(scroller);
+    const span = snapSpans(scroller)[all.indexOf(target)];
+    home = target;
+    if (span && span.end - span.start > 2) return;
+    const to = nearestToSnapLine(scroller) ?? target;
+    const off = snapTop(to) - snapLine(scroller);
+    if (Math.abs(off) > 1) glideScroll(scroller, { top: scroller.scrollTop + off });
+    return;
+  }
   // Within the container last rested in, scrolling is free (also partway into a tall one,
   // where snapping is off). Come to rest in another one — scrolling up into a tall one too —
   // its top is aligned: the visitor scrolls on down through it from there.

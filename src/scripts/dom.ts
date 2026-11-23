@@ -12,6 +12,8 @@ export const mq = {
   touchColumn: matchMedia('(max-width: 767px) and (pointer: coarse)'),
   desktop: matchMedia('(min-width: 1280px)'),
   mobile: matchMedia('(max-width: 767px)'),
+  /** A phone turned sideways (touch, landscape, at most 540px tall: the tablet layout, low). */
+  phoneLandscape: matchMedia('(orientation: landscape) and (pointer: coarse) and (max-height: 540px)'),
   reducedMotion: matchMedia('(prefers-reduced-motion: reduce)'),
 };
 
@@ -462,7 +464,8 @@ export const snapTop = (cf: Element) =>
  */
 export function visibleBottom(scroller: HTMLElement) {
   const bottom = scroller.getBoundingClientRect().bottom;
-  if (!mq.mobile.matches) return bottom;
+  // Mobile, and phones turned sideways (the SCROLL button covers the column's bottom there too).
+  if (!mq.mobile.matches && !mq.phoneLandscape.matches) return bottom;
   const tops = Array.from(document.querySelectorAll<HTMLElement>('[data-scroll-ctl], .mmenu__bar'))
     .map((el) => el.getBoundingClientRect())
     .filter((r) => r.height > 0)

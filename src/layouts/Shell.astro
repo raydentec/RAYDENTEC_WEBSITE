@@ -194,6 +194,21 @@ const title = page === 'start' ? `${site.name} · ${site.tagline}` : `${pageLabe
     display: none;
   }
 
+  /* Phones turned sideways (touch, landscape, at most 540px tall; the tablet layout, low):
+     the browser's snapping kept pulling the column back to a tall container's top (Safari
+     decides where a fling lands before the script can switch snapping off), so nothing
+     reached the bottom. There the script aligns instead (scripts/snap.ts: containers that fit
+     to their top, tall ones scroll freely). Empty space at the end, as on mobile, so the last
+     content scrolls clear of the SCROLL button with 16px above it. */
+  @media (orientation: landscape) and (pointer: coarse) and (max-height: 540px) {
+    .scroller {
+      scroll-snap-type: none !important;
+    }
+    .column {
+      padding-bottom: max(var(--tail, 0px), calc(var(--ctl-bottom) - var(--footer-h) + var(--ctl-h) + 16px));
+    }
+  }
+
   /*
    * Background switch, tablet and up: top right of the window, top on the logo's top
    * edge (the nav row), right edge in line with the scroll control's. Mobile has its own
