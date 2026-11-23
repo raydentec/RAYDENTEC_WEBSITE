@@ -142,8 +142,12 @@ import Icon from './Icon.astro';
       width: calc(100vw - 2 * var(--gutter));
       z-index: 6;
     }
-    /* Mobile: arrow-only (↓ or ↑ by mode) as soon as the page scrolls — except the
-       full-width BACK TO TOP kept open on the last container. */
+  }
+  /* Mobile, and phones turned sideways (touch, landscape, at most 540px tall: the tablet
+     layout, but a tap "hovered" it open there as on desktop): arrow-only (↓ or ↑ by mode) as
+     soon as the page scrolls — except the full-width BACK TO TOP kept open on the last
+     container. */
+  @media (max-width: 767px), (orientation: landscape) and (pointer: coarse) and (max-height: 540px) {
     [data-state='scroll']:not([data-mode='up']),
     [data-state='idle'] {
       width: var(--ctl-h);
