@@ -9,7 +9,9 @@
  *   - the main links: the Community page's link items (the Social Accounts tiles),
  *     content/community.json, with their `handle` (else `caption`) under the label;
  *     a link without an href yet (Discord) shows disabled (lib/content.ts isPlaceholder);
- *   - "More Links": the Community page's "More ways to connect" grid.
+ *   - "More Links": the Community page's "More ways to connect" grid;
+ *   - the section headings (linksPage), the logo's alt text, the share site name / X account:
+ *     content/site.json.
  * Fonts: the site's (public/assets/fonts/fonts.css); video: public/assets/video (the clip
  * picked as in scripts/bg-video.ts: portrait below 1024px); icons: public/assets/icons.
  * The site's own address ("Website") links to / (same tab); the others open in a new tab
@@ -54,7 +56,7 @@ const shareImageAlt = SHARE_IMAGE.alt;
     <link rel="canonical" href={`${SITE_URL}/links`} />
     <!-- Share preview (Open Graph + X/Twitter). URLs must stay absolute. -->
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="RAYDENTEC" />
+    <meta property="og:site_name" content={site.share.siteName} />
     <meta property="og:title" content={shareTitle} />
     <meta property="og:description" content={shareDescription} />
     <meta property="og:url" content={`${SITE_URL}/links`} />
@@ -64,7 +66,7 @@ const shareImageAlt = SHARE_IMAGE.alt;
     <meta property="og:image:height" content={String(SHARE_IMAGE.height)} />
     <meta property="og:image:alt" content={shareImageAlt} />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@raydentec" />
+    <meta name="twitter:site" content={site.share.xAccount} />
     <meta name="twitter:title" content={shareTitle} />
     <meta name="twitter:description" content={shareDescription} />
     <meta name="twitter:image" content={`${SITE_URL}${SHARE_IMAGE.path}`} />
@@ -84,7 +86,7 @@ const shareImageAlt = SHARE_IMAGE.alt;
       <main class="layout">
         <section class="profile">
           <div class="id">
-            <div class="logo"><img src="/assets/logo.svg" alt="RAYDENTEC logo" width="100" height="100" /></div>
+            <div class="logo"><img src="/assets/logo.svg" alt={site.logoAlt} width="100" height="100" /></div>
             <div>
               <h1 class="name">{site.name}</h1>
               <p class="tagline">{site.tagline} <b>{site.handle}</b></p>
@@ -103,7 +105,7 @@ const shareImageAlt = SHARE_IMAGE.alt;
 
         <div class="links">
           <section class="sec" aria-labelledby="h-links">
-            <div class="sec-h"><h2 id="h-links">Links</h2></div>
+            <div class="sec-h"><h2 id="h-links">{site.linksPage.linksTitle}</h2></div>
 
             {
               website && (
@@ -153,7 +155,7 @@ const shareImageAlt = SHARE_IMAGE.alt;
             more && (
               <section class="sec" aria-labelledby="h-more">
                 <div class="sec-h">
-                  <h2 id="h-more">More Links</h2>
+                  <h2 id="h-more">{site.linksPage.moreTitle}</h2>
                 </div>
                 <div class="grid more">
                   {more.links.map((m) =>
@@ -295,11 +297,10 @@ const shareImageAlt = SHARE_IMAGE.alt;
     gap: 20px;
     text-align: center;
   }
+  /* The logo file is the black square with its padding (public/assets/logo.svg). */
   .logo {
     width: 156px;
     height: 156px;
-    padding: 28px;
-    background: #000;
   }
   .logo img {
     display: block;
@@ -553,7 +554,6 @@ const shareImageAlt = SHARE_IMAGE.alt;
     .logo {
       width: 232px;
       height: 232px;
-      padding: 40px;
     }
     .name {
       font-size: 94px;

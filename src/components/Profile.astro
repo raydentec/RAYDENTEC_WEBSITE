@@ -14,7 +14,7 @@ const site = await getSite();
 
 <div class="profile">
   <BgToggle class="profile__bg" />
-  <img class="profile__logo" src="/assets/logo.png" alt="RAYDENTEC logo" width="170" height="170" />
+  <img class="profile__logo" src="/assets/logo.svg" alt={site.logoAlt} width="170" height="170" />
   <p class="profile__name">{site.name}</p>
   <p class="profile__tagline">
     {site.tagline}<br /><span class="profile__handle">{site.handle}</span>

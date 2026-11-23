@@ -59,9 +59,9 @@ const shareImage = `${SITE_URL}${SHARE_IMAGE.path}`;
     <meta name="description" content={site.bio} />
     <meta name="theme-color" content="#000000" />
     <title>{title}</title>
-    <link rel="icon" type="image/png" href="/assets/logo.png" />
+    <link rel="icon" type="image/svg+xml" href="/assets/logo.svg" />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="RAYDENTEC" />
+    <meta property="og:site_name" content={site.share.siteName} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={site.bio} />
     <meta property="og:url" content={pageUrl} />
@@ -71,7 +71,7 @@ const shareImage = `${SITE_URL}${SHARE_IMAGE.path}`;
     <meta property="og:image:height" content={String(SHARE_IMAGE.height)} />
     <meta property="og:image:alt" content={SHARE_IMAGE.alt} />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@raydentec" />
+    <meta name="twitter:site" content={site.share.xAccount} />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={site.bio} />
     <meta name="twitter:image" content={shareImage} />

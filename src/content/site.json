@@ -65,5 +65,14 @@
     "copyright": "© 2026 RAYDENTEC. All rights reserved.",
     "legalLabel": "Legal Info",
     "legalHref": "/legal"
+  },
+  "logoAlt": "RAYDENTEC logo",
+  "share": {
+    "siteName": "RAYDENTEC",
+    "xAccount": "@raydentec"
+  },
+  "linksPage": {
+    "linksTitle": "Links",
+    "moreTitle": "More Links"
   }
 }

@@ -38,6 +38,12 @@ const site = defineCollection({
     sidebarSocials: z.array(z.object({ icon: z.string(), label: z.string(), href })),
     pages: z.array(z.object({ id: z.enum(['start', 'games', 'projects', 'community']), label: z.string() })),
     footer: z.object({ copyright: z.string(), legalLabel: z.string(), legalHref: href }),
+    /** The logo image's text alternative (Profile, LowerThird, Rail, pages/links.astro). */
+    logoAlt: z.string(),
+    /** Share previews (Open Graph site name, X account): Shell.astro, pages/links.astro. */
+    share: z.object({ siteName: z.string(), xAccount: z.string() }),
+    /** The /links page's section headings (pages/links.astro). */
+    linksPage: z.object({ linksTitle: z.string(), moreTitle: z.string() }),
   }),
 });
 

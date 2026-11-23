@@ -6,7 +6,7 @@
  * the page's <h1>. Positioned by StartHero.astro.
  */
 import Icon from './Icon.astro';
-import { linkAttrs } from '../lib/content';
+import { getSite, linkAttrs } from '../lib/content';
 
 interface Props {
   name: string;
@@ -19,12 +19,13 @@ interface Props {
 }
 
 const { name, tagline, handle, bio, joinPrompt, ctas, class: className } = Astro.props;
+const site = await getSite();
 ---
 
 <section class:list={['lt', className]} aria-label="Introduction">
   <div class="lt__main">
     <div class="lt__id">
-      <img class="lt__logo" src="/assets/logo.png" alt="RAYDENTEC logo" width="94" height="94" />
+      <img class="lt__logo" src="/assets/logo.svg" alt={site.logoAlt} width="94" height="94" />
       <div class="lt__names">
         <h1 class="lt__name">{name}</h1>
         <p class="lt__tagline">{tagline} <span class="lt__handle">{handle}</span></p>
