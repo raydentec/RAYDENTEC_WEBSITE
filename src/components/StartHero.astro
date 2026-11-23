@@ -30,8 +30,10 @@ import LowerThird from './LowerThird.astro';
 import { asset } from '../lib/content';
 
 interface Props {
-  /** mobilePosition: this slide's own mobile object-position (else imagePosition.mobile). */
-  images: { src: string; mobilePosition?: string }[];
+  /** mobilePosition: this slide's own mobile object-position (else imagePosition.mobile);
+      portrait: an upright image for phones held upright (PORTRAIT_MEDIA), placed by
+      portraitPosition (else center). */
+  images: { src: string; mobilePosition?: string; portrait?: string; portraitPosition?: string }[];
   imageAlt: string;
   imagePosition: { desktop: string; tablet: string; mobile: string };
   name: string;
@@ -51,10 +53,19 @@ const slides = [
   ...(looped ? [{ image: images[0], clone: true }] : []),
 ].map(({ image, clone }) => ({
   src: image.src,
+  portrait: image.portrait,
   clone,
-  // Overrides the hero's --pos-mobile for this slide (and its copy).
-  style: image.mobilePosition ? `--pos-mobile: ${image.mobilePosition}` : undefined,
+  // Overrides the hero's --pos-mobile / --pos-portrait for this slide (and its copy).
+  style:
+    [
+      image.mobilePosition && `--pos-mobile: ${image.mobilePosition}`,
+      image.portraitPosition && `--pos-portrait: ${image.portraitPosition}`,
+    ]
+      .filter(Boolean)
+      .join('; ') || undefined,
 }));
+// Phones held upright: a slide's portrait image instead (the same query as its CSS below).
+const PORTRAIT_MEDIA = '(max-width: 767px) and (orientation: portrait)';
 const first = looped ? 1 : 0;
 const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imagePosition.tablet}; --pos-mobile: ${imagePosition.mobile}`;
 ---
@@ -63,22 +74,34 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
   <div class="hero__art" aria-hidden={imageAlt ? undefined : 'true'}>
     <div class:list={['hero__track', { 'hero__track--single': images.length < 2 }]} data-slide-track>
       {
-        slides.map(({ src, clone, style }, i) => (
-          <img
-            class="hero__img"
-            data-slide={clone ? undefined : ''}
-            data-slide-clone={clone ? '' : undefined}
-            src={asset(src)}
-            style={style}
-            alt={clone ? '' : imageAlt}
-            width="1920"
-            height="1080"
-            decoding="async"
-            draggable="false"
-            loading={i === first ? 'eager' : 'lazy'}
-            fetchpriority={i === first ? 'high' : undefined}
-          />
-        ))
+        slides.map(({ src, portrait, clone, style }, i) => {
+          const img = (
+            <img
+              class:list={['hero__img', { 'hero__img--portrait': portrait }]}
+              data-slide={clone ? undefined : ''}
+              data-slide-clone={clone ? '' : undefined}
+              src={asset(src)}
+              style={style}
+              alt={clone ? '' : imageAlt}
+              width="1920"
+              height="1080"
+              decoding="async"
+              draggable="false"
+              loading={i === first ? 'eager' : 'lazy'}
+              fetchpriority={i === first ? 'high' : undefined}
+            />
+          );
+          // <picture> lays out as if it weren't there (display: contents): the img stays the
+          // track's slide.
+          return portrait ? (
+            <picture class="hero__pic">
+              <source media={PORTRAIT_MEDIA} srcset={asset(portrait)} width="1080" height="1920" />
+              {img}
+            </picture>
+          ) : (
+            img
+          );
+        })
       }
     </div>
   </div>
@@ -196,6 +219,11 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
      Firefox would pull each frame's position back to the nearest slide. */
   .hero__track[data-gliding] {
     scroll-snap-type: none;
+  }
+  /* A slide change under way (scripts/hero-slider.ts): input is ignored until it has
+     finished — a finger can't pan the track sideways meanwhile (vertical still scrolls). */
+  .hero__track[data-switching] {
+    touch-action: pan-y;
   }
   /* iPhone / iPad: sideways touch is the script's alone (scripts/ios-swipe.ts), as the rows'. */
   :global(html[data-ios-touch]) .hero__track {
@@ -401,6 +429,17 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
     .hero__dots {
       width: auto;
       margin-inline: 18px;
+    }
+  }
+
+  /* Phones held upright (PORTRAIT_MEDIA above): a slide with a portrait image shows that
+     instead (<picture>), placed by its portraitPosition (--pos-portrait, else centred). */
+  .hero__pic {
+    display: contents;
+  }
+  @media (max-width: 767px) and (orientation: portrait) {
+    .hero__img--portrait {
+      object-position: var(--pos-portrait, center);
     }
   }
 </style>

@@ -52,14 +52,27 @@ const start = defineCollection({
     hero: z.object({
       /**
        * Slider images (StartHero.astro), shown in this order: a path, or
-       * { src, mobilePosition } to give that slide its own mobile object-position
-       * (otherwise imagePosition.mobile). Normalised to { src, mobilePosition? }.
+       * { src, mobilePosition, portrait, portraitPosition }: mobilePosition gives that slide
+       * its own mobile object-position (otherwise imagePosition.mobile); portrait is an
+       * upright image shown instead on phones held upright (narrow + portrait), placed by
+       * portraitPosition (default center). Normalised to { src, mobilePosition?, portrait?,
+       * portraitPosition? }.
        */
       images: z
         .array(
           z.union([
-            assetPath.transform((src) => ({ src, mobilePosition: undefined as string | undefined })),
-            z.object({ src: assetPath, mobilePosition: z.string().optional() }),
+            assetPath.transform((src) => ({
+              src,
+              mobilePosition: undefined as string | undefined,
+              portrait: undefined as string | undefined,
+              portraitPosition: undefined as string | undefined,
+            })),
+            z.object({
+              src: assetPath,
+              mobilePosition: z.string().optional(),
+              portrait: assetPath.optional(),
+              portraitPosition: z.string().optional(),
+            }),
           ]),
         )
         .min(1),
