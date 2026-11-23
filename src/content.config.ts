@@ -54,7 +54,7 @@ const start = defineCollection({
        * Slider images (StartHero.astro), shown in this order: a path, or
        * { src, mobilePosition, portrait, portraitPosition }: mobilePosition gives that slide
        * its own mobile object-position (otherwise imagePosition.mobile); portrait is an
-       * upright image shown instead on phones held upright (narrow + portrait), placed by
+       * upright image shown instead in the mobile layout (under 768px wide), placed by
        * portraitPosition (default center). Normalised to { src, mobilePosition?, portrait?,
        * portraitPosition? }.
        */

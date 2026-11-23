@@ -31,7 +31,7 @@ import { asset } from '../lib/content';
 
 interface Props {
   /** mobilePosition: this slide's own mobile object-position (else imagePosition.mobile);
-      portrait: an upright image for phones held upright (PORTRAIT_MEDIA), placed by
+      portrait: an upright image for the mobile layout (PORTRAIT_MEDIA), placed by
       portraitPosition (else center). */
   images: { src: string; mobilePosition?: string; portrait?: string; portraitPosition?: string }[];
   imageAlt: string;
@@ -64,8 +64,10 @@ const slides = [
       .filter(Boolean)
       .join('; ') || undefined,
 }));
-// Phones held upright: a slide's portrait image instead (the same query as its CSS below).
-const PORTRAIT_MEDIA = '(max-width: 767px) and (orientation: portrait)';
+// The mobile layout (its hero is tall, whatever the window's height): a slide's portrait
+// image instead — not tied to the orientation, or a window made lower than wide swapped the
+// image mid-way. The same query as its CSS below.
+const PORTRAIT_MEDIA = '(max-width: 767px)';
 const first = looped ? 1 : 0;
 const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imagePosition.tablet}; --pos-mobile: ${imagePosition.mobile}`;
 ---
@@ -219,11 +221,6 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
      Firefox would pull each frame's position back to the nearest slide. */
   .hero__track[data-gliding] {
     scroll-snap-type: none;
-  }
-  /* A slide change under way (scripts/hero-slider.ts): input is ignored until it has
-     finished — a finger can't pan the track sideways meanwhile (vertical still scrolls). */
-  .hero__track[data-switching] {
-    touch-action: pan-y;
   }
   /* iPhone / iPad: sideways touch is the script's alone (scripts/ios-swipe.ts), as the rows'. */
   :global(html[data-ios-touch]) .hero__track {
@@ -432,12 +429,12 @@ const positions = `--pos-desktop: ${imagePosition.desktop}; --pos-tablet: ${imag
     }
   }
 
-  /* Phones held upright (PORTRAIT_MEDIA above): a slide with a portrait image shows that
+  /* The mobile layout (PORTRAIT_MEDIA above): a slide with a portrait image shows that
      instead (<picture>), placed by its portraitPosition (--pos-portrait, else centred). */
   .hero__pic {
     display: contents;
   }
-  @media (max-width: 767px) and (orientation: portrait) {
+  @media (max-width: 767px) {
     .hero__img--portrait {
       object-position: var(--pos-portrait, center);
     }

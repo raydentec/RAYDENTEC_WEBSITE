@@ -80,8 +80,8 @@ clips at 1024, which is a separate breakpoint).
 - `releaseDate` is `YYYY-MM-DD`. Games rows and Projects groups list items newest first.
 - Start hero `images`: a path, or `{ "src": "assets/…", "mobilePosition": "center" }` to give
   that slide its own mobile placement (CSS `object-position`; otherwise `imagePosition.mobile`).
-  Add `"portrait": "assets/…"` for an upright image shown instead on phones held upright
-  (`max-width: 767px` + portrait), placed by `"portraitPosition"` (default `center`).
+  Add `"portrait": "assets/…"` for an upright image shown instead in the mobile layout
+  (`max-width: 767px`, any orientation), placed by `"portraitPosition"` (default `center`).
 - Games: one row per category (rows sorted alphabetically). A game in several categories appears in each of their rows.
 - Projects: `category` must be one of `projectCategoryOrder` in `lib/project-categories.ts`.
   To add a category, add it there.

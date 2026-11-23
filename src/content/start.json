@@ -3,15 +3,15 @@
   "_note": "Replaces content/start.json from handoff v2. Two snap sections: hero, then explore.",
   "hero": {
     "images": [
-      { "src": "assets/placeholder-render.jpg", "mobilePosition": "50% center", "portrait": "assets/image-placeholder-portrait.jpg" },
-      { "src": "assets/placeholder-render.jpg", "mobilePosition": "62% center", "portrait": "assets/image-placeholder-portrait.jpg" },
-      { "src": "assets/placeholder-render.jpg", "mobilePosition": "62% center", "portrait": "assets/image-placeholder-portrait.jpg" }
+      { "src": "assets/placeholder-render.jpg", "mobilePosition": "50% 35%", "portrait": "assets/image-placeholder-portrait.jpg", "portraitPosition": "50% 35%" },
+      { "src": "assets/placeholder-render.jpg", "mobilePosition": "50% 35%", "portrait": "assets/image-placeholder-portrait.jpg", "portraitPosition": "50% 35%" },
+      { "src": "assets/placeholder-render.jpg", "mobilePosition": "50% 35%", "portrait": "assets/image-placeholder-portrait.jpg", "portraitPosition": "50% 35%" }
     ],
     "imageAlt": "",
     "imagePosition": {
-      "desktop": "center 35%",
-      "tablet": "center 35%",
-      "mobile": "62% center"
+      "desktop": "50% 35%",
+      "tablet": "50% 35%",
+      "mobile": "50% 35%"
     },
     "name": "RAYDEN",
     "tagline": "Creator of Virtual Worlds",

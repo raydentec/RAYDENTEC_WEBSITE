@@ -3,9 +3,10 @@
  * scrolls and snaps sideways — swipe (stopping at the next slide, scroll-snap-stop), and
  * ← / → while the hero is in view (one slide per press). A touch swipe moves one slide,
  * decided when let go (`swipe`). Every switch counts at once: its line lights. While a switch
- * is under way (`switching`: the glide to its slide) all input is ignored — arrows, keys,
- * lines, wheel, touch (the track can't be panned meanwhile: data-switching, StartHero.astro) —
- * the next switch can only start once it has finished. Sideways wheel /
+ * is under way (`switching`: the glide to its slide) the arrow buttons, lines, keys and wheel
+ * are ignored — their next switch only once it has finished; touch isn't: a finger takes the
+ * track over mid-switch and swipes on from the slide it was heading to (quick swipes add
+ * up). Sideways wheel /
  * trackpad / Shift+wheel input doesn't scroll the track natively: each gesture switches
  * one slide by script (as the indicator lines do), and the rest of the gesture (further
  * notches, trackpad momentum) is ignored until the next gesture (dom.ts wheelGesture).
@@ -31,7 +32,7 @@
  * in Chrome, short and abrupt in Firefox / Safari. The glide (GLIDE_EASE: fitted to
  * Chrome's; GLIDE_MS longer) steps scrollLeft every frame with snapping paused
  * (data-gliding, StartHero.astro), so it looks the same everywhere. Touching the track
- * doesn't stop it (see `switching`).
+ * stops it (a mouse press doesn't: see `switching`).
  */
 import {
   CHROME_EASE,
@@ -94,11 +95,8 @@ let wheelOf = -1;
 let glideFrame = 0;
 let glideTrack: HTMLElement | null = null;
 
-/** A switch is under way (a glide to its slide): input is ignored until it has finished (see top). */
+/** A switch is under way (a glide to its slide): buttons, keys and wheel wait until it has finished (see top). */
 const switching = () => glideFrame !== 0;
-function markSwitching(t: HTMLElement | null, on: boolean) {
-  if (t) t.toggleAttribute('data-switching', on);
-}
 
 /** Stop a running glide where it is; snapping takes over again. */
 function stopGlide() {
@@ -108,7 +106,6 @@ function stopGlide() {
   cancelAnimationFrame(glideFrame);
   glideFrame = 0;
   delete glideTrack?.dataset.gliding;
-  markSwitching(glideTrack, false);
   glideTrack = null;
 }
 
@@ -140,7 +137,6 @@ function scrollToSlide(root: HTMLElement, index: number, v0 = 0) {
   const from = t.scrollLeft;
   if (mq.reducedMotion.matches || Math.abs(to - from) < 1) {
     delete t.dataset.gliding;
-    markSwitching(t, false);
     glideTrack = null;
     t.scrollTo({ left: to, behavior: 'instant' });
     releaseMomentum(t);
@@ -148,7 +144,6 @@ function scrollToSlide(root: HTMLElement, index: number, v0 = 0) {
   }
   // Glide by script (see top); settle once it has arrived.
   t.dataset.gliding = '';
-  markSwitching(t, true);
   glideTrack = t;
   // From where it is on the first frame (a touch swipe's fling gets one frame in first, see
   // dom.ts glideScroll): no jump back.
@@ -175,7 +170,6 @@ function scrollToSlide(root: HTMLElement, index: number, v0 = 0) {
     glideFrame = 0;
     glideTrack = null;
     delete t.dataset.gliding;
-    markSwitching(t, false);
     releaseMomentum(t); // arrived: the user can scroll it again
     window.clearTimeout(settleTimer);
     settle(root);
@@ -319,7 +313,7 @@ for (const type of ['touchstart', 'pointerdown'] as const) {
       // A touch also fires pointerdown (first): touchstart handles it, with the target intact.
       if (type === 'pointerdown' && (e as PointerEvent).pointerType === 'touch') return;
       if (type === 'touchstart' && IOS_TOUCH) return; // iOS: ios-swipe.ts (below)
-      if (switching()) return; // ignored: the switch under way goes on (see top)
+      if (type === 'pointerdown' && switching()) return; // a mouse press: the switch goes on (see top)
       const root = slider();
       const heading = target;
       stopGlide();
@@ -372,7 +366,7 @@ let iosHeading: number | null = null;
 bindIosSwipe('[data-slide-track]', {
   start(t) {
     const root = t.closest<HTMLElement>('[data-slider]');
-    if (!root || !looped(root) || switching()) return null; // during a switch: ignored (see top)
+    if (!root || !looped(root)) return null;
     const n = count(root);
     iosHeading = target;
     const base = target === null ? current : ((target % n) + n) % n;
