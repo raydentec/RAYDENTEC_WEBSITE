@@ -71,11 +71,45 @@ const shareImageAlt = SHARE_IMAGE.alt;
     <meta name="twitter:description" content={shareDescription} />
     <meta name="twitter:image" content={`${SITE_URL}${SHARE_IMAGE.path}`} />
     <meta name="twitter:image:alt" content={shareImageAlt} />
+    <!-- Every font the page shows, preloaded (without, the later ones swapped in from the
+         fallback after the first paint): the name, tagline / handle / headings, labels,
+         captions, footer. -->
     <link rel="preload" href="/assets/fonts/russo-one-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="/assets/fonts/chakra-petch-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/assets/fonts/sora-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/assets/fonts/sora-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/assets/fonts/sora-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/assets/fonts/chakra-petch-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/assets/fonts/chakra-petch-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/assets/fonts/ibm-plex-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/assets/fonts/ibm-plex-mono-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="/assets/fonts/fonts.css" />
+    <!-- The content waits for its fonts (html.fonts-wait, below): shown once, in them, never
+         first in the fallback — at most FONT_WAIT_MS, so a slow font never keeps it hidden. -->
+    <script is:inline>
+      (function () {
+        var FONT_WAIT_MS = 1000;
+        var root = document.documentElement;
+        if (!document.fonts || !document.fonts.load) return;
+        root.classList.add('fonts-wait');
+        var show = function () {
+          root.classList.remove('fonts-wait');
+        };
+        // Asked for by name: this early nothing has requested them yet (fonts.ready alone
+        // could resolve at once).
+        var faces = [
+          '400 1em "Russo One"',
+          '500 1em Sora',
+          '600 1em Sora',
+          '700 1em Sora',
+          '500 1em "Chakra Petch"',
+          '600 1em "Chakra Petch"',
+          '400 1em "IBM Plex Mono"',
+          '500 1em "IBM Plex Mono"',
+        ];
+        Promise.all(faces.map(function (f) { return document.fonts.load(f); })).then(show, show);
+        setTimeout(show, FONT_WAIT_MS);
+      })();
+    </script>
   </head>
   <body>
     <video class="bg-video" id="bgVideo" autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>
@@ -269,6 +303,11 @@ const shareImageAlt = SHARE_IMAGE.alt;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+  }
+  /* Waiting for the fonts (the script in <head>): the content hidden, the background and the
+     video not. */
+  html.fonts-wait .page {
+    visibility: hidden;
   }
   .topbar {
     height: 4px;
