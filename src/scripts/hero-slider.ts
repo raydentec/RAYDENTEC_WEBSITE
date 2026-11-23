@@ -115,6 +115,38 @@ const count = (root: HTMLElement) => root.querySelectorAll('[data-slide]').lengt
 const looped = (root: HTMLElement) => count(root) > 1;
 const dots = (root: HTMLElement) => Array.from(root.querySelectorAll<HTMLElement>('[data-slide-dot]'));
 
+/**
+ * The track's width when it was last placed on its slide (place). A different width now
+ * (the window resized, a phone turned): the slides have moved under its scroll position, so
+ * that position says nothing about the current slide until place() has run again (the track's
+ * ResizeObserver, onPageLoad) — scroll events meanwhile don't re-pick it (they picked the
+ * wrong slide, or a copy, and turning back left the slides out of line).
+ */
+let trackW = 0;
+const resized = (t: HTMLElement) => t.clientWidth !== trackW;
+let trackObserver: ResizeObserver | null = null;
+
+/**
+ * A finger takes over mid-switch: the slide to count from — the one the switch was heading to
+ * (`heading`; current when none). Heading to a copy (past either end), the track is moved at
+ * once to the same spot by the real slide it shows (they look the same) and the count goes on
+ * from that real slide: counted from the real slide while the track was still by the copy,
+ * the release glided back across all the slides (a full loop of fast swipes reversed).
+ */
+function takeOver(t: HTMLElement, root: HTMLElement, heading: number | null) {
+  const n = count(root);
+  let base = heading ?? current;
+  if (base >= n || base < 0) {
+    const shift = base >= n ? -n : n;
+    // Snapping paused first (the touch keeps it paused): with it on, Chrome snapped the moved
+    // track to the nearest slide edge — a jump back.
+    t.dataset.gliding = '';
+    t.scrollTo({ left: t.scrollLeft + shift * t.clientWidth, behavior: 'instant' });
+    base += shift;
+  }
+  return base;
+}
+
 /** Slide the track rests at: -1 = copy of the last, count = copy of the first. */
 const position = (t: HTMLElement) => (t.clientWidth ? Math.round(t.scrollLeft / t.clientWidth) - 1 : 0);
 /** Track offset of a slide (the copy of the last comes first). */
@@ -185,6 +217,7 @@ function lightDot(root: HTMLElement, index: number) {
 function settle(root: HTMLElement) {
   const t = track(root);
   if (!t || !looped(root) || touching) return; // settles again on touchend
+  if (resized(t)) return; // resized: place() puts it back on its slide (see trackW)
   const n = count(root);
   let index = position(t);
   // Scrolling by script: wait until it has arrived.
@@ -270,7 +303,7 @@ document.addEventListener(
     const t = e.target;
     if (!(t instanceof HTMLElement) || !t.matches('[data-slide-track]')) return;
     const root = t.closest<HTMLElement>('[data-slider]');
-    if (!root || !looped(root)) return;
+    if (!root || !looped(root) || resized(t)) return; // resized: see trackW
     // Scrolled by hand: no timer until the track rests (settle).
     if (target === null) window.clearInterval(timer);
     const n = count(root);
@@ -320,9 +353,8 @@ for (const type of ['touchstart', 'pointerdown'] as const) {
       target = null;
       if (type === 'touchstart' && root) {
         touching = true;
-        const n = count(root);
-        const base = heading === null ? current : (heading + n) % n;
         const t = track(root);
+        const base = t ? takeOver(t, root, heading) : current;
         // Mid-switch: snapping paused until let go (it would snap back meanwhile); from rest it
         // stays on, so Chrome's own fling (a frame before the release glide) aims at the next
         // slide instead of flying past it.
@@ -367,10 +399,9 @@ bindIosSwipe('[data-slide-track]', {
   start(t) {
     const root = t.closest<HTMLElement>('[data-slider]');
     if (!root || !looped(root)) return null;
-    const n = count(root);
     iosHeading = target;
-    const base = target === null ? current : ((target % n) + n) % n;
     stopGlide();
+    const base = takeOver(t, root, target);
     target = null;
     touching = true; // its line stays as it is until let go; no settling meanwhile
     t.dataset.gliding = '';
@@ -471,9 +502,14 @@ document.addEventListener('keydown', (e) => {
 function place(root: HTMLElement) {
   const t = track(root);
   if (!t || !looped(root)) return;
+  // Mid-switch: on the slide it was heading to (it counted at once).
+  const n = count(root);
+  if (target !== null) current = ((target % n) + n) % n;
   stopGlide();
   target = null;
+  trackW = t.clientWidth;
   t.scrollTo({ left: left(t, current), behavior: 'instant' });
+  lightDot(root, current);
 }
 
 window.addEventListener('resize', () => {
@@ -499,6 +535,16 @@ onPageLoad(() => {
   const root = slider();
   if (!root) return;
   place(root);
+  // Its width changing (a phone turned, the window resized — whenever the layout has actually
+  // taken the new size, also after the resize event): back on its slide (see trackW).
+  trackObserver?.disconnect();
+  const t = track(root);
+  if (t) {
+    trackObserver = new ResizeObserver(() => {
+      if (resized(t) && slider() === root) place(root);
+    });
+    trackObserver.observe(t);
+  }
   // The copies become snap points now (StartHero.astro).
   track(root)?.setAttribute('data-ready', '');
   restart();
