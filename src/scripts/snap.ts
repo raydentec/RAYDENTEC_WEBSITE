@@ -3,7 +3,8 @@
  * once scrolling settles, the container closest to the snap line becomes `.is-active`.
  * Keyboard focus inside a container also makes it active.
  *
- * Mobile: the profile block above the containers scrolls freely. Snapping is only
+ * Mobile: the profile block above the containers (the info area) scrolls freely, and while
+ * the column rests in it no container is selected — the info area is (inInfoArea). Snapping is only
  * switched on (#scroller[data-snap="on"]) once container 1 is about to activate,
  * i.e. its top has passed the middle of the visible area between the header line
  * and the scroll control.
@@ -33,6 +34,24 @@ import {
 
 const SETTLE_MS = 90;
 let settleTimer = 0;
+
+/**
+ * Mobile: the info area above the containers (the profile; not Start, whose hero is a
+ * container) is a section of its own — while the column rests in it (container 1's top
+ * still below the snap line) it is the selected one, and no container is (clearActive).
+ */
+function inInfoArea(scroller: HTMLElement) {
+  if (!mq.mobile.matches || scroller.dataset.page === 'start') return false;
+  const first = containers(scroller)[0];
+  return !!first && snapTop(first) - snapLine(scroller) > 2;
+}
+/** No container selected (the info area is, see inInfoArea). */
+function clearActive(scroller: HTMLElement) {
+  const all = containers(scroller);
+  if (!all.some((cf) => cf.classList.contains('is-active'))) return;
+  all.forEach((cf) => cf.classList.remove('is-active'));
+  document.dispatchEvent(new CustomEvent(ACTIVE_CHANGE, { detail: { index: -1 } }));
+}
 
 function setActive(scroller: HTMLElement, active: HTMLElement | undefined) {
   if (!active || active.classList.contains('is-active')) return;
@@ -77,6 +96,13 @@ const SUPPORTS_SCROLLEND = 'onscrollend' in window;
  */
 function settle(scroller: HTMLElement, align: boolean) {
   window.clearTimeout(settleTimer);
+  // Resting in the mobile info area: it is the selected section, no container is.
+  if (inInfoArea(scroller)) {
+    clearActive(scroller);
+    home = null;
+    if (!('gliding' in scroller.dataset)) clearArriving(scroller);
+    return;
+  }
   const target = containerAtSnapLine(scroller) ?? nearestToSnapLine(scroller);
   if (!target) return;
   setActive(scroller, target);
@@ -287,6 +313,9 @@ onPageLoad(() => {
   positionedOnSwap = false;
   updateTail(scroller);
   updateSnapping(scroller);
+  // Opened at the top on mobile: in the info area — no container selected (the markup
+  // selects container 1).
+  if (inInfoArea(scroller)) clearActive(scroller);
   // The scroller is swapped on navigation, so this listener is bound once per page.
   scroller.addEventListener('focusin', (e) => {
     const cf = containers(scroller).find((c) => c.contains(e.target as Node));
