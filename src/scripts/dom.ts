@@ -329,6 +329,9 @@ export function stopGlide(el: HTMLElement) {
   if (!stop) return;
   stop();
   delete el.dataset.gliding;
+  // A native smooth scroll (Chromium) runs on by itself: an instant scroll to where it is
+  // now ends it there (a glide by script has already stopped writing).
+  el.scrollTo({ left: el.scrollLeft, top: el.scrollTop, behavior: 'instant' });
 }
 
 /** A glide of `el` is running. */

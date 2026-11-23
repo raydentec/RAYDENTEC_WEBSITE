@@ -414,8 +414,10 @@ document.addEventListener('astro:before-swap', () => {
  *     far enough for its speed — a fast swipe (dom.ts SWIPE_FAST_SPEED) 7.5 %, a slow one
  *     25 % of the way: half the sideways shares (dom.ts swipeShare × VERTICAL_SHARE) — else
  *     back; gliding from the finger's speed (dom.ts releaseEase).
- *   - Begun while a switch was still gliding: it counts from that switch's target, and a
- *     drag of CHAIN_PX that way goes one further (quick swipes add up).
+ *   - Begun while a switch was still gliding: the finger holds the column where it is at
+ *     once (and the drag moves it from there); it counts from that switch's target, and a
+ *     drag of CHAIN_PX that way goes one further (quick swipes add up). Let go without a
+ *     vertical drag, the switch finishes from where it was held.
  */
 const DECIDE_PX = 6;
 const CHAIN_PX = 10;
@@ -452,6 +454,13 @@ document.addEventListener(
     const target = e.target as Element | null;
     if (!target || !scroller.contains(target) || getRootState('mmenu') === 'open') return;
     const chained = isGliding(scroller);
+    // A finger down mid-glide holds the column where it is, at once (it used to glide on
+    // until the drag was decided, then jump back to where the finger had come down); the
+    // drag goes on from there. Snapping stays paused meanwhile.
+    if (chained) {
+      scroller.dataset.wheel = ''; // first: stopping with snapping on snapped it to a section
+      stopGlide(scroller);
+    }
     const top0 = scroller.scrollTop;
     const anchor = chained ? glideTo : top0;
     const spans = withProfile(scroller, snapSpans(scroller));
@@ -506,8 +515,19 @@ const touchEnd = (e: TouchEvent) => {
   const d = vdrag;
   if (!d || Array.from(e.touches).some((t) => t.identifier === d.id)) return;
   vdrag = null;
-  if (d.axis !== 'y') return; // a tap / a sideways swipe: nothing changed here
   const { scroller } = d;
+  if (d.axis !== 'y') {
+    // A tap / a sideways swipe: nothing changed here — but one that held a glide (above)
+    // lets it finish, on to where it was heading, from where it was held.
+    if (d.chained) {
+      try {
+        glideColumn(scroller, d.anchor);
+      } finally {
+        delete scroller.dataset.wheel;
+      }
+    }
+    return;
+  }
   // Snapping comes back on only after the glide has started (it's still paused: reading the
   // position with it on snapped the column straight back to the nearest section).
   try {
