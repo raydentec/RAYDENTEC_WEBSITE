@@ -260,9 +260,13 @@ for (const type of ['touchend', 'touchcancel'] as const) {
       if (!t) return;
       const f = (e as TouchEvent).changedTouches[0];
       const moved = t.scrollLeft - left0;
-      // Not moved sideways (a tap, a vertical drag) and nothing under way: as it was.
+      // Not moved sideways (a tap, a vertical drag) and nothing under way: as it was — but
+      // synced now: a vertical swipe begun on it may have moved the selection to another
+      // section meanwhile (sync skipped it while the finger was down), which left its game
+      // looking selected.
       if (Math.abs(moved) < 1 && !targets.has(row)) {
         delete t.dataset.gliding;
+        sync(row);
         return;
       }
       // One game at most, if swiped far enough for its speed (dom.ts swipeDirection).
