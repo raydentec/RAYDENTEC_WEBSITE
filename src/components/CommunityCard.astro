@@ -27,6 +27,7 @@ interface Props {
 const { platform, icon, color, title, description, caption, href, buttonLabel, framed = false } = Astro.props;
 
 // YouTube uses the filled play glyph; X and GitHub tiles get a light edge (dark fills).
+// Icons: the "social" set (public/assets/icons/social/, Icon.astro).
 const tileIcon = platform === 'youtube' ? 'play-filled' : icon;
 const tileEdge = platform === 'x' || platform === 'github';
 ---
@@ -35,7 +36,7 @@ const tileEdge = platform === 'x' || platform === 'github';
   <div class="card__inner">
     <div class="card__head">
       <span class:list={['card__tile', { 'card__tile--edge': tileEdge }]} style={`background: ${color}`}>
-        <Icon name={tileIcon} size={26} />
+        <Icon name={tileIcon} size={26} set="social" />
       </span>
       <h2 class="card__title">{title}</h2>
     </div>

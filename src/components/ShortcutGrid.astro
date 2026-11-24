@@ -7,7 +7,7 @@
  * dimmed while the container isn't selected (as the Community link sections). The
  * container takes its height from the grid (ContainerFrame fit). Tiles as on the Community link
  * sections (CommunityCard.astro). An unpublished link (null / "[PLACEHOLDER]") is shown
- * but not clickable.
+ * but not clickable. Icons: the "social" set (public/assets/icons/social/, Icon.astro).
  *
  * When the last row isn't full, empty half-transparent grey squares finish it (shown by the
  * script below, which counts the columns the grid currently has).
@@ -33,7 +33,7 @@ const FILLERS = 8;
       const inner = (
         <>
           <span class="sc__tile" style={`--brand: ${l.color}`}>
-            <Icon name={icon} size={30} />
+            <Icon name={icon} size={30} set="social" />
           </span>
           <span class="sc__name">{l.title}</span>
         </>

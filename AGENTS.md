@@ -123,7 +123,9 @@ clips at 1024, which is a separate breakpoint).
 - Follow the existing comment style: each component/script starts with a block comment that
   says what it does and why, and names the related files. When you change behaviour, update these comments.
 - Icons: `<Icon name="…" />` inlines `public/assets/icons/<name>.svg` (24px grid, `currentColor`).
-  Add new icons as SVG files there.
+  Add new icons as SVG files there. `<Icon name="…" set="social" />` reads
+  `public/assets/icons/social/<name>.svg` instead: a separate set for the Community page's
+  Social Accounts tiles and Links cards (ShortcutGrid, CommunityCard).
 - Use the tokens (`--c-*`, `--f-*`, `--t-*`, layout vars) instead of raw values where one exists.
   Per-breakpoint sizes go in `@media (max-width: 1279px)` / `(max-width: 767px)` blocks.
 - Commit messages: short, `Area: what changed` (e.g. `Community: …`, `Hero slider: …`).

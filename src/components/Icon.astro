@@ -1,7 +1,9 @@
 ---
 /**
- * Inline SVG from public/assets/icons/<name>.svg (icons use currentColor).
- * Read at build time so the markup is inlined, not fetched.
+ * Inline SVG from public/assets/icons/<name>.svg (icons use currentColor) — or, with `set`,
+ * from public/assets/icons/<set>/<name>.svg: a separate set for one part of the site
+ * ("social": the Community page's Social Accounts tiles and Links cards, ShortcutGrid /
+ * CommunityCard). Read at build time so the markup is inlined, not fetched.
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -10,18 +12,21 @@ interface Props {
   name: string;
   size?: number;
   class?: string;
+  /** Icon set: a subfolder of public/assets/icons (e.g. "social"); none = the main set. */
+  set?: string;
 }
 
-const { name, size = 24, class: className } = Astro.props;
+const { name, size = 24, class: className, set } = Astro.props;
+const file = set ? join(set, `${name}.svg`) : `${name}.svg`;
 
 const cache = ((globalThis as { __iconCache?: Map<string, string> }).__iconCache ??= new Map());
-let svg = cache.get(name);
+let svg = cache.get(file);
 if (!svg) {
   // Only the root <svg> tag loses its width/height/xmlns (inner <rect>s keep theirs).
-  svg = readFileSync(join(process.cwd(), 'public/assets/icons', `${name}.svg`), 'utf8')
+  svg = readFileSync(join(process.cwd(), 'public/assets/icons', file), 'utf8')
     .trim()
     .replace(/^<svg[^>]*>/, (tag) => tag.replace(/\s(width|height|xmlns)="[^"]*"/g, ''));
-  cache.set(name, svg);
+  cache.set(file, svg);
 }
 const html = svg.replace(
   '<svg',
