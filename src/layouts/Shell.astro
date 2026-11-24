@@ -100,8 +100,20 @@ const shareImage = `${SITE_URL}${SHARE_IMAGE.path}`;
       playsinline
       preload="auto"
       aria-hidden="true"
-      poster="/assets/video/lightning-mobile-poster.jpg"
       transition:persist="bg-video"></video>
+    <!-- Its poster (the still shown until the clip plays — or for good with reduced motion), set
+         before the first paint for this window's layout: as an attribute in the markup, desktop
+         first fetched and showed the portrait phone still, then the right one. Same clips and
+         breakpoint as scripts/bg-video.ts (which keeps it in step on resize). -->
+    <script is:inline>
+      (function () {
+        var v = document.getElementById('bgVideo');
+        if (!v) return;
+        var desktop = matchMedia('(min-width: 1024px)').matches;
+        var poster = '/assets/video/lightning-' + (desktop ? 'desktop' : 'mobile') + '-poster.jpg';
+        if (v.getAttribute('poster') !== poster) v.setAttribute('poster', poster);
+      })();
+    </script>
     <!-- Still blue glow shown instead of the video when it's switched off (BgToggle.astro). -->
     <div class="bg-glow" aria-hidden="true" transition:persist="bg-glow"></div>
     <div class="top-bar" aria-hidden="true"></div>

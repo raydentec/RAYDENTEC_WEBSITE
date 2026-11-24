@@ -1,6 +1,8 @@
 /**
  * Background video (HANDOFF §2.1): load only the clip that matches the layout —
- * landscape ≥1024px, portrait below — and never load it with reduced motion.
+ * landscape ≥1024px, portrait below — and never load it with reduced motion. Its poster
+ * (still) matches the layout too: set before the first paint by an inline script after the
+ * <video> (Shell.astro), switched here when the window crosses 1024px.
  * The <video> is persisted across navigation, so this runs once.
  *
  * Background switch (BgToggle.astro): <html data-bg="glow"> fades the video out and a still
@@ -24,15 +26,19 @@ function init() {
   const v = document.getElementById('bgVideo') as HTMLVideoElement | null;
   if (!v || v.dataset.init) return;
   v.dataset.init = '1';
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return; // never load
+  const mq = matchMedia('(min-width: 1024px)');
+  // The poster follows the layout even with reduced motion (it's then the whole background;
+  // the first one is set before the first paint, Shell.astro).
+  const setPoster = () => { v.poster = (mq.matches ? DESKTOP : MOBILE).poster; };
+  mq.addEventListener('change', setPoster);
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return; // never load the clip
 
   // Muted and inline as properties too: Safari checks those before it lets a video autoplay.
   v.muted = true;
   v.playsInline = true;
-  const mq = matchMedia('(min-width: 1024px)');
   const pick = () => {
     const clip = mq.matches ? DESKTOP : MOBILE;
-    v.poster = clip.poster;
+    setPoster();
     if (v.getAttribute('src') !== clip.src) {
       v.src = clip.src;
       ensurePlaying();
