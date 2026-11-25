@@ -20,6 +20,7 @@ content, and git keeps every version, so nothing is ever lost.
 | Community links and link grid | `src/content/community.json` | Also feeds the `/links` page |
 | Legal documents | `src/content/legal/*.md` | A new `.md` file becomes `/legal/<file name>` |
 | Images | `public/assets/…` | Referenced from the content files as `assets/…` |
+| Icons | `public/assets/icons/*.svg` (`social/` for Community tiles and cards) | Not checked; see "Add or update an icon" below |
 
 - A link set to `null` or to a bracketed placeholder such as `"[URL]"` shows as a **disabled**
   button, so you can add an item before its link exists. External links open in a new tab.
@@ -164,6 +165,36 @@ The document text, in Markdown.
 ```
 
 `group` is `agreements` or `policies`; `order` sets its position within the group.
+
+### Add or update an icon (`public/assets/icons/`)
+
+Icons are drawn on a 24 × 24 px artboard in a single colour, and the site inlines them so they take
+the colour of the text around them. The file name is the name used in the code
+(`gamepad.svg` → `<Icon name="gamepad" />`).
+
+Export from Illustrator with **File → Export → Export As… → SVG**, using these settings:
+
+- **Styling:** Presentation Attributes
+- **Font:** Convert to Outlines
+- **Object IDs:** Minimal
+- **Decimal:** 1
+- **Minify:** on
+- **Responsive:** off (this keeps `width` and `height`)
+
+Then open the file in a text editor and make the opening tag match the other icons, removing any
+`id`, `version`, `class` or `style`, as well as `fill` colours on the shapes:
+
+```svg
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">…</svg>
+```
+
+`fill="currentColor"` is the one that matters most: without it the icon shows black instead of
+following the button or link colour. Also remove any `<?xml …?>` line or Illustrator comment if
+present.
+
+The dev server keeps icons in memory once it has read them, so after replacing an icon, restart it
+(`npx astro dev stop`, then `npx astro dev --background`) to see the new one. `npm run build`
+always uses the current files.
 
 ## If you'd rather not edit JSON by hand
 
