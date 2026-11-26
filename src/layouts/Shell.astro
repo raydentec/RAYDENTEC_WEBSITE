@@ -59,7 +59,10 @@ const shareImage = `${SITE_URL}${SHARE_IMAGE.path}`;
     <meta name="description" content={site.bio} />
     <meta name="theme-color" content="#000000" />
     <title>{title}</title>
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="icon" type="image/svg+xml" href="/assets/logo.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={site.share.siteName} />
     <meta property="og:title" content={title} />
